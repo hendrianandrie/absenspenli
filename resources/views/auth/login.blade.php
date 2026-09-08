@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SI-GURU SMP</title>
+    <title>Login - SI-KASEP (Sistem Informasi Rekap Absen Spenli)</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -60,8 +60,8 @@
             <div class="mb-2">
                 <i class="fa-solid fa-graduation-cap fa-3x text-warning"></i>
             </div>
-            <h4 class="fw-bold mb-1">SI-GURU SMP</h4>
-            <p class="mb-0 text-white-50 fs-7">Sistem Manajemen Nilai & Absensi Siswa</p>
+            <h4 class="fw-bold mb-1">SI-KASEP</h4>
+            <p class="mb-0 text-white-50 fs-7">Sistem Informasi Rekap Absen Spenli</p>
         </div>
 
         <!-- Body Form -->
@@ -112,7 +112,7 @@
         </div>
 
         <div class="bg-light py-3 text-center border-top text-muted fs-8">
-            &copy; {{ date('Y') }} SI-GURU SMP — Manajemen Nilai & Absensi
+            &copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen Spenli
         </div>
     </div>
 

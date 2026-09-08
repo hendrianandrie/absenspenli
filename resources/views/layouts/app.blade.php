@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Guru SMP - Nilai & Absensi</title>
+    <title>SI-KASEP - Sistem Informasi Rekap Absen Spenli</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -61,7 +61,7 @@
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
                 <i class="fa-solid fa-graduation-cap fa-lg text-warning"></i>
-                <span>SI-GURU <small class="fw-normal text-white-50 fs-6">SMP</small></span>
+                <span>SI-KASEP <small class="fw-normal text-white-50 fs-6">SPENLI</small></span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
                 <span class="navbar-toggler-icon"></span>
@@ -136,7 +136,7 @@
     <!-- Footer -->
     <footer class="bg-white border-top py-3 text-center text-muted fs-7 mt-auto">
         <div class="container">
-            <small>&copy; {{ date('Y') }} Aplikasi Guru SMP — Sistem Manajemen Nilai & Absensi Siswa</small>
+            <small>&copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen Spenli</small>
         </div>
     </footer>
 

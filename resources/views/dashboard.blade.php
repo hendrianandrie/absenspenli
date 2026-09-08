@@ -3,8 +3,8 @@
 @section('content')
 <div class="row mb-4 align-items-center">
     <div class="col-md-8">
-        <h3 class="fw-bold mb-1"><i class="fa-solid fa-gauge-high text-primary me-2"></i> Dashboard Guru SMP</h3>
-        <p class="text-muted mb-0">Selamat datang! Kelola data nilai, kegiatan belajar, dan absensi siswa dengan cepat.</p>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-gauge-high text-primary me-2"></i> Dashboard SI-KASEP</h3>
+        <p class="text-muted mb-0">Selamat datang di Sistem Informasi Rekap Absen Spenli (SMP Negeri 5).</p>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
         <span class="badge bg-white text-dark border px-3 py-2 fs-6 rounded-pill shadow-sm">
