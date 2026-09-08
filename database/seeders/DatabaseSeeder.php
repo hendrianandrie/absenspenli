@@ -22,6 +22,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Default User Piket (Hanya Absensi)
+        User::updateOrCreate(
+            ['name' => 'piket'],
+            [
+                'email' => 'piket@smp.sch.id',
+                'password' => Hash::make('piket123'),
+                'role' => 'piket',
+            ]
+        );
+
         // Default Mata Pelajaran SMP
         $mapels = [
             ['kode_mapel' => 'MAT-SMP', 'nama_mapel' => 'Matematika', 'kkm' => 75],

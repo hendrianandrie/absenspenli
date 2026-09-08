@@ -40,19 +40,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
     Route::get('/rekap/pdf', [AbsensiController::class, 'cetakPDF'])->name('absensi.cetakPDF');
 
-    // Mata Pelajaran
-    Route::get('/mapel', [MataPelajaranController::class, 'index'])->name('mapel.index');
-    Route::post('/mapel', [MataPelajaranController::class, 'store'])->name('mapel.store');
-    Route::delete('/mapel/{id}', [MataPelajaranController::class, 'destroy'])->name('mapel.destroy');
+    // Routes khusus Guru / Admin (Bukan Piket)
+    Route::middleware(\App\Http\Middleware\CheckNotPiket::class)->group(function () {
+        // Mata Pelajaran
+        Route::get('/mapel', [MataPelajaranController::class, 'index'])->name('mapel.index');
+        Route::post('/mapel', [MataPelajaranController::class, 'store'])->name('mapel.store');
+        Route::delete('/mapel/{id}', [MataPelajaranController::class, 'destroy'])->name('mapel.destroy');
 
-    // Penilaian (Kegiatan, Rata-Rata Murni, Export PDF & Excel)
-    Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
-    Route::get('/nilai/kegiatan/create', [NilaiController::class, 'createKegiatan'])->name('nilai.kegiatan.create');
-    Route::post('/nilai/kegiatan/store', [NilaiController::class, 'storeKegiatan'])->name('nilai.kegiatan.store');
-    Route::get('/nilai/kegiatan/{id}/edit', [NilaiController::class, 'editKegiatan'])->name('nilai.kegiatan.edit');
-    Route::post('/nilai/kegiatan/{id}/update', [NilaiController::class, 'updateKegiatan'])->name('nilai.kegiatan.update');
-    Route::delete('/nilai/kegiatan/{id}', [NilaiController::class, 'destroyKegiatan'])->name('nilai.kegiatan.destroy');
-    Route::get('/nilai/rekap-pdf', [NilaiController::class, 'rekapPdf'])->name('nilai.rekapPdf');
-    Route::get('/nilai/rekap-excel', [NilaiController::class, 'rekapExcel'])->name('nilai.rekapExcel');
-    Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
+        // Penilaian (Kegiatan, Rata-Rata Murni, Export PDF & Excel)
+        Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
+        Route::get('/nilai/kegiatan/create', [NilaiController::class, 'createKegiatan'])->name('nilai.kegiatan.create');
+        Route::post('/nilai/kegiatan/store', [NilaiController::class, 'storeKegiatan'])->name('nilai.kegiatan.store');
+        Route::get('/nilai/kegiatan/{id}/edit', [NilaiController::class, 'editKegiatan'])->name('nilai.kegiatan.edit');
+        Route::post('/nilai/kegiatan/{id}/update', [NilaiController::class, 'updateKegiatan'])->name('nilai.kegiatan.update');
+        Route::delete('/nilai/kegiatan/{id}', [NilaiController::class, 'destroyKegiatan'])->name('nilai.kegiatan.destroy');
+        Route::get('/nilai/rekap-pdf', [NilaiController::class, 'rekapPdf'])->name('nilai.rekapPdf');
+        Route::get('/nilai/rekap-excel', [NilaiController::class, 'rekapExcel'])->name('nilai.rekapExcel');
+        Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
+    });
 });

@@ -15,58 +15,87 @@
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted fs-7 text-uppercase fw-semibold">Total Siswa</span>
-                    <h2 class="fw-bold mb-0 text-primary">{{ $totalSiswa ?? 0 }}</h2>
-                </div>
-                <div class="bg-primary-subtle p-3 rounded-circle text-primary">
-                    <i class="fa-solid fa-user-graduate fa-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-custom p-3 bg-white stat-card border-start border-info border-4 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted fs-7 text-uppercase fw-semibold">Mata Pelajaran</span>
-                    <h2 class="fw-bold mb-0 text-info">{{ $totalMapel ?? 0 }}</h2>
-                </div>
-                <div class="bg-info-subtle p-3 rounded-circle text-info">
-                    <i class="fa-solid fa-book fa-xl"></i>
+    @if(Auth::check() && Auth::user()->role === 'piket')
+        <div class="col-sm-6 col-xl-6">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Total Siswa Terdaftar</span>
+                        <h2 class="fw-bold mb-0 text-primary">{{ $totalSiswa ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-primary-subtle p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-user-graduate fa-xl"></i>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-custom p-3 bg-white stat-card border-start border-warning border-4 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted fs-7 text-uppercase fw-semibold">Kegiatan Penilaian</span>
-                    <h2 class="fw-bold mb-0 text-warning">{{ $totalKegiatan ?? 0 }}</h2>
-                </div>
-                <div class="bg-warning-subtle p-3 rounded-circle text-warning">
-                    <i class="fa-solid fa-clipboard-list fa-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card card-custom p-3 bg-white stat-card border-start border-success border-4 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted fs-7 text-uppercase fw-semibold">Rata-Rata Nilai</span>
-                    <h2 class="fw-bold mb-0 text-success">{{ $avgNilaiGlobal ? number_format($avgNilaiGlobal, 1) : '-' }}</h2>
-                </div>
-                <div class="bg-success-subtle p-3 rounded-circle text-success">
-                    <i class="fa-solid fa-star fa-xl"></i>
+        <div class="col-sm-6 col-xl-6">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-warning border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Hak Akses Sistem</span>
+                        <h4 class="fw-bold mb-0 text-warning"><i class="fa-solid fa-clipboard-user me-1"></i> Petugas Piket (Absensi)</h4>
+                    </div>
+                    <div class="bg-warning-subtle p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-user-shield fa-xl"></i>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @else
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Total Siswa</span>
+                        <h2 class="fw-bold mb-0 text-primary">{{ $totalSiswa ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-primary-subtle p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-user-graduate fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-info border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Mata Pelajaran</span>
+                        <h2 class="fw-bold mb-0 text-info">{{ $totalMapel ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-info-subtle p-3 rounded-circle text-info">
+                        <i class="fa-solid fa-book fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-warning border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Kegiatan Penilaian</span>
+                        <h2 class="fw-bold mb-0 text-warning">{{ $totalKegiatan ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-warning-subtle p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-clipboard-list fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-success border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Rata-Rata Nilai</span>
+                        <h2 class="fw-bold mb-0 text-success">{{ $avgNilaiGlobal ? number_format($avgNilaiGlobal, 1) : '-' }}</h2>
+                    </div>
+                    <div class="bg-success-subtle p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-star fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 
 <!-- Kehadiran Kelas Chart/Table & Posisi Tombol Cetak PDF -->

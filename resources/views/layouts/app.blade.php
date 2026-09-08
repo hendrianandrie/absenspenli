@@ -82,18 +82,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('mapel.*') ? 'active fw-semibold' : '' }}" href="{{ route('mapel.index') }}">
-                            <i class="fa-solid fa-book-open me-1"></i> Mata Pelajaran
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('absensi.harian') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.harian') }}">
                             <i class="fa-solid fa-calendar-check me-1"></i> Absensi Cepat
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('nilai.*') ? 'active fw-semibold' : '' }}" href="{{ route('nilai.index') }}">
-                            <i class="fa-solid fa-pen-to-square me-1"></i> Manajemen Nilai
                         </a>
                     </li>
                     <li class="nav-item">
@@ -101,6 +91,18 @@
                             <i class="fa-solid fa-file-invoice me-1"></i> Rekap Absensi
                         </a>
                     </li>
+                    @if(Auth::check() && Auth::user()->role !== 'piket')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('mapel.*') ? 'active fw-semibold' : '' }}" href="{{ route('mapel.index') }}">
+                                <i class="fa-solid fa-book-open me-1"></i> Mata Pelajaran
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('nilai.*') ? 'active fw-semibold' : '' }}" href="{{ route('nilai.index') }}">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Manajemen Nilai
+                            </a>
+                        </li>
+                    @endif
                     @auth
                         <li class="nav-item ms-lg-2">
                             <form action="{{ route('logout') }}" method="POST" class="d-inline">
