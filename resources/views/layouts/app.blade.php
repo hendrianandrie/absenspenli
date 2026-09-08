@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SI-KASEP - Sistem Informasi Rekap Absen Spenli</title>
+    <!-- Favicon Logo -->
+    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -60,7 +62,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top mb-4">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ route('dashboard') }}">
-                <i class="fa-solid fa-graduation-cap fa-lg text-warning"></i>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SPENLI" width="34" height="34" class="d-inline-block align-text-top bg-white rounded-circle p-1">
                 <span>SI-KASEP <small class="fw-normal text-white-50 fs-6">SPENLI</small></span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">

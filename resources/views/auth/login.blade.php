@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SI-KASEP (Sistem Informasi Rekap Absen Spenli)</title>
+    <!-- Favicon Logo -->
+    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -58,7 +60,7 @@
         <!-- Header Brand -->
         <div class="login-header">
             <div class="mb-2">
-                <i class="fa-solid fa-graduation-cap fa-3x text-warning"></i>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SPENLI" width="80" height="80" class="bg-white rounded-circle p-2 shadow-sm">
             </div>
             <h4 class="fw-bold mb-1">SI-KASEP</h4>
             <p class="mb-0 text-white-50 fs-7">Sistem Informasi Rekap Absen Spenli</p>
