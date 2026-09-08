@@ -38,6 +38,7 @@ class DashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Persentase Kehadiran, Izin, Sakit & Alpa Siswa', false);
+        $response->assertSee('Hari Ini');
         $response->assertSee('Minggu Ini');
         $response->assertSee('Bulan Ini');
         $response->assertSee('Keseluruhan');

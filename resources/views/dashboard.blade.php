@@ -132,7 +132,7 @@
     @endif
 </div>
 
-<!-- Rekap Persentase Kehadiran (Mingguan, Bulanan, Keseluruhan) -->
+<!-- Rekap Persentase Kehadiran (Hari Ini, Mingguan, Bulanan, Keseluruhan) -->
 <div class="card card-custom p-4 bg-white shadow-sm">
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h5 class="fw-bold mb-0">
@@ -143,9 +143,63 @@
         </span>
     </div>
 
-    <div class="row g-4">
-        <!-- Card 1: Minggu Ini -->
-        <div class="col-lg-4">
+    <div class="row g-3">
+        <!-- Card 1: Hari Ini -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="p-3 rounded-3 border bg-light h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-warning">
+                        <i class="fa-solid fa-calendar-day me-1"></i> Hari Ini
+                    </h6>
+                    <span class="badge bg-warning-subtle text-warning fw-semibold px-2 py-1">
+                        {{ $statsHariIni['total'] }} Record
+                    </span>
+                </div>
+                
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="fw-semibold text-success"><i class="fa-solid fa-circle-check me-1"></i> Hadir</span>
+                        <span class="fw-bold text-success">{{ $statsHariIni['hadir_pct'] }}% <small class="text-muted">({{ $statsHariIni['hadir'] }})</small></span>
+                    </div>
+                    <div class="progress mb-2" style="height: 7px;">
+                        <div class="progress-bar bg-success" style="width: {{ $statsHariIni['hadir_pct'] }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="fw-semibold text-info"><i class="fa-solid fa-envelope-open-text me-1"></i> Izin</span>
+                        <span class="fw-bold text-info">{{ $statsHariIni['izin_pct'] }}% <small class="text-muted">({{ $statsHariIni['izin'] }})</small></span>
+                    </div>
+                    <div class="progress mb-2" style="height: 7px;">
+                        <div class="progress-bar bg-info" style="width: {{ $statsHariIni['izin_pct'] }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="fw-semibold text-warning"><i class="fa-solid fa-notes-medical me-1"></i> Sakit</span>
+                        <span class="fw-bold text-warning">{{ $statsHariIni['sakit_pct'] }}% <small class="text-muted">({{ $statsHariIni['sakit'] }})</small></span>
+                    </div>
+                    <div class="progress mb-2" style="height: 7px;">
+                        <div class="progress-bar bg-warning" style="width: {{ $statsHariIni['sakit_pct'] }}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        <span class="fw-semibold text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Alpa</span>
+                        <span class="fw-bold text-danger">{{ $statsHariIni['alpha_pct'] }}% <small class="text-muted">({{ $statsHariIni['alpha'] }})</small></span>
+                    </div>
+                    <div class="progress" style="height: 7px;">
+                        <div class="progress-bar bg-danger" style="width: {{ $statsHariIni['alpha_pct'] }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Minggu Ini -->
+        <div class="col-sm-6 col-xl-3">
             <div class="p-3 rounded-3 border bg-light h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0 text-primary">
@@ -198,8 +252,8 @@
             </div>
         </div>
 
-        <!-- Card 2: Bulan Ini -->
-        <div class="col-lg-4">
+        <!-- Card 3: Bulan Ini -->
+        <div class="col-sm-6 col-xl-3">
             <div class="p-3 rounded-3 border bg-light h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0 text-info">
@@ -252,12 +306,12 @@
             </div>
         </div>
 
-        <!-- Card 3: Keseluruhan -->
-        <div class="col-lg-4">
+        <!-- Card 4: Keseluruhan -->
+        <div class="col-sm-6 col-xl-3">
             <div class="p-3 rounded-3 border bg-light h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0 text-success">
-                        <i class="fa-solid fa-globe me-1"></i> Keseluruhan (All-Time)
+                        <i class="fa-solid fa-globe me-1"></i> Keseluruhan
                     </h6>
                     <span class="badge bg-success-subtle text-success fw-semibold px-2 py-1">
                         {{ $statsKeseluruhan['total'] }} Record
@@ -313,6 +367,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-start ps-3">Kategori Status</th>
+                    <th><i class="fa-solid fa-calendar-day text-warning me-1"></i> Hari Ini</th>
                     <th><i class="fa-solid fa-calendar-week text-primary me-1"></i> Minggu Ini</th>
                     <th><i class="fa-solid fa-calendar-days text-info me-1"></i> Bulan Ini</th>
                     <th><i class="fa-solid fa-globe text-success me-1"></i> Keseluruhan</th>
@@ -321,24 +376,28 @@
             <tbody>
                 <tr>
                     <td class="text-start ps-3 fw-semibold text-success"><i class="fa-solid fa-circle-check me-2"></i> Hadir</td>
+                    <td><span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fs-6">{{ $statsHariIni['hadir_pct'] }}%</span></td>
                     <td><span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fs-6">{{ $statsMingguIni['hadir_pct'] }}%</span></td>
                     <td><span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fs-6">{{ $statsBulanIni['hadir_pct'] }}%</span></td>
                     <td><span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fs-6">{{ $statsKeseluruhan['hadir_pct'] }}%</span></td>
                 </tr>
                 <tr>
                     <td class="text-start ps-3 fw-semibold text-info"><i class="fa-solid fa-envelope-open-text me-2"></i> Izin</td>
+                    <td><span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 fs-6">{{ $statsHariIni['izin_pct'] }}%</span></td>
                     <td><span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 fs-6">{{ $statsMingguIni['izin_pct'] }}%</span></td>
                     <td><span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 fs-6">{{ $statsBulanIni['izin_pct'] }}%</span></td>
                     <td><span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 fs-6">{{ $statsKeseluruhan['izin_pct'] }}%</span></td>
                 </tr>
                 <tr>
                     <td class="text-start ps-3 fw-semibold text-warning"><i class="fa-solid fa-notes-medical me-2"></i> Sakit</td>
+                    <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 fs-6">{{ $statsHariIni['sakit_pct'] }}%</span></td>
                     <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 fs-6">{{ $statsMingguIni['sakit_pct'] }}%</span></td>
                     <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 fs-6">{{ $statsBulanIni['sakit_pct'] }}%</span></td>
                     <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 fs-6">{{ $statsKeseluruhan['sakit_pct'] }}%</span></td>
                 </tr>
                 <tr>
                     <td class="text-start ps-3 fw-semibold text-danger"><i class="fa-solid fa-circle-xmark me-2"></i> Alpa</td>
+                    <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fs-6">{{ $statsHariIni['alpha_pct'] }}%</span></td>
                     <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fs-6">{{ $statsMingguIni['alpha_pct'] }}%</span></td>
                     <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fs-6">{{ $statsBulanIni['alpha_pct'] }}%</span></td>
                     <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fs-6">{{ $statsKeseluruhan['alpha_pct'] }}%</span></td>

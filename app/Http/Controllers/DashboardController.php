@@ -46,7 +46,7 @@ class DashboardController extends Controller
         $hadirData = $dataKelas ? array_column($dataKelas, 'hadir') : [];
         $tidakHadirData = $dataKelas ? array_column($dataKelas, 'tidak_hadir') : [];
 
-        // Calculation for Absensi Percentages (Overall, Weekly, Monthly)
+        // Calculation for Absensi Percentages (Hari Ini, Weekly, Monthly, Overall)
         $now = Carbon::now();
         $startOfWeek = $now->copy()->startOfWeek()->toDateString();
         $endOfWeek = $now->copy()->endOfWeek()->toDateString();
@@ -56,7 +56,11 @@ class DashboardController extends Controller
         $calcStats = function ($startDate = null, $endDate = null) {
             $query = Absensi::query();
             if ($startDate && $endDate) {
-                $query->whereBetween('tanggal', [$startDate, $endDate]);
+                if ($startDate === $endDate) {
+                    $query->where('tanggal', $startDate);
+                } else {
+                    $query->whereBetween('tanggal', [$startDate, $endDate]);
+                }
             }
 
             $total = $query->count();
@@ -93,6 +97,7 @@ class DashboardController extends Controller
             ];
         };
 
+        $statsHariIni = $calcStats($tanggal, $tanggal);
         $statsMingguIni = $calcStats($startOfWeek, $endOfWeek);
         $statsBulanIni = $calcStats($startOfMonth, $endOfMonth);
         $statsKeseluruhan = $calcStats();
@@ -107,6 +112,7 @@ class DashboardController extends Controller
             'totalMapel',
             'totalKegiatan',
             'avgNilaiGlobal',
+            'statsHariIni',
             'statsMingguIni',
             'statsBulanIni',
             'statsKeseluruhan'
