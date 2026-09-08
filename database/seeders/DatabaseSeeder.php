@@ -38,21 +38,7 @@ class DatabaseSeeder extends Seeder
             MataPelajaran::firstOrCreate(['kode_mapel' => $mapel['kode_mapel']], $mapel);
         }
 
-        // Sample Siswa if table is empty
-        if (Siswa::count() === 0) {
-            $siswaData = [
-                ['nis' => '8001', 'nama' => 'Aditya Pratama', 'kelas' => '7A', 'jenis_kelamin' => 'L'],
-                ['nis' => '8002', 'nama' => 'Budi Santoso', 'kelas' => '7A', 'jenis_kelamin' => 'L'],
-                ['nis' => '8003', 'nama' => 'Citra Lestari', 'kelas' => '7A', 'jenis_kelamin' => 'P'],
-                ['nis' => '8004', 'nama' => 'Dewi Anggraini', 'kelas' => '7A', 'jenis_kelamin' => 'P'],
-                ['nis' => '8005', 'nama' => 'Eko Prasetyo', 'kelas' => '7A', 'jenis_kelamin' => 'L'],
-                ['nis' => '8006', 'nama' => 'Fani Wijaya', 'kelas' => '7B', 'jenis_kelamin' => 'P'],
-                ['nis' => '8007', 'nama' => 'Gilang Ramadhan', 'kelas' => '7B', 'jenis_kelamin' => 'L'],
-            ];
-
-            foreach ($siswaData as $s) {
-                Siswa::create($s);
-            }
-        }
+        // Call Siswa CSV Seeder
+        $this->call(SiswaCsvSeeder::class);
     }
 }
