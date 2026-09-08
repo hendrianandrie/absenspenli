@@ -62,4 +62,15 @@ class PiketAccountTest extends TestCase
         $responseNilai = $this->actingAs($piketUser)->get('/nilai');
         $responseNilai->assertRedirect('/dashboard');
     }
+
+    public function test_login_page_displays_rekap_absen_per_kelas_with_toggle_button(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertSee('SI-KASEP');
+        $response->assertSee('Rekap Absen Per Kelas');
+        $response->assertSee('btnToggleKelas');
+        $response->assertSee('Selengkapnya (More)');
+    }
 }

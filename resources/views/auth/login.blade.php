@@ -141,9 +141,62 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Rekap Absen Per Kelas Hari Ini -->
+                    @if(isset($dataKelas) && count($dataKelas) > 0)
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-white mb-0">
+                                    <i class="fa-solid fa-school me-2"></i> Rekap Absen Per Kelas
+                                </h6>
+                                <span class="badge bg-white text-dark rounded-pill px-2 py-1 small fw-semibold" style="font-size: 11px;">
+                                    {{ count($dataKelas) }} Kelas
+                                </span>
+                            </div>
+
+                            <div class="stats-card-box p-2">
+                                <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                                    <table class="table table-dark table-hover table-sm text-white align-middle mb-0" style="font-size: 12px; --bs-table-bg: transparent;">
+                                        <thead>
+                                            <tr class="border-bottom border-white-20 text-white-50">
+                                                <th class="py-1 ps-2">Kelas</th>
+                                                <th class="py-1 text-center">Total</th>
+                                                <th class="py-1 text-center text-success">Hadir</th>
+                                                <th class="py-1 text-center text-warning">Absen</th>
+                                                <th class="py-1 text-end pe-2">% Hadir</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($dataKelas as $index => $k)
+                                                <tr class="kelas-row {{ $index >= 4 ? 'd-none' : '' }} border-bottom border-white-10">
+                                                    <td class="fw-bold ps-2">{{ $k['kelas'] }}</td>
+                                                    <td class="text-center text-white-50">{{ $k['total'] }}</td>
+                                                    <td class="text-center text-success fw-semibold">{{ $k['hadir'] }}</td>
+                                                    <td class="text-center text-warning fw-semibold">{{ $k['tidak_hadir'] }}</td>
+                                                    <td class="text-end pe-2">
+                                                        <span class="badge {{ $k['persen'] >= 90 ? 'bg-success' : ($k['persen'] >= 75 ? 'bg-warning text-dark' : 'bg-danger') }} rounded-pill" style="font-size: 10px;">
+                                                            {{ $k['persen'] }}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @if(count($dataKelas) > 4)
+                                    <div class="text-center pt-2 border-top border-white-10 mt-2">
+                                        <button type="button" id="btnToggleKelas" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-semibold" style="font-size: 12px;">
+                                            <i class="fa-solid fa-chevron-down me-1" id="iconToggleKelas"></i> <span id="textToggleKelas">Selengkapnya (More)</span>
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="pt-3 border-top border-white-10 text-white-50 small">
+                <div class="pt-3 mt-3 border-top border-white-10 text-white-50 small">
                     <i class="fa-solid fa-circle-info me-1"></i> Data diupdate real-time dari Sistem Informasi Rekap Absen Spenli.
                 </div>
             </div>
@@ -210,5 +263,39 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Less / More Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnToggle = document.getElementById('btnToggleKelas');
+            if (btnToggle) {
+                let isExpanded = false;
+                btnToggle.addEventListener('click', function() {
+                    isExpanded = !isExpanded;
+                    const rows = document.querySelectorAll('.kelas-row');
+                    rows.forEach((row, index) => {
+                        if (index >= 4) {
+                            if (isExpanded) {
+                                row.classList.remove('d-none');
+                            } else {
+                                row.classList.add('d-none');
+                            }
+                        }
+                    });
+
+                    const textSpan = document.getElementById('textToggleKelas');
+                    const iconSpan = document.getElementById('iconToggleKelas');
+
+                    if (isExpanded) {
+                        textSpan.textContent = 'Sembunyikan (Less)';
+                        iconSpan.className = 'fa-solid fa-chevron-up me-1';
+                    } else {
+                        textSpan.textContent = 'Selengkapnya (More)';
+                        iconSpan.className = 'fa-solid fa-chevron-down me-1';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -54,7 +54,29 @@ class AuthController extends Controller
             ];
         }
 
-        return view('auth.login', compact('statsHariIni', 'tanggal', 'totalSiswa'));
+        $kelasList = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        $dataKelas = [];
+
+        foreach ($kelasList as $kelas) {
+            $jumlahTidakHadir = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+                ->where('siswas.kelas', $kelas)
+                ->where('absensis.tanggal', $tanggal)
+                ->whereIn('absensis.status', ['Sakit', 'Izin', 'Alpha'])
+                ->count();
+
+            $totalSiswaKelas = Siswa::where('kelas', $kelas)->count();
+            $jumlahHadir = $totalSiswaKelas - $jumlahTidakHadir;
+
+            $dataKelas[] = [
+                'kelas' => $kelas,
+                'total' => $totalSiswaKelas,
+                'hadir' => $jumlahHadir,
+                'tidak_hadir' => $jumlahTidakHadir,
+                'persen' => $totalSiswaKelas > 0 ? round(($jumlahHadir / $totalSiswaKelas) * 100) : 0,
+            ];
+        }
+
+        return view('auth.login', compact('statsHariIni', 'tanggal', 'totalSiswa', 'dataKelas'));
     }
 
     public function login(Request $request)
