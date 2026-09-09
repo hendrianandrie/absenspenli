@@ -17,7 +17,12 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $tanggal = Carbon::today()->toDateString();
+        $today = Carbon::today()->toDateString();
+        $hasDataToday = Absensi::where('tanggal', $today)->exists();
+
+        // Jika hari ini sudah ada data absensi, gunakan tanggal hari ini.
+        // Jika belum ada data absensi hari ini, gunakan tanggal absensi terbaru di database.
+        $tanggal = $hasDataToday ? $today : (Absensi::max('tanggal') ?? $today);
         $totalSiswa = Siswa::count();
 
         $query = Absensi::where('tanggal', $tanggal);
@@ -41,16 +46,27 @@ class AuthController extends Controller
             $izin = $counts['Izin'] ?? 0;
             $alpha = $counts['Alpha'] ?? 0;
 
+            $recordedCount = $hadir + $sakit + $izin + $alpha;
+            if ($recordedCount < $totalSiswa && ($sakit + $izin + $alpha) > 0 && $hadir == 0) {
+                $hadir = max(0, $totalSiswa - ($sakit + $izin + $alpha));
+                $effectiveTotal = $totalSiswa;
+            } else {
+                $effectiveTotal = max($recordedCount, $totalSiswa);
+                if ($hadir == 0 && ($sakit + $izin + $alpha) > 0) {
+                    $hadir = max(0, $totalSiswa - ($sakit + $izin + $alpha));
+                }
+            }
+
             $statsHariIni = [
-                'total' => $totalHariIni,
+                'total' => $effectiveTotal,
                 'hadir' => $hadir,
-                'hadir_pct' => round(($hadir / $totalHariIni) * 100, 1),
+                'hadir_pct' => $effectiveTotal > 0 ? round(($hadir / $effectiveTotal) * 100, 1) : 0,
                 'sakit' => $sakit,
-                'sakit_pct' => round(($sakit / $totalHariIni) * 100, 1),
+                'sakit_pct' => $effectiveTotal > 0 ? round(($sakit / $effectiveTotal) * 100, 1) : 0,
                 'izin' => $izin,
-                'izin_pct' => round(($izin / $totalHariIni) * 100, 1),
+                'izin_pct' => $effectiveTotal > 0 ? round(($izin / $effectiveTotal) * 100, 1) : 0,
                 'alpha' => $alpha,
-                'alpha_pct' => round(($alpha / $totalHariIni) * 100, 1),
+                'alpha_pct' => $effectiveTotal > 0 ? round(($alpha / $effectiveTotal) * 100, 1) : 0,
             ];
         }
 
@@ -58,14 +74,32 @@ class AuthController extends Controller
         $dataKelas = [];
 
         foreach ($kelasList as $kelas) {
-            $jumlahTidakHadir = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+            $hasAbsenKelas = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
                 ->where('siswas.kelas', $kelas)
                 ->where('absensis.tanggal', $tanggal)
-                ->whereIn('absensis.status', ['Sakit', 'Izin', 'Alpha'])
-                ->count();
+                ->exists();
 
             $totalSiswaKelas = Siswa::where('kelas', $kelas)->count();
-            $jumlahHadir = $totalSiswaKelas - $jumlahTidakHadir;
+
+            if (! $hasAbsenKelas) {
+                $jumlahHadir = 0;
+                $jumlahTidakHadir = 0;
+            } else {
+                $countsKelas = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+                    ->where('siswas.kelas', $kelas)
+                    ->where('absensis.tanggal', $tanggal)
+                    ->selectRaw('absensis.status, COUNT(*) as aggregate')
+                    ->groupBy('absensis.status')
+                    ->pluck('aggregate', 'absensis.status');
+
+                $sakit = $countsKelas['Sakit'] ?? 0;
+                $izin = $countsKelas['Izin'] ?? 0;
+                $alpha = $countsKelas['Alpha'] ?? 0;
+                $hadirExp = $countsKelas['Hadir'] ?? 0;
+
+                $jumlahTidakHadir = $sakit + $izin + $alpha;
+                $jumlahHadir = max($hadirExp, $totalSiswaKelas - $jumlahTidakHadir);
+            }
 
             $dataKelas[] = [
                 'kelas' => $kelas,
