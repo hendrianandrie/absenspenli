@@ -93,7 +93,9 @@
                                 <th class="text-center">Tingkat</th>
                                 <th class="text-center">KKM</th>
                                 <th class="text-center">Bobot Penilaian (T/UH/UTS/UAS)</th>
-                                <th class="text-end">Aksi</th>
+                                @if(empty($isGuru) || !$isGuru)
+                                    <th class="text-end">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -117,11 +119,11 @@
                                         <span class="badge bg-light text-dark border">UTS: {{ $mapel->bobot_uts ?? 25 }}%</span>
                                         <span class="badge bg-light text-dark border">UAS: {{ $mapel->bobot_uas ?? 25 }}%</span>
                                     </td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $mapel->id }}">
-                                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit KKM & Bobot
-                                        </button>
-                                        @if(empty($isGuru) || !$isGuru)
+                                    @if(empty($isGuru) || !$isGuru)
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $mapel->id }}">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit KKM & Bobot
+                                            </button>
                                             <form action="{{ route('mapel.destroy', $mapel->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus mata pelajaran ini?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -129,8 +131,8 @@
                                                     <i class="fa-solid fa-trash me-1"></i> Hapus
                                                 </button>
                                             </form>
-                                        @endif
-                                    </td>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -141,72 +143,74 @@
     </div>
 </div>
 
-<!-- Modal Container -->
-@foreach($mapels as $mapel)
-    <div class="modal fade" id="editMapelModal{{ $mapel->id }}" tabindex="-1" aria-labelledby="editMapelModalLabel{{ $mapel->id }}" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold" id="editMapelModalLabel{{ $mapel->id }}">
-                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Mapel, KKM & Bobot
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+@if(empty($isGuru) || !$isGuru)
+    <!-- Modal Container -->
+    @foreach($mapels as $mapel)
+        <div class="modal fade" id="editMapelModal{{ $mapel->id }}" tabindex="-1" aria-labelledby="editMapelModalLabel{{ $mapel->id }}" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="editMapelModalLabel{{ $mapel->id }}">
+                            <i class="fa-solid fa-pen-to-square me-2"></i> Edit Mapel, KKM & Bobot
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('mapel.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="id" value="{{ $mapel->id }}">
+                        <div class="modal-body p-4 text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold fs-7">Kode Mapel</label>
+                                <input type="text" name="kode_mapel" class="form-control font-monospace" value="{{ $mapel->kode_mapel }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold fs-7">Nama Mata Pelajaran</label>
+                                <input type="text" name="nama_mapel" class="form-control fw-semibold" value="{{ $mapel->nama_mapel }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-layer-group text-primary me-1"></i> Tingkat Kelas</label>
+                                <select name="tingkat" class="form-select" required>
+                                    <option value="Semua" {{ ($mapel->tingkat ?? 'Semua') == 'Semua' ? 'selected' : '' }}>Semua Tingkat (7, 8, 9)</option>
+                                    <option value="7" {{ ($mapel->tingkat ?? '') == '7' ? 'selected' : '' }}>Tingkat 7</option>
+                                    <option value="8" {{ ($mapel->tingkat ?? '') == '8' ? 'selected' : '' }}>Tingkat 8</option>
+                                    <option value="9" {{ ($mapel->tingkat ?? '') == '9' ? 'selected' : '' }}>Tingkat 9</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold fs-7 text-primary">Nilai KKM (Kriteria Ketuntasan Minimal)</label>
+                                <input type="number" name="kkm" class="form-control form-control-lg fw-bold text-center text-primary" value="{{ $mapel->kkm }}" min="0" max="100" required>
+                            </div>
+                            <hr class="my-3">
+                            <h6 class="fw-bold text-dark mb-2 fs-7"><i class="fa-solid fa-sliders text-primary me-1"></i> Komposisi Bobot Penilaian Rapor (%)</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small mb-1">Bobot Tugas (%)</label>
+                                    <input type="number" name="bobot_tugas" class="form-control" value="{{ $mapel->bobot_tugas ?? 20 }}" min="0" max="100" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small mb-1">Bobot UH (%)</label>
+                                    <input type="number" name="bobot_uh" class="form-control" value="{{ $mapel->bobot_uh ?? 30 }}" min="0" max="100" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small mb-1">Bobot UTS (%)</label>
+                                    <input type="number" name="bobot_uts" class="form-control" value="{{ $mapel->bobot_uts ?? 25 }}" min="0" max="100" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small mb-1">Bobot UAS (%)</label>
+                                    <input type="number" name="bobot_uas" class="form-control" value="{{ $mapel->bobot_uas ?? 25 }}" min="0" max="100" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form action="{{ route('mapel.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="id" value="{{ $mapel->id }}">
-                    <div class="modal-body p-4 text-start">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold fs-7">Kode Mapel</label>
-                            <input type="text" name="kode_mapel" class="form-control font-monospace" value="{{ $mapel->kode_mapel }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold fs-7">Nama Mata Pelajaran</label>
-                            <input type="text" name="nama_mapel" class="form-control fw-semibold" value="{{ $mapel->nama_mapel }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-layer-group text-primary me-1"></i> Tingkat Kelas</label>
-                            <select name="tingkat" class="form-select" required>
-                                <option value="Semua" {{ ($mapel->tingkat ?? 'Semua') == 'Semua' ? 'selected' : '' }}>Semua Tingkat (7, 8, 9)</option>
-                                <option value="7" {{ ($mapel->tingkat ?? '') == '7' ? 'selected' : '' }}>Tingkat 7</option>
-                                <option value="8" {{ ($mapel->tingkat ?? '') == '8' ? 'selected' : '' }}>Tingkat 8</option>
-                                <option value="9" {{ ($mapel->tingkat ?? '') == '9' ? 'selected' : '' }}>Tingkat 9</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold fs-7 text-primary">Nilai KKM (Kriteria Ketuntasan Minimal)</label>
-                            <input type="number" name="kkm" class="form-control form-control-lg fw-bold text-center text-primary" value="{{ $mapel->kkm }}" min="0" max="100" required>
-                        </div>
-                        <hr class="my-3">
-                        <h6 class="fw-bold text-dark mb-2 fs-7"><i class="fa-solid fa-sliders text-primary me-1"></i> Komposisi Bobot Penilaian Rapor (%)</h6>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label small mb-1">Bobot Tugas (%)</label>
-                                <input type="number" name="bobot_tugas" class="form-control" value="{{ $mapel->bobot_tugas ?? 20 }}" min="0" max="100" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small mb-1">Bobot UH (%)</label>
-                                <input type="number" name="bobot_uh" class="form-control" value="{{ $mapel->bobot_uh ?? 30 }}" min="0" max="100" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small mb-1">Bobot UTS (%)</label>
-                                <input type="number" name="bobot_uts" class="form-control" value="{{ $mapel->bobot_uts ?? 25 }}" min="0" max="100" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small mb-1">Bobot UAS (%)</label>
-                                <input type="number" name="bobot_uas" class="form-control" value="{{ $mapel->bobot_uas ?? 25 }}" min="0" max="100" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Perubahan
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
-@endforeach
+    @endforeach
+@endif
 @endsection
