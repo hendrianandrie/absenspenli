@@ -144,6 +144,13 @@
                                 <i class="fa-solid fa-star me-1"></i> Penilaian Siswa
                             </a>
                         </li>
+                        @if(Auth::check() && Auth::user()->role === 'admin')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('users.*') ? 'active fw-semibold' : '' }}" href="{{ route('users.index') }}">
+                                    <i class="fa-solid fa-users-gear me-1"></i> Kelola Pengguna
+                                </a>
+                            </li>
+                        @endif
                     @endif
                     @auth
                         <li class="nav-item ms-lg-2">

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MataPelajaranController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -42,6 +43,11 @@ Route::middleware('auth')->group(function () {
 
     // Routes khusus Guru / Admin (Bukan Piket)
     Route::middleware(\App\Http\Middleware\CheckNotPiket::class)->group(function () {
+        // Kelola Pengguna (Admin Only)
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
         // Mata Pelajaran
         Route::get('/mapel', [MataPelajaranController::class, 'index'])->name('mapel.index');
         Route::post('/mapel', [MataPelajaranController::class, 'store'])->name('mapel.store');
