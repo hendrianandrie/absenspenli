@@ -25,9 +25,16 @@ class NilaiController extends Controller
             $mapels = MataPelajaran::orderBy('nama_mapel')->get();
         }
 
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        if ($isGuru && ! empty($user->kelas_diampu) && is_array($user->kelas_diampu)) {
+            $daftarKelas = collect($user->kelas_diampu)->sort()->values();
+        } else {
+            $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        }
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
+        if ($selectedKelas && ! $daftarKelas->contains($selectedKelas)) {
+            $selectedKelas = $daftarKelas->first() ?? '';
+        }
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
 
         $selectedMapel = $mapels->where('id', $selectedMapelId)->first();
@@ -168,9 +175,16 @@ class NilaiController extends Controller
             $mapels = MataPelajaran::orderBy('nama_mapel')->get();
         }
 
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        if ($isGuru && ! empty($user->kelas_diampu) && is_array($user->kelas_diampu)) {
+            $daftarKelas = collect($user->kelas_diampu)->sort()->values();
+        } else {
+            $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        }
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
+        if ($selectedKelas && ! $daftarKelas->contains($selectedKelas)) {
+            $selectedKelas = $daftarKelas->first() ?? '';
+        }
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
 
         $siswas = collect();

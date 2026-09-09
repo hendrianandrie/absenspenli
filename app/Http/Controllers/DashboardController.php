@@ -126,8 +126,15 @@ class DashboardController extends Controller
             $guruMapel = $user->mataPelajaran;
             $guruKelas = is_array($user->kelas_diampu) ? $user->kelas_diampu : [];
 
-            $guruDaftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+            if (! empty($guruKelas)) {
+                $guruDaftarKelas = collect($guruKelas)->sort()->values();
+            } else {
+                $guruDaftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+            }
             $selectedGuruKelas = request()->get('kelas_guru', $guruDaftarKelas->first() ?? '');
+            if ($selectedGuruKelas && ! $guruDaftarKelas->contains($selectedGuruKelas)) {
+                $selectedGuruKelas = $guruDaftarKelas->first() ?? '';
+            }
 
             if ($guruMapel) {
                 // Fetch activities for selected class & subject

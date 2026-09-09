@@ -66,6 +66,7 @@ class TeacherRoleTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Matematika');
         $response->assertSee('Kelas VII A');
+        $response->assertDontSee('Kelas VIII B');
         $response->assertDontSee('IPA');
     }
 
