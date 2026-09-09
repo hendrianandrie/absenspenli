@@ -158,7 +158,9 @@
                             <th class="bg-info-subtle text-info fw-bold" style="width: 120px;">Rata-Rata Murni</th>
                             <th class="bg-primary-subtle text-primary fw-bold" style="width: 130px;">Nilai Akhir Rapor</th>
                             <th class="bg-light fw-bold" style="width: 140px;">Status KKM</th>
-                            <th class="bg-light fw-bold" style="width: 110px;">Aksi</th>
+                            @if(empty($isGuru) || !$isGuru)
+                                <th class="bg-light fw-bold" style="width: 110px;">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -207,11 +209,13 @@
                                         <span class="text-muted fs-7">-</span>
                                     @endif
                                 </td>
-                                <td>
-                                    <a href="{{ route('nilai.raporSiswaPdf', $siswa->id) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
-                                        <i class="fa-solid fa-file-pdf"></i> Rapor
-                                    </a>
-                                </td>
+                                @if(empty($isGuru) || !$isGuru)
+                                    <td>
+                                        <a href="{{ route('nilai.raporSiswaPdf', $siswa->id) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
+                                            <i class="fa-solid fa-file-pdf"></i> Rapor
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
