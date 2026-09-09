@@ -9,13 +9,35 @@ class MataPelajaranController extends Controller
 {
     public function index()
     {
-        $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        $user = auth()->user();
+        $isGuru = $user && $user->role === 'guru';
 
-        return view('mapel.index', compact('mapels'));
+        if ($isGuru && $user->mata_pelajaran_id) {
+            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
+        } elseif ($isGuru) {
+            $mapels = collect();
+        } else {
+            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        }
+
+        return view('mapel.index', compact('mapels', 'isGuru'));
     }
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $isGuru = $user && $user->role === 'guru';
+
+        // Jika guru mencoba menambah mapel baru tanpa ID mapel diampu
+        if ($isGuru && ! $request->id) {
+            return redirect()->route('mapel.index')->with('error', 'Hanya Admin yang dapat menambah mata pelajaran baru.');
+        }
+
+        // Jika guru mencoba mengedit mapel lain yang bukan diampunya
+        if ($isGuru && $request->id && $request->id != $user->mata_pelajaran_id) {
+            return redirect()->route('mapel.index')->with('error', 'Anda hanya dapat mengubah KKM & Bobot mata pelajaran yang Anda ampu.');
+        }
+
         $request->validate([
             'kode_mapel' => 'required|string|max:50|unique:mata_pelajarans,kode_mapel,'.$request->id,
             'nama_mapel' => 'required|string|max:100',
@@ -46,6 +68,10 @@ class MataPelajaranController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->user()->role === 'guru') {
+            return redirect()->route('mapel.index')->with('error', 'Hanya Admin yang dapat menghapus mata pelajaran.');
+        }
+
         $mapel = MataPelajaran::findOrFail($id);
         $mapel->delete();
 
