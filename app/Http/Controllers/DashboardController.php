@@ -126,25 +126,62 @@ class DashboardController extends Controller
         $kelasList = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
         $dataKelas = [];
 
+        $totalGlobalSiswa = 0;
+        $totalGlobalHadir = 0;
+        $totalGlobalSakit = 0;
+        $totalGlobalIzin = 0;
+        $totalGlobalAlpha = 0;
+        $totalGlobalTidakHadir = 0;
+
         foreach ($kelasList as $kelas) {
-            $jumlahTidakHadir = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+            $counts = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
                 ->where('siswas.kelas', $kelas)
                 ->where('absensis.tanggal', $tanggal)
-                ->whereIn('absensis.status', ['Sakit', 'Izin', 'Alpha'])
-                ->count();
+                ->selectRaw('absensis.status, COUNT(*) as aggregate')
+                ->groupBy('absensis.status')
+                ->pluck('aggregate', 'absensis.status');
+
+            $sakit = $counts['Sakit'] ?? 0;
+            $izin = $counts['Izin'] ?? 0;
+            $alpha = $counts['Alpha'] ?? 0;
+            $jumlahTidakHadir = $sakit + $izin + $alpha;
 
             $totalSiswa = Siswa::where('kelas', $kelas)->count();
-            $jumlahHadir = $totalSiswa - $jumlahTidakHadir;
+            $jumlahHadir = max(0, $totalSiswa - $jumlahTidakHadir);
+            $persenHadir = $totalSiswa > 0 ? round(($jumlahHadir / $totalSiswa) * 100, 1) : 0;
+
+            $totalGlobalSiswa += $totalSiswa;
+            $totalGlobalHadir += $jumlahHadir;
+            $totalGlobalSakit += $sakit;
+            $totalGlobalIzin += $izin;
+            $totalGlobalAlpha += $alpha;
+            $totalGlobalTidakHadir += $jumlahTidakHadir;
 
             $dataKelas[] = [
                 'kelas' => $kelas,
                 'total' => $totalSiswa,
                 'hadir' => $jumlahHadir,
+                'sakit' => $sakit,
+                'izin' => $izin,
+                'alpha' => $alpha,
                 'tidak_hadir' => $jumlahTidakHadir,
+                'persen' => $persenHadir,
             ];
         }
 
-        $pdf = Pdf::loadView('dashboard_pdf', compact('dataKelas', 'tanggal'))
+        $totalGlobalPersen = $totalGlobalSiswa > 0 ? round(($totalGlobalHadir / $totalGlobalSiswa) * 100, 1) : 0;
+
+        $summary = [
+            'total_siswa' => $totalGlobalSiswa,
+            'hadir' => $totalGlobalHadir,
+            'sakit' => $totalGlobalSakit,
+            'izin' => $totalGlobalIzin,
+            'alpha' => $totalGlobalAlpha,
+            'tidak_hadir' => $totalGlobalTidakHadir,
+            'persen' => $totalGlobalPersen,
+        ];
+
+        $pdf = Pdf::loadView('dashboard_pdf', compact('dataKelas', 'tanggal', 'summary'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('rekap_kehadiran_'.$tanggal.'.pdf');
