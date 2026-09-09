@@ -71,27 +71,69 @@
             
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-1">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('dashboard') }}">
-                            <i class="fa-solid fa-chart-line me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('siswa.*') ? 'active fw-semibold' : '' }}" href="{{ route('siswa.index') }}">
-                            <i class="fa-solid fa-users me-1"></i> Siswa
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('absensi.harian') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.harian') }}">
-                            <i class="fa-solid fa-calendar-check me-1"></i> Absensi Cepat
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('absensi.rekap') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.rekap') }}">
-                            <i class="fa-solid fa-file-invoice me-1"></i> Rekap Absensi
-                        </a>
-                    </li>
-                    @if(Auth::check() && Auth::user()->role !== 'piket')
+                    @if(Auth::check() && Auth::user()->role === 'piket')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="fa-solid fa-chart-line me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('siswa.*') ? 'active fw-semibold' : '' }}" href="{{ route('siswa.index') }}">
+                                <i class="fa-solid fa-users me-1"></i> Siswa
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('absensi.harian') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.harian') }}">
+                                <i class="fa-solid fa-calendar-check me-1"></i> Absensi Cepat
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('absensi.rekap') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.rekap') }}">
+                                <i class="fa-solid fa-file-invoice me-1"></i> Rekap Absensi
+                            </a>
+                        </li>
+                    @elseif(Auth::check() && Auth::user()->role === 'guru')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="fa-solid fa-chart-line me-1"></i> Dashboard Guru
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('nilai.*') ? 'active fw-semibold' : '' }}" href="{{ route('nilai.index') }}">
+                                <i class="fa-solid fa-star me-1"></i> Manajemen Nilai
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('mapel.*') ? 'active fw-semibold' : '' }}" href="{{ route('mapel.index') }}">
+                                <i class="fa-solid fa-book-open me-1"></i> Bobot Mapel
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('siswa.*') ? 'active fw-semibold' : '' }}" href="{{ route('siswa.index') }}">
+                                <i class="fa-solid fa-users me-1"></i> Data Siswa
+                            </a>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="fa-solid fa-chart-line me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('siswa.*') ? 'active fw-semibold' : '' }}" href="{{ route('siswa.index') }}">
+                                <i class="fa-solid fa-users me-1"></i> Siswa
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('absensi.harian') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.harian') }}">
+                                <i class="fa-solid fa-calendar-check me-1"></i> Absensi Cepat
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('absensi.rekap') ? 'active fw-semibold' : '' }}" href="{{ route('absensi.rekap') }}">
+                                <i class="fa-solid fa-file-invoice me-1"></i> Rekap Absensi
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('mapel.*') ? 'active fw-semibold' : '' }}" href="{{ route('mapel.index') }}">
                                 <i class="fa-solid fa-book-open me-1"></i> Mata Pelajaran
@@ -99,7 +141,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('nilai.*') ? 'active fw-semibold' : '' }}" href="{{ route('nilai.index') }}">
-                                <i class="fa-solid fa-pen-to-square me-1"></i> Manajemen Nilai
+                                <i class="fa-solid fa-star me-1"></i> Penilaian Siswa
                             </a>
                         </li>
                     @endif

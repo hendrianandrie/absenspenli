@@ -15,8 +15,25 @@ class NilaiController extends Controller
 {
     public function index(Request $request)
     {
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
-        $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        $user = auth()->user();
+        $isGuru = $user && $user->role === 'guru';
+
+        // Filter Mapel & Kelas jika Role Guru
+        if ($isGuru && $user->mata_pelajaran_id) {
+            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
+        } else {
+            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        }
+
+        $allKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        if ($isGuru && is_array($user->kelas_diampu) && count($user->kelas_diampu) > 0) {
+            $daftarKelas = collect($user->kelas_diampu)->intersect($allKelas)->values();
+            if ($daftarKelas->isEmpty()) {
+                $daftarKelas = collect($user->kelas_diampu);
+            }
+        } else {
+            $daftarKelas = $allKelas;
+        }
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
@@ -25,49 +42,113 @@ class NilaiController extends Controller
         $siswas = collect();
         $kegiatans = collect();
         $rekapNilai = [];
+        $analytics = [
+            'total_siswa' => 0,
+            'tuntas_count' => 0,
+            'belum_tuntas_count' => 0,
+            'pct_tuntas' => 0,
+            'highest' => 0,
+            'lowest' => 0,
+            'avg_kelas' => 0,
+        ];
 
-        if ($selectedKelas && $selectedMapelId) {
+        if ($selectedKelas && $selectedMapelId && $selectedMapel) {
             $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
             $kegiatans = Kegiatan::where('mata_pelajaran_id', $selectedMapelId)
                 ->where('kelas', $selectedKelas)
                 ->orderBy('tanggal')
                 ->get();
 
-            // Hitung Rata-rata Murni per siswa
+            $kkm = $selectedMapel->kkm ?? 75;
+            $bTugas = $selectedMapel->bobot_tugas ?? 20;
+            $bUh = $selectedMapel->bobot_uh ?? 30;
+            $bUts = $selectedMapel->bobot_uts ?? 25;
+            $bUas = $selectedMapel->bobot_uas ?? 25;
+
+            $allFinalScores = [];
+            $tuntasCount = 0;
+            $belumTuntasCount = 0;
+
             foreach ($siswas as $siswa) {
                 $scores = [];
+                $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
+
                 foreach ($kegiatans as $kegiatan) {
                     $nilaiObj = Nilai::where('kegiatan_id', $kegiatan->id)
                         ->where('siswa_id', $siswa->id)
                         ->first();
                     $val = $nilaiObj ? $nilaiObj->nilai : null;
                     $scores[$kegiatan->id] = $val;
+
+                    if ($val !== null && isset($scoresByJenis[$kegiatan->jenis])) {
+                        $scoresByJenis[$kegiatan->jenis][] = $val;
+                    }
                 }
 
                 $validScores = array_filter($scores, fn ($n) => $n !== null);
-                $rataRata = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 1) : null;
+                $rataRataMurni = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 1) : null;
 
-                // Hitung predikat berdasarkan KKM mapel
-                $kkm = $selectedMapel ? $selectedMapel->kkm : 75;
+                // Hitung Rata-Rata per Kategori untuk Bobot Penilaian
+                $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
+                $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
+                $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
+                $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+
+                $weightedSum = 0;
+                $weightTotal = 0;
+
+                if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
+                if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
+                if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
+                if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+
+                $nilaiAkhirBerbobot = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : $rataRataMurni;
+
                 $predikat = '-';
-                if ($rataRata !== null) {
-                    if ($rataRata >= 90) {
+                $statusKetuntasan = '-';
+                $scoreUsed = $nilaiAkhirBerbobot ?? $rataRataMurni;
+
+                if ($scoreUsed !== null) {
+                    $allFinalScores[] = $scoreUsed;
+                    if ($scoreUsed >= 90) {
                         $predikat = 'A (Sangat Baik)';
-                    } elseif ($rataRata >= 80) {
+                    } elseif ($scoreUsed >= 80) {
                         $predikat = 'B (Baik)';
-                    } elseif ($rataRata >= $kkm) {
+                    } elseif ($scoreUsed >= $kkm) {
                         $predikat = 'C (Cukup / Tuntas)';
                     } else {
                         $predikat = 'D (Perlu Bimbingan)';
+                    }
+
+                    if ($scoreUsed >= $kkm) {
+                        $statusKetuntasan = 'TUNTAS';
+                        $tuntasCount++;
+                    } else {
+                        $statusKetuntasan = 'BELUM TUNTAS';
+                        $belumTuntasCount++;
                     }
                 }
 
                 $rekapNilai[$siswa->id] = [
                     'scores' => $scores,
-                    'rata_rata' => $rataRata,
+                    'rata_rata' => $rataRataMurni,
+                    'nilai_akhir' => $nilaiAkhirBerbobot,
                     'predikat' => $predikat,
+                    'status_ketuntasan' => $statusKetuntasan,
                 ];
             }
+
+            $totalStudents = count($siswas);
+            $totalEvaluated = count($allFinalScores);
+            $analytics = [
+                'total_siswa' => $totalStudents,
+                'tuntas_count' => $tuntasCount,
+                'belum_tuntas_count' => $belumTuntasCount,
+                'pct_tuntas' => $totalEvaluated > 0 ? round(($tuntasCount / $totalEvaluated) * 100, 1) : 0,
+                'highest' => count($allFinalScores) > 0 ? max($allFinalScores) : 0,
+                'lowest' => count($allFinalScores) > 0 ? min($allFinalScores) : 0,
+                'avg_kelas' => count($allFinalScores) > 0 ? round(array_sum($allFinalScores) / count($allFinalScores), 1) : 0,
+            ];
         }
 
         return view('nilai.index', compact(
@@ -78,14 +159,32 @@ class NilaiController extends Controller
             'selectedMapel',
             'siswas',
             'kegiatans',
-            'rekapNilai'
+            'rekapNilai',
+            'analytics',
+            'isGuru'
         ));
     }
 
     public function createKegiatan(Request $request)
     {
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
-        $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        $user = auth()->user();
+        $isGuru = $user && $user->role === 'guru';
+
+        if ($isGuru && $user->mata_pelajaran_id) {
+            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
+        } else {
+            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        }
+
+        $allKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        if ($isGuru && is_array($user->kelas_diampu) && count($user->kelas_diampu) > 0) {
+            $daftarKelas = collect($user->kelas_diampu)->intersect($allKelas)->values();
+            if ($daftarKelas->isEmpty()) {
+                $daftarKelas = collect($user->kelas_diampu);
+            }
+        } else {
+            $daftarKelas = $allKelas;
+        }
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
@@ -95,7 +194,7 @@ class NilaiController extends Controller
             $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
         }
 
-        return view('nilai.create_kegiatan', compact('daftarKelas', 'mapels', 'selectedKelas', 'selectedMapelId', 'siswas'));
+        return view('nilai.create_kegiatan', compact('daftarKelas', 'mapels', 'selectedKelas', 'selectedMapelId', 'siswas', 'isGuru'));
     }
 
     public function storeKegiatan(Request $request)
@@ -248,5 +347,87 @@ class NilaiController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('Lembar_Cetak_Kosong_'.$kelas.'.pdf');
+    }
+
+    public function raporSiswaPdf($siswaId)
+    {
+        $siswa = Siswa::findOrFail($siswaId);
+        $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+
+        // Rekap Absensi Siswa
+        $absensiCounts = \App\Models\Absensi::where('siswa_id', $siswa->id)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $rekapAbsensi = [
+            'hadir' => $absensiCounts['Hadir'] ?? 0,
+            'sakit' => $absensiCounts['Sakit'] ?? 0,
+            'izin' => $absensiCounts['Izin'] ?? 0,
+            'alpha' => $absensiCounts['Alpha'] ?? 0,
+        ];
+
+        // Rekap Nilai Siswa Semua Mapel
+        $raporMapel = [];
+        foreach ($mapels as $mapel) {
+            $kegiatans = Kegiatan::where('mata_pelajaran_id', $mapel->id)
+                ->where('kelas', $siswa->kelas)
+                ->pluck('id');
+
+            if ($kegiatans->isEmpty()) {
+                $raporMapel[] = [
+                    'mapel' => $mapel,
+                    'nilai_akhir' => null,
+                    'predikat' => '-',
+                    'status' => 'Belum Ada Nilai',
+                    'deskripsi' => 'Belum ada penilaian kegiatan untuk mata pelajaran ini.',
+                ];
+                continue;
+            }
+
+            $nilais = Nilai::whereIn('kegiatan_id', $kegiatans)
+                ->where('siswa_id', $siswa->id)
+                ->pluck('nilai');
+
+            $avg = $nilais->count() > 0 ? round($nilais->avg(), 1) : null;
+            $kkm = $mapel->kkm ?? 75;
+
+            $predikat = '-';
+            $status = '-';
+            $deskripsi = 'Belum Mengikuti Penilaian';
+
+            if ($avg !== null) {
+                if ($avg >= 90) {
+                    $predikat = 'A';
+                    $status = 'Sangat Baik';
+                    $deskripsi = 'Menunjukkan penguasaan kompetensi yang sangat baik dalam seluruh materi.';
+                } elseif ($avg >= 80) {
+                    $predikat = 'B';
+                    $status = 'Baik';
+                    $deskripsi = 'Menunjukkan penguasaan kompetensi yang baik dalam materi pembelajaran.';
+                } elseif ($avg >= $kkm) {
+                    $predikat = 'C';
+                    $status = 'Cukup';
+                    $deskripsi = 'Telah mencapai kriteria ketuntasan minimal (KKM) yang ditetapkan.';
+                } else {
+                    $predikat = 'D';
+                    $status = 'Perlu Bimbingan';
+                    $deskripsi = 'Perlu bimbingan dan remedial untuk mencapai kriteria ketuntasan minimal (KKM).';
+                }
+            }
+
+            $raporMapel[] = [
+                'mapel' => $mapel,
+                'nilai_akhir' => $avg,
+                'predikat' => $predikat,
+                'status' => $status,
+                'deskripsi' => $deskripsi,
+            ];
+        }
+
+        $pdf = Pdf::loadView('nilai.pdf_rapor_siswa', compact('siswa', 'raporMapel', 'rekapAbsensi'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Rapor_Siswa_'.$siswa->nis.'_'.str_replace(' ', '_', $siswa->nama).'.pdf');
     }
 }

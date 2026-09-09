@@ -20,6 +20,10 @@ class MataPelajaranController extends Controller
             'kode_mapel' => 'required|string|max:50|unique:mata_pelajarans,kode_mapel,'.$request->id,
             'nama_mapel' => 'required|string|max:100',
             'kkm' => 'required|integer|min:0|max:100',
+            'bobot_tugas' => 'nullable|integer|min:0|max:100',
+            'bobot_uh' => 'nullable|integer|min:0|max:100',
+            'bobot_uts' => 'nullable|integer|min:0|max:100',
+            'bobot_uas' => 'nullable|integer|min:0|max:100',
         ]);
 
         MataPelajaran::updateOrCreate(
@@ -28,10 +32,14 @@ class MataPelajaranController extends Controller
                 'kode_mapel' => strtoupper($request->kode_mapel),
                 'nama_mapel' => $request->nama_mapel,
                 'kkm' => $request->kkm,
+                'bobot_tugas' => $request->input('bobot_tugas', 20),
+                'bobot_uh' => $request->input('bobot_uh', 30),
+                'bobot_uts' => $request->input('bobot_uts', 25),
+                'bobot_uas' => $request->input('bobot_uas', 25),
             ]
         );
 
-        return redirect()->route('mapel.index')->with('success', 'Mata Pelajaran berhasil disimpan!');
+        return redirect()->route('mapel.index')->with('success', 'Mata Pelajaran & Bobot Penilaian berhasil disimpan!');
     }
 
     public function destroy($id)

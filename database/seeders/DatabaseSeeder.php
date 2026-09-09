@@ -44,9 +44,38 @@ class DatabaseSeeder extends Seeder
             ['kode_mapel' => 'PJK-SMP', 'nama_mapel' => 'PJOK', 'kkm' => 75],
         ];
 
+        $mapelMtk = null;
+        $mapelIndo = null;
+
         foreach ($mapels as $mapel) {
-            MataPelajaran::firstOrCreate(['kode_mapel' => $mapel['kode_mapel']], $mapel);
+            $m = MataPelajaran::firstOrCreate(['kode_mapel' => $mapel['kode_mapel']], $mapel);
+            if ($m->kode_mapel === 'MAT-SMP') $mapelMtk = $m;
+            if ($m->kode_mapel === 'BIN-SMP') $mapelIndo = $m;
         }
+
+        // Default Guru Matematika
+        User::updateOrCreate(
+            ['name' => 'guru_mtk'],
+            [
+                'email' => 'guru_mtk@smp.sch.id',
+                'password' => Hash::make('guru123'),
+                'role' => 'guru',
+                'mata_pelajaran_id' => $mapelMtk ? $mapelMtk->id : null,
+                'kelas_diampu' => ['VII A', 'VII B', 'VIII A', 'IX A'],
+            ]
+        );
+
+        // Default Guru Bahasa Indonesia
+        User::updateOrCreate(
+            ['name' => 'guru_indo'],
+            [
+                'email' => 'guru_indo@smp.sch.id',
+                'password' => Hash::make('guru123'),
+                'role' => 'guru',
+                'mata_pelajaran_id' => $mapelIndo ? $mapelIndo->id : null,
+                'kelas_diampu' => ['VII A', 'VII C', 'VIII B', 'IX B'],
+            ]
+        );
 
         // Call Siswa CSV Seeder
         $this->call(SiswaCsvSeeder::class);

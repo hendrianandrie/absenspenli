@@ -51,14 +51,76 @@
 </div>
 
 @if($selectedKelas && $selectedMapel)
+    <!-- Card Analytics Ketuntasan & Statistik Penilaian -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-success border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Ketuntasan KKM</span>
+                        <h2 class="fw-bold mb-0 text-success">{{ $analytics['pct_tuntas'] }}%</h2>
+                        <small class="text-muted" style="font-size: 11px;">{{ $analytics['tuntas_count'] }} Tuntas / {{ $analytics['belum_tuntas_count'] }} Remedial</small>
+                    </div>
+                    <div class="bg-success-subtle p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-circle-check fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Rata-Rata Kelas</span>
+                        <h2 class="fw-bold mb-0 text-primary">{{ $analytics['avg_kelas'] }}</h2>
+                        <small class="text-muted" style="font-size: 11px;">Target KKM: {{ $selectedMapel->kkm }}</small>
+                    </div>
+                    <div class="bg-primary-subtle p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-chart-simple fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-info border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Nilai Tertinggi</span>
+                        <h2 class="fw-bold mb-0 text-info">{{ $analytics['highest'] }}</h2>
+                        <small class="text-muted" style="font-size: 11px;">Skor terbaik kelas</small>
+                    </div>
+                    <div class="bg-info-subtle p-3 rounded-circle text-info">
+                        <i class="fa-solid fa-trophy fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-warning border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Nilai Terendah</span>
+                        <h2 class="fw-bold mb-0 text-warning">{{ $analytics['lowest'] }}</h2>
+                        <small class="text-muted" style="font-size: 11px;">Perlu pembinaan</small>
+                    </div>
+                    <div class="bg-warning-subtle p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-triangle-exclamation fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Informasi & Tombol Tambah Kegiatan -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <h5 class="fw-bold mb-0">
-                Matriks Nilai Kelas {{ $selectedKelas }} — {{ $selectedMapel->nama_mapel }} 
+                Matriks Penilaian Kelas {{ $selectedKelas }} — {{ $selectedMapel->nama_mapel }} 
                 <span class="badge bg-primary fs-6 ms-2">KKM: {{ $selectedMapel->kkm }}</span>
             </h5>
-            <small class="text-muted">Metode perhitungan: **Rata-rata Murni** seluruh kegiatan penilaian.</small>
+            <small class="text-muted">
+                Bobot Mapel: Tugas ({{ $selectedMapel->bobot_tugas ?? 20 }}%), UH ({{ $selectedMapel->bobot_uh ?? 30 }}%), UTS ({{ $selectedMapel->bobot_uts ?? 25 }}%), UAS ({{ $selectedMapel->bobot_uas ?? 25 }}%).
+            </small>
         </div>
         <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-success rounded-3 shadow-sm">
             <i class="fa-solid fa-plus-circle me-1"></i> Tambah Kegiatan Penilaian Baru
@@ -93,15 +155,18 @@
                             @empty
                                 <th class="text-muted fw-normal">Belum ada kegiatan penilaian</th>
                             @endforelse
-                            <th class="bg-primary-subtle text-primary fw-bold" style="width: 130px;">Rata-Rata Murni</th>
-                            <th class="bg-light fw-bold" style="width: 150px;">Predikat</th>
+                            <th class="bg-info-subtle text-info fw-bold" style="width: 120px;">Rata-Rata Murni</th>
+                            <th class="bg-primary-subtle text-primary fw-bold" style="width: 130px;">Nilai Akhir Rapor</th>
+                            <th class="bg-light fw-bold" style="width: 140px;">Status KKM</th>
+                            <th class="bg-light fw-bold" style="width: 110px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($siswas as $idx => $siswa)
                             @php
-                                $info = $rekapNilai[$siswa->id] ?? ['scores' => [], 'rata_rata' => null, 'predikat' => '-'];
-                                $avg = $info['rata_rata'];
+                                $info = $rekapNilai[$siswa->id] ?? ['scores' => [], 'rata_rata' => null, 'nilai_akhir' => null, 'predikat' => '-', 'status_ketuntasan' => '-'];
+                                $avgMurni = $info['rata_rata'];
+                                $nilaiAkhir = $info['nilai_akhir'];
                                 $kkm = $selectedMapel->kkm;
                             @endphp
                             <tr>
@@ -121,16 +186,19 @@
                                 @empty
                                     <td class="text-muted">-</td>
                                 @endforelse
+                                <td class="bg-info-subtle fw-semibold">
+                                    {{ $avgMurni !== null ? $avgMurni : '-' }}
+                                </td>
                                 <td class="bg-primary-subtle fw-bold fs-6">
-                                    @if($avg !== null)
-                                        <span class="{{ $avg < $kkm ? 'text-danger fw-bold' : 'text-primary' }}">{{ $avg }}</span>
+                                    @if($nilaiAkhir !== null)
+                                        <span class="{{ $nilaiAkhir < $kkm ? 'text-danger' : 'text-primary' }}">{{ $nilaiAkhir }}</span>
                                     @else
                                         <span class="text-muted fs-7">-</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($avg !== null)
-                                        @if($avg >= $kkm)
+                                    @if($nilaiAkhir !== null)
+                                        @if($nilaiAkhir >= $kkm)
                                             <span class="badge badge-kkm-pass px-2 py-1 fs-7"><i class="fa-solid fa-circle-check me-1"></i> {{ $info['predikat'] }}</span>
                                         @else
                                             <span class="badge badge-kkm-fail px-2 py-1 fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ $info['predikat'] }}</span>
@@ -138,6 +206,11 @@
                                     @else
                                         <span class="text-muted fs-7">-</span>
                                     @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('nilai.raporSiswaPdf', $siswa->id) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
+                                        <i class="fa-solid fa-file-pdf"></i> Rapor
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach

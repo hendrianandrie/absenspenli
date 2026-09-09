@@ -102,6 +102,52 @@ class DashboardController extends Controller
         $statsBulanIni = $calcStats($startOfMonth, $endOfMonth);
         $statsKeseluruhan = $calcStats();
 
+        $user = auth()->user();
+        $isGuru = $user && $user->role === 'guru';
+
+        $guruMapel = null;
+        $guruKelas = [];
+        $guruKegiatans = collect();
+        $guruStats = [];
+
+        if ($isGuru) {
+            $guruMapel = $user->mataPelajaran;
+            $guruKelas = is_array($user->kelas_diampu) ? $user->kelas_diampu : [];
+
+            if ($guruMapel) {
+                $guruKegiatans = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
+                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->orderBy('tanggal', 'desc')
+                    ->take(10)
+                    ->get();
+
+                $totalSiswaDiampu = Siswa::when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))->count();
+                $totalKegiatanMapel = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
+                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->count();
+
+                $kegiatanIds = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
+                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->pluck('id');
+
+                $avgNilaiMapel = Nilai::whereIn('kegiatan_id', $kegiatanIds)->avg('nilai');
+
+                $nilaisAll = Nilai::whereIn('kegiatan_id', $kegiatanIds)->pluck('nilai');
+                $tuntasCount = $nilaisAll->filter(fn ($v) => $v >= $guruMapel->kkm)->count();
+                $totalNilaiEntry = $nilaisAll->count();
+                $pctTuntas = $totalNilaiEntry > 0 ? round(($tuntasCount / $totalNilaiEntry) * 100, 1) : 0;
+
+                $guruStats = [
+                    'total_siswa' => $totalSiswaDiampu,
+                    'total_kegiatan' => $totalKegiatanMapel,
+                    'avg_nilai' => $avgNilaiMapel ? round($avgNilaiMapel, 1) : 0,
+                    'pct_tuntas' => $pctTuntas,
+                    'tuntas_count' => $tuntasCount,
+                    'belum_tuntas_count' => $totalNilaiEntry - $tuntasCount,
+                ];
+            }
+        }
+
         return view('dashboard', compact(
             'dataKelas',
             'tanggal',
@@ -115,7 +161,12 @@ class DashboardController extends Controller
             'statsHariIni',
             'statsMingguIni',
             'statsBulanIni',
-            'statsKeseluruhan'
+            'statsKeseluruhan',
+            'isGuru',
+            'guruMapel',
+            'guruKelas',
+            'guruKegiatans',
+            'guruStats'
         ));
     }
 

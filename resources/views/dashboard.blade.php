@@ -15,7 +15,90 @@
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4">
-    @if(Auth::check() && Auth::user()->role === 'piket')
+    @if(isset($isGuru) && $isGuru)
+        <!-- DASHBOARD KHUSUS GURU MATA PELAJARAN -->
+        <div class="col-12 mb-2">
+            <div class="card card-custom p-4 bg-primary text-white shadow-sm border-0 rounded-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <span class="badge bg-white text-primary rounded-pill px-3 py-1 mb-2 fw-semibold">
+                            <i class="fa-solid fa-chalkboard-user me-1"></i> Dashboard Guru Mata Pelajaran
+                        </span>
+                        <h3 class="fw-bold mb-1 text-white">Guru {{ $guruMapel->nama_mapel ?? 'Mata Pelajaran' }}</h3>
+                        <p class="text-white-50 mb-0 small">
+                            <i class="fa-solid fa-id-card me-1"></i> pengampu mata pelajaran {{ $guruMapel->nama_mapel ?? '-' }} (KKM: {{ $guruMapel->kkm ?? 75 }}) 
+                            • Kelas Diampu: <strong>{{ !empty($guruKelas) ? implode(', ', $guruKelas) : 'Semua Kelas' }}</strong>
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('nilai.kegiatan.create') }}" class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-3 shadow-sm">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Input Nilai Baru
+                        </a>
+                        <a href="{{ route('nilai.index') }}" class="btn btn-light text-primary fw-bold px-3 py-2 rounded-3 shadow-sm">
+                            <i class="fa-solid fa-list-check me-1"></i> Kelola Nilai
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Total Siswa Diampu</span>
+                        <h2 class="fw-bold mb-0 text-primary">{{ $guruStats['total_siswa'] ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-primary-subtle p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-users fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-info border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Kegiatan Penilaian</span>
+                        <h2 class="fw-bold mb-0 text-info">{{ $guruStats['total_kegiatan'] ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-info-subtle p-3 rounded-circle text-info">
+                        <i class="fa-solid fa-clipboard-list fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-warning border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Rata-Rata Nilai</span>
+                        <h2 class="fw-bold mb-0 text-warning">{{ $guruStats['avg_nilai'] ?? 0 }}</h2>
+                    </div>
+                    <div class="bg-warning-subtle p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-star fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-custom p-3 bg-white stat-card border-start border-success border-4 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fs-7 text-uppercase fw-semibold">Ketuntasan KKM</span>
+                        <h2 class="fw-bold mb-0 text-success">{{ $guruStats['pct_tuntas'] ?? 0 }}%</h2>
+                        <small class="text-muted" style="font-size: 11px;">{{ $guruStats['tuntas_count'] ?? 0 }} Tuntas / {{ $guruStats['belum_tuntas_count'] ?? 0 }} Remedial</small>
+                    </div>
+                    <div class="bg-success-subtle p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-circle-check fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif(Auth::check() && Auth::user()->role === 'piket')
         <div class="col-sm-6 col-xl-6">
             <div class="card card-custom p-3 bg-white stat-card border-start border-primary border-4 shadow-sm">
                 <div class="d-flex align-items-center justify-content-between">

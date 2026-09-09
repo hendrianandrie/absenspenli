@@ -15,6 +15,10 @@ class MataPelajaran extends Model
         'kode_mapel',
         'nama_mapel',
         'kkm',
+        'bobot_tugas',
+        'bobot_uh',
+        'bobot_uts',
+        'bobot_uas',
     ];
 
     public function kegiatans()
