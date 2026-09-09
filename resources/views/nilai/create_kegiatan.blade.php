@@ -22,7 +22,9 @@
                 <label class="form-label fw-semibold fs-7">Mata Pelajaran</label>
                 <select name="mata_pelajaran_id" class="form-select" required>
                     @foreach($mapels as $m)
-                        <option value="{{ $m->id }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>{{ $m->nama_mapel }}</option>
+                        <option value="{{ $m->id }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
+                            {{ $m->nama_mapel }} @if(($m->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $m->tingkat }}] @endif
+                        </option>
                     @endforeach
                 </select>
             </div>

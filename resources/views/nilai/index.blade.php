@@ -37,7 +37,7 @@
             <select name="mata_pelajaran_id" class="form-select" onchange="this.form.submit()">
                 @foreach ($mapels as $m)
                     <option value="{{ $m->id }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
-                        {{ $m->nama_mapel }} (KKM: {{ $m->kkm }})
+                        {{ $m->nama_mapel }} @if(($m->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $m->tingkat }}] @endif (KKM: {{ $m->kkm }})
                     </option>
                 @endforeach
             </select>

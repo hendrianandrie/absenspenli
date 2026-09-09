@@ -34,14 +34,14 @@ class DatabaseSeeder extends Seeder
 
         // Default Mata Pelajaran SMP
         $mapels = [
-            ['kode_mapel' => 'MAT-SMP', 'nama_mapel' => 'Matematika', 'kkm' => 75],
-            ['kode_mapel' => 'BIN-SMP', 'nama_mapel' => 'Bahasa Indonesia', 'kkm' => 75],
-            ['kode_mapel' => 'BIG-SMP', 'nama_mapel' => 'Bahasa Inggris', 'kkm' => 75],
-            ['kode_mapel' => 'IPA-SMP', 'nama_mapel' => 'Ilmu Pengetahuan Alam (IPA)', 'kkm' => 75],
-            ['kode_mapel' => 'IPS-SMP', 'nama_mapel' => 'Ilmu Pengetahuan Sosial (IPS)', 'kkm' => 75],
-            ['kode_mapel' => 'INF-SMP', 'nama_mapel' => 'Informatika', 'kkm' => 75],
-            ['kode_mapel' => 'PAI-SMP', 'nama_mapel' => 'Pendidikan Agama & Budi Pekerti', 'kkm' => 75],
-            ['kode_mapel' => 'PJK-SMP', 'nama_mapel' => 'PJOK', 'kkm' => 75],
+            ['kode_mapel' => 'MAT-SMP', 'nama_mapel' => 'Matematika', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'BIN-SMP', 'nama_mapel' => 'Bahasa Indonesia', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'BIG-SMP', 'nama_mapel' => 'Bahasa Inggris', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'IPA-SMP', 'nama_mapel' => 'Ilmu Pengetahuan Alam (IPA)', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'IPS-SMP', 'nama_mapel' => 'Ilmu Pengetahuan Sosial (IPS)', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'INF-SMP', 'nama_mapel' => 'Informatika', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'PAI-SMP', 'nama_mapel' => 'Pendidikan Agama & Budi Pekerti', 'tingkat' => 'Semua', 'kkm' => 75],
+            ['kode_mapel' => 'PJK-SMP', 'nama_mapel' => 'PJOK', 'tingkat' => 'Semua', 'kkm' => 75],
         ];
 
         $mapelMtk = null;

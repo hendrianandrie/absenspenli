@@ -24,6 +24,15 @@
                     <input type="text" name="nama_mapel" class="form-control" placeholder="Contoh: Matematika" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-layer-group text-primary me-1"></i> Tingkat Kelas</label>
+                    <select name="tingkat" class="form-select" required>
+                        <option value="Semua">Semua Tingkat (7, 8, 9)</option>
+                        <option value="7">Tingkat 7</option>
+                        <option value="8">Tingkat 8</option>
+                        <option value="9">Tingkat 9</option>
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label class="form-label fw-semibold fs-7">KKM Minimal</label>
                     <input type="number" name="kkm" class="form-control" value="75" min="0" max="100" required>
                 </div>
@@ -69,6 +78,7 @@
                             <tr>
                                 <th>Kode</th>
                                 <th>Nama Mata Pelajaran</th>
+                                <th class="text-center">Tingkat</th>
                                 <th class="text-center">KKM</th>
                                 <th class="text-center">Bobot Penilaian (T/UH/UTS/UAS)</th>
                                 <th class="text-end">Aksi</th>
@@ -79,6 +89,13 @@
                                 <tr>
                                     <td><span class="badge bg-secondary font-monospace fs-6">{{ $mapel->kode_mapel }}</span></td>
                                     <td class="fw-semibold">{{ $mapel->nama_mapel }}</td>
+                                    <td class="text-center">
+                                        @if(($mapel->tingkat ?? 'Semua') == 'Semua')
+                                            <span class="badge bg-secondary">Semua (7,8,9)</span>
+                                        @else
+                                            <span class="badge bg-info text-dark">Tingkat {{ $mapel->tingkat }}</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <span class="badge bg-primary fs-6 px-3 py-2"><i class="fa-solid fa-star text-warning me-1"></i> {{ $mapel->kkm }}</span>
                                     </td>
@@ -132,6 +149,15 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold fs-7">Nama Mata Pelajaran</label>
                             <input type="text" name="nama_mapel" class="form-control fw-semibold" value="{{ $mapel->nama_mapel }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-layer-group text-primary me-1"></i> Tingkat Kelas</label>
+                            <select name="tingkat" class="form-select" required>
+                                <option value="Semua" {{ ($mapel->tingkat ?? 'Semua') == 'Semua' ? 'selected' : '' }}>Semua Tingkat (7, 8, 9)</option>
+                                <option value="7" {{ ($mapel->tingkat ?? '') == '7' ? 'selected' : '' }}>Tingkat 7</option>
+                                <option value="8" {{ ($mapel->tingkat ?? '') == '8' ? 'selected' : '' }}>Tingkat 8</option>
+                                <option value="9" {{ ($mapel->tingkat ?? '') == '9' ? 'selected' : '' }}>Tingkat 9</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold fs-7 text-primary">Nilai KKM (Kriteria Ketuntasan Minimal)</label>

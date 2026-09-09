@@ -19,6 +19,7 @@ class MataPelajaranController extends Controller
         $request->validate([
             'kode_mapel' => 'required|string|max:50|unique:mata_pelajarans,kode_mapel,'.$request->id,
             'nama_mapel' => 'required|string|max:100',
+            'tingkat' => 'required|string|in:7,8,9,Semua',
             'kkm' => 'required|integer|min:0|max:100',
             'bobot_tugas' => 'nullable|integer|min:0|max:100',
             'bobot_uh' => 'nullable|integer|min:0|max:100',
@@ -31,6 +32,7 @@ class MataPelajaranController extends Controller
             [
                 'kode_mapel' => strtoupper($request->kode_mapel),
                 'nama_mapel' => $request->nama_mapel,
+                'tingkat' => $request->tingkat ?? 'Semua',
                 'kkm' => $request->kkm,
                 'bobot_tugas' => $request->input('bobot_tugas', 20),
                 'bobot_uh' => $request->input('bobot_uh', 30),
