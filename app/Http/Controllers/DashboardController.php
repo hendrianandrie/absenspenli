@@ -107,20 +107,45 @@ class DashboardController extends Controller
 
         $guruMapel = null;
         $guruKelas = [];
+        $guruDaftarKelas = collect();
+        $selectedGuruKelas = '';
         $guruKegiatans = collect();
         $guruStats = [];
+        $guruSiswasWithAbsen = collect();
+        $guruAbsenStats = [
+            'total' => 0,
+            'hadir' => 0,
+            'sakit' => 0,
+            'izin' => 0,
+            'alpha' => 0,
+            'tidak_hadir' => 0,
+            'hadir_pct' => 0,
+        ];
 
         if ($isGuru) {
             $guruMapel = $user->mataPelajaran;
             $guruKelas = is_array($user->kelas_diampu) ? $user->kelas_diampu : [];
 
+            $allKelasList = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+            if (! empty($guruKelas)) {
+                $guruDaftarKelas = collect($guruKelas)->intersect($allKelasList)->values();
+                if ($guruDaftarKelas->isEmpty()) {
+                    $guruDaftarKelas = collect($guruKelas);
+                }
+            } else {
+                $guruDaftarKelas = $allKelasList;
+            }
+
+            $selectedGuruKelas = request()->get('kelas_guru', $guruDaftarKelas->first() ?? '');
+
             if ($guruMapel) {
+                // Fetch activities for selected class & subject
                 $guruKegiatans = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
-                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->when($selectedGuruKelas, fn ($q) => $q->where('kelas', $selectedGuruKelas))
                     ->orderBy('tanggal', 'desc')
-                    ->take(10)
                     ->get();
 
+                // Total students in assigned classes
                 $totalSiswaDiampu = Siswa::when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))->count();
                 $totalKegiatanMapel = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
                     ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
@@ -131,7 +156,6 @@ class DashboardController extends Controller
                     ->pluck('id');
 
                 $avgNilaiMapel = Nilai::whereIn('kegiatan_id', $kegiatanIds)->avg('nilai');
-
                 $nilaisAll = Nilai::whereIn('kegiatan_id', $kegiatanIds)->pluck('nilai');
                 $tuntasCount = $nilaisAll->filter(fn ($v) => $v >= $guruMapel->kkm)->count();
                 $totalNilaiEntry = $nilaisAll->count();
@@ -145,6 +169,60 @@ class DashboardController extends Controller
                     'tuntas_count' => $tuntasCount,
                     'belum_tuntas_count' => $totalNilaiEntry - $tuntasCount,
                 ];
+
+                // Ambil Data Siswa & Absensi Hari Ini untuk Kelas Terpilih
+                if ($selectedGuruKelas) {
+                    $siswasInClass = Siswa::where('kelas', $selectedGuruKelas)->orderBy('nama')->get();
+
+                    $absensiToday = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+                        ->where('siswas.kelas', $selectedGuruKelas)
+                        ->where('absensis.tanggal', $tanggal)
+                        ->pluck('absensis.status', 'siswas.id');
+
+                    $hadirCount = 0;
+                    $sakitCount = 0;
+                    $izinCount = 0;
+                    $alphaCount = 0;
+
+                    $guruSiswasWithAbsen = $siswasInClass->map(function ($s) use ($absensiToday, $guruMapel, $selectedGuruKelas, &$hadirCount, &$sakitCount, &$izinCount, &$alphaCount) {
+                        $st = $absensiToday[$s->id] ?? 'Hadir'; // Default Hadir jika belum diisi absensi
+                        if ($st === 'Sakit') $sakitCount++;
+                        elseif ($st === 'Izin') $izinCount++;
+                        elseif ($st === 'Alpha') $alphaCount++;
+                        else $hadirCount++;
+
+                        // Nilai siswa di mapel ini
+                        $kegiatanIdsClass = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
+                            ->where('kelas', $selectedGuruKelas)
+                            ->pluck('id');
+
+                        $scores = Nilai::whereIn('kegiatan_id', $kegiatanIdsClass)
+                            ->where('siswa_id', $s->id)
+                            ->pluck('nilai');
+
+                        $avg = $scores->count() > 0 ? round($scores->avg(), 1) : null;
+                        $kkm = $guruMapel->kkm ?? 75;
+
+                        return [
+                            'siswa' => $s,
+                            'status_absen' => $st,
+                            'nilai_akhir' => $avg,
+                            'is_tuntas' => $avg !== null ? ($avg >= $kkm) : null,
+                        ];
+                    });
+
+                    $tot = count($siswasInClass);
+                    $tidakHadirCount = $sakitCount + $izinCount + $alphaCount;
+                    $guruAbsenStats = [
+                        'total' => $tot,
+                        'hadir' => $hadirCount,
+                        'sakit' => $sakitCount,
+                        'izin' => $izinCount,
+                        'alpha' => $alphaCount,
+                        'tidak_hadir' => $tidakHadirCount,
+                        'hadir_pct' => $tot > 0 ? round(($hadirCount / $tot) * 100, 1) : 0,
+                    ];
+                }
             }
         }
 
@@ -165,8 +243,12 @@ class DashboardController extends Controller
             'isGuru',
             'guruMapel',
             'guruKelas',
+            'guruDaftarKelas',
+            'selectedGuruKelas',
             'guruKegiatans',
-            'guruStats'
+            'guruStats',
+            'guruSiswasWithAbsen',
+            'guruAbsenStats'
         ));
     }
 

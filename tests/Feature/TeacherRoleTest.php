@@ -37,10 +37,12 @@ class TeacherRoleTest extends TestCase
         $response->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($guru);
 
-        $dashResponse = $this->actingAs($guru)->get('/dashboard');
+        $dashResponse = $this->actingAs($guru)->get('/dashboard?kelas_guru=VII+A');
         $dashResponse->assertStatus(200);
         $dashResponse->assertSee('Dashboard Guru Mata Pelajaran');
         $dashResponse->assertSee('Matematika');
+        $dashResponse->assertSee('Pilih Kelas Diampu');
+        $dashResponse->assertSee('Status Kehadiran');
     }
 
     public function test_teacher_grade_dropdowns_are_scoped_to_assigned_subject_and_classes(): void
