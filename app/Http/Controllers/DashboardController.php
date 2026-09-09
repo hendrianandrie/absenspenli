@@ -126,16 +126,7 @@ class DashboardController extends Controller
             $guruMapel = $user->mataPelajaran;
             $guruKelas = is_array($user->kelas_diampu) ? $user->kelas_diampu : [];
 
-            $allKelasList = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
-            if (! empty($guruKelas)) {
-                $guruDaftarKelas = collect($guruKelas)->intersect($allKelasList)->values();
-                if ($guruDaftarKelas->isEmpty()) {
-                    $guruDaftarKelas = collect($guruKelas);
-                }
-            } else {
-                $guruDaftarKelas = $allKelasList;
-            }
-
+            $guruDaftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
             $selectedGuruKelas = request()->get('kelas_guru', $guruDaftarKelas->first() ?? '');
 
             if ($guruMapel) {

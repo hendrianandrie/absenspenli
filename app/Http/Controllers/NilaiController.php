@@ -25,15 +25,7 @@ class NilaiController extends Controller
             $mapels = MataPelajaran::orderBy('nama_mapel')->get();
         }
 
-        $allKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
-        if ($isGuru && is_array($user->kelas_diampu) && count($user->kelas_diampu) > 0) {
-            $daftarKelas = collect($user->kelas_diampu)->intersect($allKelas)->values();
-            if ($daftarKelas->isEmpty()) {
-                $daftarKelas = collect($user->kelas_diampu);
-            }
-        } else {
-            $daftarKelas = $allKelas;
-        }
+        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
@@ -176,15 +168,7 @@ class NilaiController extends Controller
             $mapels = MataPelajaran::orderBy('nama_mapel')->get();
         }
 
-        $allKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
-        if ($isGuru && is_array($user->kelas_diampu) && count($user->kelas_diampu) > 0) {
-            $daftarKelas = collect($user->kelas_diampu)->intersect($allKelas)->values();
-            if ($daftarKelas->isEmpty()) {
-                $daftarKelas = collect($user->kelas_diampu);
-            }
-        } else {
-            $daftarKelas = $allKelas;
-        }
+        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
 
         $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
