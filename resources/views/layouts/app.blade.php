@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SI-KASEP - Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis</title>
+    <title>SI-KASEP - Sistem Informasi Rekap Absen dan Nilai SMP Negeri 5 Ciamis</title>
     <!-- Favicon Logo -->
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <!-- Bootstrap 5 CSS -->
@@ -184,7 +184,7 @@
     <!-- Footer -->
     <footer class="bg-white border-top py-3 text-center text-muted fs-7 mt-auto">
         <div class="container">
-            <small>&copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis</small>
+            <small>&copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen dan Nilai SMP Negeri 5 Ciamis</small>
         </div>
     </footer>
 

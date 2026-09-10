@@ -133,7 +133,7 @@
     <div class="header-kop">
         <h2>PEMERINTAH KABUPATEN CIAMIS</h2>
         <h3>SMP NEGERI 5 CIAMIS</h3>
-        <p>SI-KASEP (Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis) — Laporan Kehadiran Siswa Per Kelas</p>
+        <p>SI-KASEP (Sistem Informasi Rekap Absen dan Nilai SMP Negeri 5 Ciamis) — Laporan Kehadiran Siswa Per Kelas</p>
     </div>
 
     <!-- TANGGAL REKAP -->

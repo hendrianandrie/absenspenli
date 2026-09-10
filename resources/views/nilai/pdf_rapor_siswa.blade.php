@@ -107,7 +107,7 @@
     <div class="header-kop">
         <h2>PEMERINTAH KABUPATEN CIAMIS</h2>
         <h3>SMP NEGERI 5 CIAMIS</h3>
-        <p>SI-KASEP (Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis) — Transkrip Rapor Hasil Belajar Siswa</p>
+        <p>SI-KASEP (Sistem Informasi Rekap Absen dan Nilai SMP Negeri 5 Ciamis) — Transkrip Rapor Hasil Belajar Siswa</p>
     </div>
 
     <h4 style="text-align: center; margin: 0 0 12px 0; text-transform: uppercase; font-size: 12px; color: #1e3a8a;">
@@ -212,7 +212,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 15px; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">
-        Dicetak secara resmi dari SI-KASEP (Sistem Informasi Rekap Absen Spenli) SMP Negeri 5 Ciamis
+        Dicetak secara resmi dari SI-KASEP (Sistem Informasi Rekap Absen dan Nilai) SMP Negeri 5 Ciamis
     </div>
 
 </body>
