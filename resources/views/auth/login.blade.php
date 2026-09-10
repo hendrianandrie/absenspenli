@@ -95,7 +95,7 @@
                             <i class="fa-solid fa-chart-pie me-2"></i> Rekap Absensi Siswa {{ $tanggal === \Carbon\Carbon::today()->toDateString() ? 'Hari Ini' : 'Terbaru' }}
                         </h5>
                         <p class="text-white-50 small mb-0">
-                            Persentase kehadiran siswa terdaftar di SPENLI (Total {{ $totalSiswa ?? 562 }} Siswa)
+                            Persentase kehadiran siswa SMP Negeri 5 Ciamis (Total {{ $totalSiswa ?? 562 }} Siswa)
                         </p>
                     </div>
 
