@@ -11,6 +11,10 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
+        if (auth()->check() && auth()->user()->role === 'guru') {
+            return redirect()->route('dashboard')->with('error', 'Akses ke Data Siswa hanya untuk Admin / Piket.');
+        }
+
         $selectedKelas = $request->get('kelas');
         $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
 

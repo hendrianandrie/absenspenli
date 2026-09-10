@@ -108,11 +108,6 @@
                                 <i class="fa-solid fa-book-open me-1"></i> Bobot Mapel
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('siswa.*') ? 'active fw-semibold' : '' }}" href="{{ route('siswa.index') }}">
-                                <i class="fa-solid fa-users me-1"></i> Data Siswa
-                            </a>
-                        </li>
                     @else
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('dashboard') }}">
