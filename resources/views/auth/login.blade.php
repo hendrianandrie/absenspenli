@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SI-KASEP (Sistem Informasi Rekap Absen Spenli)</title>
+    <title>Login - SI-KASEP (Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis)</title>
     <!-- Favicon Logo -->
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
     <!-- Bootstrap 5 CSS -->
@@ -197,7 +197,7 @@
                 </div>
 
                 <div class="pt-3 mt-3 border-top border-white-10 text-white-50 small">
-                    <i class="fa-solid fa-circle-info me-1"></i> Data diupdate real-time dari Sistem Informasi Rekap Absen Spenli.
+                    <i class="fa-solid fa-circle-info me-1"></i> Data diupdate real-time dari Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis.
                 </div>
             </div>
 
@@ -255,7 +255,7 @@
                 </div>
 
                 <div class="pt-4 mt-4 border-top text-center text-muted small">
-                    &copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen Spenli
+                    &copy; {{ date('Y') }} SI-KASEP — Sistem Informasi Rekap Absen SMP Negeri 5 Ciamis
                 </div>
             </div>
         </div>
