@@ -187,12 +187,23 @@ class NilaiController extends Controller
         }
         $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
 
-        $siswas = collect();
-        if ($selectedKelas) {
-            $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
-        }
+        $siswasByKelas = Siswa::whereIn('kelas', $daftarKelas)
+            ->orderBy('kelas')
+            ->orderBy('nama')
+            ->get()
+            ->groupBy('kelas');
 
-        return view('nilai.create_kegiatan', compact('daftarKelas', 'mapels', 'selectedKelas', 'selectedMapelId', 'siswas', 'isGuru'));
+        $siswas = $siswasByKelas->get($selectedKelas, collect());
+
+        return view('nilai.create_kegiatan', compact(
+            'daftarKelas',
+            'mapels',
+            'selectedKelas',
+            'selectedMapelId',
+            'siswas',
+            'siswasByKelas',
+            'isGuru'
+        ));
     }
 
     public function storeKegiatan(Request $request)

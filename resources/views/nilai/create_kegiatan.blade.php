@@ -30,7 +30,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-semibold fs-7">Kelas</label>
-                <select name="kelas" class="form-select" required>
+                <select name="kelas" id="selectKelas" class="form-select" required>
                     @foreach($daftarKelas as $k)
                         <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                     @endforeach
@@ -58,11 +58,15 @@
 
     <!-- Input Nilai Siswa -->
     <div class="card card-custom p-4 bg-white shadow-sm">
-        <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i> Input Nilai Siswa Kelas {{ $selectedKelas }}</h5>
+        <h5 class="fw-bold mb-3">
+            <i class="fa-solid fa-list-check text-primary me-2"></i> Input Nilai Siswa <span id="labelKelasHeader">Kelas {{ $selectedKelas }}</span>
+        </h5>
         
-        @if($siswas->isEmpty())
-            <div class="text-center py-4 text-muted">Belum ada siswa terdaftar di kelas {{ $selectedKelas }}.</div>
-        @else
+        <div id="emptyContainer" class="text-center py-4 text-muted {{ $siswas->isEmpty() ? '' : 'd-none' }}">
+            Belum ada siswa terdaftar di <span id="labelKelasEmpty">kelas {{ $selectedKelas }}</span>.
+        </div>
+
+        <div id="tableContainer" class="{{ $siswas->isEmpty() ? 'd-none' : '' }}">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -73,7 +77,7 @@
                             <th style="width: 200px;">Nilai (0 - 100)</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="siswaTbody">
                         @foreach($siswas as $idx => $siswa)
                             <tr>
                                 <td>{{ $idx + 1 }}</td>
@@ -93,7 +97,51 @@
                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Kegiatan & Nilai Siswa
                 </button>
             </div>
-        @endif
+        </div>
     </div>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const siswasByKelas = @json($siswasByKelas);
+
+        document.getElementById('selectKelas').addEventListener('change', function() {
+            const selectedKelas = this.value;
+            const labelHeader = document.getElementById('labelKelasHeader');
+            const labelEmpty = document.getElementById('labelKelasEmpty');
+            const tbody = document.getElementById('siswaTbody');
+            const emptyContainer = document.getElementById('emptyContainer');
+            const tableContainer = document.getElementById('tableContainer');
+
+            if (labelHeader) labelHeader.innerText = 'Kelas ' + selectedKelas;
+            if (labelEmpty) labelEmpty.innerText = 'kelas ' + selectedKelas;
+
+            const siswas = siswasByKelas[selectedKelas] || [];
+
+            if (siswas.length === 0) {
+                tableContainer.classList.add('d-none');
+                emptyContainer.classList.remove('d-none');
+                tbody.innerHTML = '';
+            } else {
+                emptyContainer.classList.add('d-none');
+                tableContainer.classList.remove('d-none');
+
+                let html = '';
+                siswas.forEach((siswa, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><span class="badge bg-light text-dark border font-monospace">${siswa.nis || '-'}</span></td>
+                            <td class="fw-semibold">${siswa.nama}</td>
+                            <td>
+                                <input type="number" step="0.1" min="0" max="100" name="nilai[${siswa.id}]" class="form-control fw-bold" placeholder="0 - 100">
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }
+        });
+    });
+</script>
 @endsection
