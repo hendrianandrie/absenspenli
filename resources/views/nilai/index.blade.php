@@ -22,24 +22,32 @@
 </div>
 
 <!-- Filter Bar -->
-<div class="card card-custom p-4 bg-white mb-4">
-    <form method="GET" action="{{ route('nilai.index') }}" class="row g-3 align-items-end">
+<div class="card card-custom p-4 bg-white mb-4 shadow-sm">
+    <form method="GET" action="{{ route('nilai.index') }}" class="row g-3 align-items-end" id="filterFormNilai">
         <div class="col-md-5">
-            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-chalkboard-user me-1"></i> Pilih Kelas</label>
-            <select name="kelas" class="form-select" onchange="this.form.submit()">
-                @foreach ($daftarKelas as $k)
-                    <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-book-open text-primary me-1"></i> Pilih Mata Pelajaran</label>
+            <select name="mata_pelajaran_id" id="selectMapelFilter" class="form-select" onchange="handleMapelFilterChange(this)">
+                @foreach ($mapels as $m)
+                    <option value="{{ $m->id }}" data-tingkat="{{ $m->tingkat ?? 'Semua' }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
+                        {{ $m->nama_mapel }} @if(($m->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $m->tingkat }}] @endif (KKM: {{ $m->kkm }})
+                    </option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-5">
-            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-book-open me-1"></i> Pilih Mata Pelajaran</label>
-            <select name="mata_pelajaran_id" class="form-select" onchange="this.form.submit()">
-                @foreach ($mapels as $m)
-                    <option value="{{ $m->id }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
-                        {{ $m->nama_mapel }} @if(($m->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $m->tingkat }}] @endif (KKM: {{ $m->kkm }})
-                    </option>
-                @endforeach
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold fs-7 mb-0"><i class="fa-solid fa-chalkboard-user text-primary me-1"></i> Pilih Kelas</label>
+                @if($selectedMapel && ($selectedMapel->tingkat ?? 'Semua') !== 'Semua')
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-8">Tingkat {{ $selectedMapel->tingkat }}</span>
+                @endif
+            </div>
+            <select name="kelas" id="selectKelasFilter" class="form-select" onchange="this.form.submit()">
+                @forelse ($daftarKelas as $k)
+                    @php $t = \App\Models\MataPelajaran::getTingkatFromKelas($k); @endphp
+                    <option value="{{ $k }}" data-tingkat="{{ $t }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                @empty
+                    <option value="">(Tidak ada kelas diampu untuk tingkat ini)</option>
+                @endforelse
             </select>
         </div>
         <div class="col-md-2">
@@ -224,4 +232,16 @@
         @endif
     </div>
 @endif
+
+<script>
+    function handleMapelFilterChange(selectElem) {
+        const form = selectElem.form;
+        const kelasSelect = document.getElementById('selectKelasFilter');
+        if (kelasSelect) {
+            // Remove name so that previous class belonging to different level is not retained in GET request
+            kelasSelect.removeAttribute('name');
+        }
+        form.submit();
+    }
+</script>
 @endsection

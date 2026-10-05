@@ -29,6 +29,19 @@
                             <i class="fa-solid fa-id-card me-1"></i> pengampu mata pelajaran {{ $guruMapel->nama_mapel ?? '-' }} (KKM: {{ $guruMapel->kkm ?? 75 }}) 
                             • Kelas Diampu: <strong>{{ !empty($guruKelas) ? implode(', ', $guruKelas) : 'Semua Kelas' }}</strong>
                         </p>
+                        @if(isset($guruMapels) && $guruMapels->count() > 1)
+                            <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
+                                <span class="small text-white-50 fw-semibold"><i class="fa-solid fa-layer-group me-1"></i> Ganti Mapel:</span>
+                                <div class="btn-group btn-group-sm">
+                                    @foreach($guruMapels as $gm)
+                                        <a href="{{ route('dashboard', ['mapel_id' => $gm->id]) }}" 
+                                           class="btn {{ ($guruMapel && $guruMapel->id == $gm->id) ? 'btn-light text-primary fw-bold' : 'btn-outline-light' }}">
+                                            {{ $gm->nama_mapel }} <span class="badge bg-primary text-white ms-1">{{ $gm->tingkat ?? 'Semua' }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{{ route('nilai.kegiatan.create') }}" class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-3 shadow-sm">

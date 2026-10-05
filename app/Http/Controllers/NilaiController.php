@@ -19,25 +19,45 @@ class NilaiController extends Controller
         $isGuru = $user && $user->role === 'guru';
 
         // Filter Mapel & Kelas jika Role Guru
-        if ($isGuru && $user->mata_pelajaran_id) {
-            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
+        if ($isGuru) {
+            $assignedIds = $user->assigned_mapel_ids;
+            $mapels = !empty($assignedIds)
+                ? MataPelajaran::whereIn('id', $assignedIds)->orderBy('tingkat')->orderBy('nama_mapel')->get()
+                : collect();
         } else {
-            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+            $mapels = MataPelajaran::orderBy('tingkat')->orderBy('nama_mapel')->get();
         }
 
+        $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
+        $selectedMapel = $mapels->where('id', $selectedMapelId)->first();
+
+        // Tentukan daftar kelas guru / semua
         if ($isGuru && ! empty($user->kelas_diampu) && is_array($user->kelas_diampu)) {
-            $daftarKelas = collect($user->kelas_diampu)->sort()->values();
+            $rawKelas = collect($user->kelas_diampu);
         } else {
-            $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+            $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
         }
 
-        $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
-        if ($selectedKelas && ! $daftarKelas->contains($selectedKelas)) {
+        // Urutkan kelas secara logis (VII, VIII, IX)
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $sortedKelas = $rawKelas->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
+
+        // Filter kelas sesuai tingkat mapel yang dipilih
+        if ($selectedMapel) {
+            $daftarKelas = $selectedMapel->filterKelasCollection($sortedKelas);
+        } else {
+            $daftarKelas = $sortedKelas;
+        }
+
+        $selectedKelas = $request->get('kelas');
+        if (! $selectedKelas || ! $daftarKelas->contains($selectedKelas)) {
             $selectedKelas = $daftarKelas->first() ?? '';
         }
-        $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
-
-        $selectedMapel = $mapels->where('id', $selectedMapelId)->first();
         $siswas = collect();
         $kegiatans = collect();
         $rekapNilai = [];
@@ -169,25 +189,46 @@ class NilaiController extends Controller
         $user = auth()->user();
         $isGuru = $user && $user->role === 'guru';
 
-        if ($isGuru && $user->mata_pelajaran_id) {
-            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
+        if ($isGuru) {
+            $assignedIds = $user->assigned_mapel_ids;
+            $mapels = !empty($assignedIds)
+                ? MataPelajaran::whereIn('id', $assignedIds)->orderBy('tingkat')->orderBy('nama_mapel')->get()
+                : collect();
         } else {
-            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+            $mapels = MataPelajaran::orderBy('tingkat')->orderBy('nama_mapel')->get();
         }
+
+        $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
+        $selectedMapel = $mapels->where('id', $selectedMapelId)->first();
 
         if ($isGuru && ! empty($user->kelas_diampu) && is_array($user->kelas_diampu)) {
-            $daftarKelas = collect($user->kelas_diampu)->sort()->values();
+            $rawKelas = collect($user->kelas_diampu);
         } else {
-            $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+            $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
         }
 
-        $selectedKelas = $request->get('kelas', $daftarKelas->first() ?? '');
-        if ($selectedKelas && ! $daftarKelas->contains($selectedKelas)) {
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $sortedKelas = $rawKelas->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
+
+        $allDaftarKelas = $sortedKelas;
+
+        if ($selectedMapel) {
+            $daftarKelas = $selectedMapel->filterKelasCollection($sortedKelas);
+        } else {
+            $daftarKelas = $sortedKelas;
+        }
+
+        $selectedKelas = $request->get('kelas');
+        if (! $selectedKelas || ! $daftarKelas->contains($selectedKelas)) {
             $selectedKelas = $daftarKelas->first() ?? '';
         }
-        $selectedMapelId = $request->get('mata_pelajaran_id', $mapels->first()->id ?? null);
 
-        $siswasByKelas = Siswa::whereIn('kelas', $daftarKelas)
+        $siswasByKelas = Siswa::whereIn('kelas', $allDaftarKelas)
             ->orderBy('kelas')
             ->orderBy('nama')
             ->get()
@@ -197,6 +238,7 @@ class NilaiController extends Controller
 
         return view('nilai.create_kegiatan', compact(
             'daftarKelas',
+            'allDaftarKelas',
             'mapels',
             'selectedKelas',
             'selectedMapelId',
@@ -214,7 +256,11 @@ class NilaiController extends Controller
             'nama_kegiatan' => 'required|string|max:150',
             'jenis' => 'required|in:Tugas,UH,UTS,UAS',
             'tanggal' => 'required|date',
-            'nilai' => 'array',
+            'nilai' => 'nullable|array',
+            'nilai.*' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'nilai.*.max' => 'Nilai siswa tidak boleh lebih dari 100.',
+            'nilai.*.min' => 'Nilai siswa tidak boleh kurang dari 0.',
         ]);
 
         $kegiatan = Kegiatan::create([
@@ -228,10 +274,11 @@ class NilaiController extends Controller
         if ($request->has('nilai')) {
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
+                    $score = min(100, max(0, floatval($val)));
                     Nilai::create([
                         'kegiatan_id' => $kegiatan->id,
                         'siswa_id' => $siswa_id,
-                        'nilai' => floatval($val),
+                        'nilai' => $score,
                     ]);
                 }
             }
@@ -259,7 +306,11 @@ class NilaiController extends Controller
             'nama_kegiatan' => 'required|string|max:150',
             'jenis' => 'required|in:Tugas,UH,UTS,UAS',
             'tanggal' => 'required|date',
-            'nilai' => 'array',
+            'nilai' => 'nullable|array',
+            'nilai.*' => 'nullable|numeric|min:0|max:100',
+        ], [
+            'nilai.*.max' => 'Nilai siswa tidak boleh lebih dari 100.',
+            'nilai.*.min' => 'Nilai siswa tidak boleh kurang dari 0.',
         ]);
 
         $kegiatan->update([
@@ -271,9 +322,10 @@ class NilaiController extends Controller
         if ($request->has('nilai')) {
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
+                    $score = min(100, max(0, floatval($val)));
                     Nilai::updateOrCreate(
                         ['kegiatan_id' => $kegiatan->id, 'siswa_id' => $siswa_id],
-                        ['nilai' => floatval($val)]
+                        ['nilai' => $score]
                     );
                 } else {
                     Nilai::where('kegiatan_id', $kegiatan->id)->where('siswa_id', $siswa_id)->delete();

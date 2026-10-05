@@ -70,7 +70,7 @@
                             <td><span class="badge bg-light text-dark border font-monospace">{{ $siswa->nis }}</span></td>
                             <td class="fw-semibold">{{ $siswa->nama }}</td>
                             <td>
-                                <input type="number" step="0.1" min="0" max="100" name="nilai[{{ $siswa->id }}]" class="form-control fw-bold" value="{{ $val }}" placeholder="0 - 100">
+                                <input type="number" step="0.1" min="0" max="100" name="nilai[{{ $siswa->id }}]" class="form-control fw-bold nilai-input" value="{{ $val }}" placeholder="0 - 100" oninput="validateNilaiInput(this)">
                             </td>
                         </tr>
                     @endforeach
@@ -85,4 +85,20 @@
         </div>
     </div>
 </form>
+
+<script>
+    function validateNilaiInput(input) {
+        if (!input || input.value === '') return;
+        let val = parseFloat(input.value);
+        if (isNaN(val)) {
+            input.value = '';
+            return;
+        }
+        if (val > 100) {
+            input.value = 100;
+        } else if (val < 0) {
+            input.value = 0;
+        }
+    }
+</script>
 @endsection

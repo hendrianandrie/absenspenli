@@ -16,9 +16,18 @@ class UserController extends Controller
             return redirect()->route('dashboard')->with('error', 'Hanya Admin yang dapat mengelola akun pengguna.');
         }
 
-        $users = User::with('mataPelajaran')->orderBy('role')->orderBy('name')->get();
+        $users = User::with(['mataPelajaran', 'mataPelajarans'])->orderBy('role')->orderBy('name')->get();
         $mapels = MataPelajaran::orderBy('nama_mapel')->get();
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
+        $daftarKelas = $rawKelas->sort(function ($a, $b) {
+            $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+            preg_match('/^(VIII|VII|IX|\d+)/i', $a, $mA);
+            preg_match('/^(VIII|VII|IX|\d+)/i', $b, $mB);
+            $tA = $order[strtoupper($mA[1] ?? '')] ?? 99;
+            $tB = $order[strtoupper($mB[1] ?? '')] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
 
         return view('users.index', compact('users', 'mapels', 'daftarKelas'));
     }
@@ -36,15 +45,27 @@ class UserController extends Controller
             'email' => 'required|email|max:150|unique:users,email,'.$userId,
             'password' => $userId ? 'nullable|string|min:6' : 'required|string|min:6',
             'role' => 'required|in:admin,piket,guru',
+            'mata_pelajaran_ids' => 'nullable|array',
+            'mata_pelajaran_ids.*' => 'exists:mata_pelajarans,id',
             'mata_pelajaran_id' => 'nullable|exists:mata_pelajarans,id',
             'kelas_diampu' => 'nullable|array',
         ]);
+
+        $mapelIds = [];
+        if ($request->role === 'guru') {
+            if ($request->has('mata_pelajaran_ids')) {
+                $mapelIds = array_values(array_filter((array) $request->mata_pelajaran_ids));
+            } elseif ($request->filled('mata_pelajaran_id')) {
+                $mapelIds = [(int) $request->mata_pelajaran_id];
+            }
+        }
+        $primaryMapelId = !empty($mapelIds) ? $mapelIds[0] : null;
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'mata_pelajaran_id' => $request->role === 'guru' ? $request->mata_pelajaran_id : null,
+            'mata_pelajaran_id' => $primaryMapelId,
             'kelas_diampu' => $request->role === 'guru' ? ($request->kelas_diampu ?? []) : null,
         ];
 
@@ -52,7 +73,13 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        User::updateOrCreate(['id' => $userId], $data);
+        $user = User::updateOrCreate(['id' => $userId], $data);
+
+        if ($request->role === 'guru') {
+            $user->mataPelajarans()->sync($mapelIds);
+        } else {
+            $user->mataPelajarans()->detach();
+        }
 
         $msg = $userId ? 'Data akun pengguna berhasil diperbarui!' : 'Akun pengguna baru berhasil ditambahkan!';
         return redirect()->route('users.index')->with('success', $msg);

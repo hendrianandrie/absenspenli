@@ -12,12 +12,13 @@ class MataPelajaranController extends Controller
         $user = auth()->user();
         $isGuru = $user && $user->role === 'guru';
 
-        if ($isGuru && $user->mata_pelajaran_id) {
-            $mapels = MataPelajaran::where('id', $user->mata_pelajaran_id)->get();
-        } elseif ($isGuru) {
-            $mapels = collect();
+        if ($isGuru) {
+            $assignedIds = $user->assigned_mapel_ids;
+            $mapels = !empty($assignedIds)
+                ? MataPelajaran::whereIn('id', $assignedIds)->orderBy('tingkat')->orderBy('nama_mapel')->get()
+                : collect();
         } else {
-            $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+            $mapels = MataPelajaran::orderBy('tingkat')->orderBy('nama_mapel')->get();
         }
 
         return view('mapel.index', compact('mapels', 'isGuru'));
@@ -34,7 +35,7 @@ class MataPelajaranController extends Controller
         }
 
         // Jika guru mencoba mengedit mapel lain yang bukan diampunya
-        if ($isGuru && $request->id && $request->id != $user->mata_pelajaran_id) {
+        if ($isGuru && $request->id && ! in_array($request->id, $user->assigned_mapel_ids)) {
             return redirect()->route('mapel.index')->with('error', 'Anda hanya dapat mengubah KKM & Bobot mata pelajaran yang Anda ampu.');
         }
 

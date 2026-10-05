@@ -20,9 +20,9 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label fw-semibold fs-7">Mata Pelajaran</label>
-                <select name="mata_pelajaran_id" class="form-select" required>
+                <select name="mata_pelajaran_id" id="selectMapelKegiatan" class="form-select" required onchange="filterKelasKegiatanByMapel(this, true)">
                     @foreach($mapels as $m)
-                        <option value="{{ $m->id }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
+                        <option value="{{ $m->id }}" data-tingkat="{{ $m->tingkat ?? 'Semua' }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
                             {{ $m->nama_mapel }} @if(($m->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $m->tingkat }}] @endif
                         </option>
                     @endforeach
@@ -32,7 +32,8 @@
                 <label class="form-label fw-semibold fs-7">Kelas</label>
                 <select name="kelas" id="selectKelas" class="form-select" required>
                     @foreach($daftarKelas as $k)
-                        <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                        @php $t = \App\Models\MataPelajaran::getTingkatFromKelas($k); @endphp
+                        <option value="{{ $k }}" data-tingkat="{{ $t }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                     @endforeach
                 </select>
             </div>
@@ -84,7 +85,7 @@
                                 <td><span class="badge bg-light text-dark border font-monospace">{{ $siswa->nis }}</span></td>
                                 <td class="fw-semibold">{{ $siswa->nama }}</td>
                                 <td>
-                                    <input type="number" step="0.1" min="0" max="100" name="nilai[{{ $siswa->id }}]" class="form-control fw-bold" placeholder="0 - 100">
+                                    <input type="number" step="0.1" min="0" max="100" name="nilai[{{ $siswa->id }}]" class="form-control fw-bold nilai-input" placeholder="0 - 100" oninput="validateNilaiInput(this)">
                                 </td>
                             </tr>
                         @endforeach
@@ -102,6 +103,68 @@
 </form>
 
 <script>
+    function validateNilaiInput(input) {
+        if (!input || input.value === '') return;
+        let val = parseFloat(input.value);
+        if (isNaN(val)) {
+            input.value = '';
+            return;
+        }
+        if (val > 100) {
+            input.value = 100;
+        } else if (val < 0) {
+            input.value = 0;
+        }
+    }
+
+    const allAvailableClasses = [
+        @foreach(($allDaftarKelas ?? $daftarKelas) as $k)
+            { kelas: @json($k), tingkat: @json(\App\Models\MataPelajaran::getTingkatFromKelas($k)) },
+        @endforeach
+    ];
+
+    function filterKelasKegiatanByMapel(selectMapelElem, isUserChange = false) {
+        if (!selectMapelElem) return;
+        const selectedOption = selectMapelElem.options[selectMapelElem.selectedIndex];
+        const tingkat = selectedOption ? (selectedOption.getAttribute('data-tingkat') || 'Semua') : 'Semua';
+        const selectKelas = document.getElementById('selectKelas');
+        if (!selectKelas) return;
+
+        const previousVal = selectKelas.value;
+        selectKelas.innerHTML = '';
+
+        let matchedFirst = null;
+        let hasCurrent = false;
+
+        allAvailableClasses.forEach(function(item) {
+            if (tingkat === 'Semua' || item.tingkat === 'Semua' || item.tingkat === tingkat) {
+                const opt = document.createElement('option');
+                opt.value = item.kelas;
+                opt.setAttribute('data-tingkat', item.tingkat);
+                opt.textContent = 'Kelas ' + item.kelas;
+                if (item.kelas === previousVal) {
+                    opt.selected = true;
+                    hasCurrent = true;
+                }
+                if (!matchedFirst) matchedFirst = item.kelas;
+                selectKelas.appendChild(opt);
+            }
+        });
+
+        if (!hasCurrent && matchedFirst) {
+            selectKelas.value = matchedFirst;
+        }
+
+        if (selectKelas.options.length === 0) {
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '(Tidak ada kelas diampu untuk tingkat ini)';
+            selectKelas.appendChild(emptyOpt);
+        }
+
+        selectKelas.dispatchEvent(new Event('change'));
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const siswasByKelas = @json($siswasByKelas);
 
@@ -134,7 +197,7 @@
                             <td><span class="badge bg-light text-dark border font-monospace">${siswa.nis || '-'}</span></td>
                             <td class="fw-semibold">${siswa.nama}</td>
                             <td>
-                                <input type="number" step="0.1" min="0" max="100" name="nilai[${siswa.id}]" class="form-control fw-bold" placeholder="0 - 100">
+                                <input type="number" step="0.1" min="0" max="100" name="nilai[${siswa.id}]" class="form-control fw-bold nilai-input" placeholder="0 - 100" oninput="validateNilaiInput(this)">
                             </td>
                         </tr>
                     `;
@@ -142,6 +205,9 @@
                 tbody.innerHTML = html;
             }
         });
+
+        // Inisialisasi filter kelas sesuai mapel tingkat awal
+        filterKelasKegiatanByMapel(document.getElementById('selectMapelKegiatan'));
     });
 </script>
 @endsection

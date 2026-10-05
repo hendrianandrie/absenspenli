@@ -50,6 +50,17 @@ class AppServiceProvider extends ServiceProvider
                     });
                 }
             }
+            if (\Illuminate\Support\Facades\Schema::hasTable('users') && \Illuminate\Support\Facades\Schema::hasTable('mata_pelajarans')) {
+                if (! \Illuminate\Support\Facades\Schema::hasTable('mata_pelajaran_user')) {
+                    \Illuminate\Support\Facades\Schema::create('mata_pelajaran_user', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->id();
+                        $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                        $table->foreignId('mata_pelajaran_id')->constrained('mata_pelajarans')->onDelete('cascade');
+                        $table->timestamps();
+                        $table->unique(['user_id', 'mata_pelajaran_id']);
+                    });
+                }
+            }
         } catch (\Throwable $e) {
             // Ignore schema exception if DB is not connected during boot
         }

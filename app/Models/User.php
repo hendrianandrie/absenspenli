@@ -54,4 +54,27 @@ class User extends Authenticatable
     {
         return $this->belongsTo(MataPelajaran::class, 'mata_pelajaran_id');
     }
+
+    public function mataPelajarans()
+    {
+        return $this->belongsToMany(MataPelajaran::class, 'mata_pelajaran_user', 'user_id', 'mata_pelajaran_id')->withTimestamps();
+    }
+
+    /**
+     * Get all assigned mapel IDs (from pivot table or fallback to mata_pelajaran_id)
+     */
+    public function getAssignedMapelIdsAttribute(): array
+    {
+        if ($this->relationLoaded('mataPelajarans')) {
+            $ids = $this->mataPelajarans->pluck('id')->toArray();
+        } else {
+            $ids = $this->mataPelajarans()->pluck('mata_pelajarans.id')->toArray();
+        }
+
+        if (empty($ids) && $this->mata_pelajaran_id) {
+            $ids = [$this->mata_pelajaran_id];
+        }
+
+        return $ids;
+    }
 }

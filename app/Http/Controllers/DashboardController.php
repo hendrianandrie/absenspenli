@@ -106,6 +106,8 @@ class DashboardController extends Controller
         $isGuru = $user && $user->role === 'guru';
 
         $guruMapel = null;
+        $guruMapels = collect();
+        $selectedMapelId = null;
         $guruKelas = [];
         $guruDaftarKelas = collect();
         $selectedGuruKelas = '';
@@ -123,18 +125,41 @@ class DashboardController extends Controller
         ];
 
         if ($isGuru) {
-            $guruMapel = $user->mataPelajaran;
+            $assignedIds = $user->assigned_mapel_ids;
+            $guruMapels = !empty($assignedIds)
+                ? MataPelajaran::whereIn('id', $assignedIds)->orderBy('tingkat')->orderBy('nama_mapel')->get()
+                : collect();
+
+            $selectedMapelId = request()->get('mapel_id', $guruMapels->first()->id ?? $user->mata_pelajaran_id);
+            $guruMapel = $guruMapels->firstWhere('id', $selectedMapelId) ?? $user->mataPelajaran;
             $guruKelas = is_array($user->kelas_diampu) ? $user->kelas_diampu : [];
 
             if (! empty($guruKelas)) {
-                $guruDaftarKelas = collect($guruKelas)->sort()->values();
+                $rawGuruKelas = collect($guruKelas);
             } else {
-                $guruDaftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+                $rawGuruKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
             }
-            $selectedGuruKelas = request()->get('kelas_guru', $guruDaftarKelas->first() ?? '');
-            if ($selectedGuruKelas && ! $guruDaftarKelas->contains($selectedGuruKelas)) {
+
+            $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+            $sortedGuruKelas = $rawGuruKelas->sort(function ($a, $b) use ($order) {
+                $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+                $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+                if ($tA !== $tB) return $tA <=> $tB;
+                return strnatcasecmp($a, $b);
+            })->values();
+
+            if ($guruMapel) {
+                $guruDaftarKelas = $guruMapel->filterKelasCollection($sortedGuruKelas);
+            } else {
+                $guruDaftarKelas = $sortedGuruKelas;
+            }
+
+            $selectedGuruKelas = request()->get('kelas_guru');
+            if (! $selectedGuruKelas || ! $guruDaftarKelas->contains($selectedGuruKelas)) {
                 $selectedGuruKelas = $guruDaftarKelas->first() ?? '';
             }
+
+            $guruKelasScope = $guruMapel ? $guruMapel->filterKelasCollection($guruKelas)->toArray() : $guruKelas;
 
             if ($guruMapel) {
                 // Fetch activities for selected class & subject
@@ -143,14 +168,14 @@ class DashboardController extends Controller
                     ->orderBy('tanggal', 'desc')
                     ->get();
 
-                // Total students in assigned classes
-                $totalSiswaDiampu = Siswa::when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))->count();
+                // Total students in assigned classes for this mapel
+                $totalSiswaDiampu = Siswa::when(! empty($guruKelasScope), fn ($q) => $q->whereIn('kelas', $guruKelasScope))->count();
                 $totalKegiatanMapel = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
-                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->when(! empty($guruKelasScope), fn ($q) => $q->whereIn('kelas', $guruKelasScope))
                     ->count();
 
                 $kegiatanIds = Kegiatan::where('mata_pelajaran_id', $guruMapel->id)
-                    ->when(! empty($guruKelas), fn ($q) => $q->whereIn('kelas', $guruKelas))
+                    ->when(! empty($guruKelasScope), fn ($q) => $q->whereIn('kelas', $guruKelasScope))
                     ->pluck('id');
 
                 $avgNilaiMapel = Nilai::whereIn('kegiatan_id', $kegiatanIds)->avg('nilai');
@@ -240,6 +265,8 @@ class DashboardController extends Controller
             'statsKeseluruhan',
             'isGuru',
             'guruMapel',
+            'guruMapels',
+            'selectedMapelId',
             'guruKelas',
             'guruDaftarKelas',
             'selectedGuruKelas',

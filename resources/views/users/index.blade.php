@@ -44,22 +44,48 @@
                 <!-- Section Khusus Role Guru -->
                 <div id="createGuruFields" class="bg-light p-3 rounded mb-3 border">
                     <h6 class="fw-bold text-dark fs-7 mb-2"><i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> Pengaturan Akses Guru</h6>
+                    
+                    <!-- Multi-Mapel Diampu -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Mata Pelajaran Diampu</label>
-                        <select name="mata_pelajaran_id" class="form-select form-select-sm">
-                            <option value="">-- Pilih Mata Pelajaran --</option>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">
+                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i> Mata Pelajaran Diampu
+                            </label>
+                            <span class="badge bg-white text-secondary border shadow-xs" id="createMapelCountBadge" style="font-size: 0.72rem;">0 dipilih</span>
+                        </div>
+                        <div class="border rounded-2 p-2 bg-white overflow-auto pe-1" style="max-height: 145px;" id="createMapelCheckboxes">
                             @foreach($mapels as $mapel)
-                                <option value="{{ $mapel->id }}">
-                                    {{ $mapel->nama_mapel }} @if(($mapel->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $mapel->tingkat }}] @endif
-                                </option>
+                                @php
+                                    $t = $mapel->tingkat ?? 'Semua';
+                                    $badgeClass = $t == '7' ? 'bg-info-subtle text-info-emphasis' : ($t == '8' ? 'bg-warning-subtle text-warning-emphasis' : ($t == '9' ? 'bg-danger-subtle text-danger-emphasis' : 'bg-primary-subtle text-primary-emphasis'));
+                                @endphp
+                                <div class="form-check small py-1 border-bottom border-light">
+                                    <input class="form-check-input create-mapel-cb" type="checkbox" name="mata_pelajaran_ids[]" value="{{ $mapel->id }}" id="create_mapel_{{ $mapel->id }}" data-tingkat="{{ $t }}" onchange="updateMultiMapelFilter('create', true)">
+                                    <label class="form-check-label d-flex justify-content-between align-items-center w-100 cursor-pointer" for="create_mapel_{{ $mapel->id }}">
+                                        <span class="fw-medium text-dark">{{ $mapel->nama_mapel }}</span>
+                                        <span class="badge {{ $badgeClass }} border" style="font-size: 0.65rem;">Tingkat {{ $t }}</span>
+                                    </label>
+                                </div>
                             @endforeach
-                        </select>
+                        </div>
+                        <div class="form-text fs-8 text-muted mt-1"><i class="fa-solid fa-info-circle me-1"></i> Centang satu atau beberapa mata pelajaran yang diampu.</div>
                     </div>
+
+                    <!-- Kelas Diampu -->
                     <div>
-                        <label class="form-label small fw-semibold mb-1">Kelas Diampu</label>
-                        <div class="row g-1 overflow-auto pe-1" style="max-height: 140px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Kelas Diampu</label>
+                            <span class="badge bg-secondary-subtle text-secondary border" id="createKelasTingkatBadge" style="font-size: 0.72rem;">Semua Tingkat</span>
+                        </div>
+                        <div class="row g-1 overflow-auto pe-1" id="createKelasContainer" style="max-height: 140px;">
                             @foreach($daftarKelas as $k)
-                                <div class="col-6 col-sm-4">
+                                @php
+                                    $t = 'Semua';
+                                    if (preg_match('/^(VIII|8)/i', trim($k))) $t = '8';
+                                    elseif (preg_match('/^(VII|7)/i', trim($k))) $t = '7';
+                                    elseif (preg_match('/^(IX|9)/i', trim($k))) $t = '9';
+                                @endphp
+                                <div class="col-6 col-sm-4 kelas-item" data-tingkat="{{ $t }}">
                                     <div class="form-check small">
                                         <input class="form-check-input" type="checkbox" name="kelas_diampu[]" value="{{ $k }}" id="create_kelas_{{ $loop->index }}">
                                         <label class="form-check-label" for="create_kelas_{{ $loop->index }}">{{ $k }}</label>
@@ -117,11 +143,22 @@
                                     </td>
                                     <td>
                                         @if($user->role === 'guru')
-                                            <div class="small fw-semibold text-primary mb-1">
-                                                <i class="fa-solid fa-book me-1"></i> {{ $user->mataPelajaran->nama_mapel ?? 'Belum Diatur' }}
-                                                @if(isset($user->mataPelajaran->tingkat) && $user->mataPelajaran->tingkat !== 'Semua')
-                                                    <span class="badge bg-info text-dark" style="font-size: 0.65rem;">Tingkat {{ $user->mataPelajaran->tingkat }}</span>
-                                                @endif
+                                            @php
+                                                $userMapels = $user->mataPelajarans->isNotEmpty() 
+                                                    ? $user->mataPelajarans 
+                                                    : ($user->mataPelajaran ? collect([$user->mataPelajaran]) : collect());
+                                            @endphp
+                                            <div class="mb-1">
+                                                @forelse($userMapels as $m)
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1 mb-1" style="font-size: 0.72rem;">
+                                                        <i class="fa-solid fa-book me-1"></i> {{ $m->nama_mapel }}
+                                                        @if(isset($m->tingkat) && $m->tingkat !== 'Semua')
+                                                            <span class="badge bg-info text-dark ms-1" style="font-size: 0.62rem;">Tk. {{ $m->tingkat }}</span>
+                                                        @endif
+                                                    </span>
+                                                @empty
+                                                    <span class="text-muted small">Belum Diatur</span>
+                                                @endforelse
                                             </div>
                                             <div>
                                                 @if(!empty($user->kelas_diampu) && is_array($user->kelas_diampu))
@@ -210,23 +247,54 @@
                         <!-- Section Khusus Role Guru Edit -->
                         <div id="editGuruFields{{ $user->id }}" class="bg-light p-3 rounded mb-3 border" style="{{ $user->role === 'guru' ? '' : 'display: none;' }}">
                             <h6 class="fw-bold text-dark fs-7 mb-2"><i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> Pengaturan Akses Guru</h6>
+                            
+                            @php
+                                $assignedMapelIds = $user->assigned_mapel_ids;
+                            @endphp
+
+                            <!-- Multi-Mapel Diampu Edit -->
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold">Mata Pelajaran Diampu</label>
-                                <select name="mata_pelajaran_id" class="form-select form-select-sm">
-                                    <option value="">-- Pilih Mata Pelajaran --</option>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label small fw-semibold mb-0">
+                                        <i class="fa-solid fa-book-bookmark text-primary me-1"></i> Mata Pelajaran Diampu
+                                    </label>
+                                    <span class="badge bg-white text-secondary border shadow-xs" id="editMapelCountBadge{{ $user->id }}" style="font-size: 0.72rem;">{{ count($assignedMapelIds) }} dipilih</span>
+                                </div>
+                                <div class="border rounded-2 p-2 bg-white overflow-auto pe-1" style="max-height: 145px;" id="editMapelCheckboxes{{ $user->id }}">
                                     @foreach($mapels as $mapel)
-                                        <option value="{{ $mapel->id }}" {{ $user->mata_pelajaran_id == $mapel->id ? 'selected' : '' }}>
-                                            {{ $mapel->nama_mapel }} @if(($mapel->tingkat ?? 'Semua') !== 'Semua') [Tingkat {{ $mapel->tingkat }}] @endif
-                                        </option>
+                                        @php
+                                            $t = $mapel->tingkat ?? 'Semua';
+                                            $badgeClass = $t == '7' ? 'bg-info-subtle text-info-emphasis' : ($t == '8' ? 'bg-warning-subtle text-warning-emphasis' : ($t == '9' ? 'bg-danger-subtle text-danger-emphasis' : 'bg-primary-subtle text-primary-emphasis'));
+                                            $isMapelChecked = in_array($mapel->id, $assignedMapelIds);
+                                        @endphp
+                                        <div class="form-check small py-1 border-bottom border-light">
+                                            <input class="form-check-input edit-mapel-cb-{{ $user->id }}" type="checkbox" name="mata_pelajaran_ids[]" value="{{ $mapel->id }}" id="edit_mapel_{{ $user->id }}_{{ $mapel->id }}" data-tingkat="{{ $t }}" {{ $isMapelChecked ? 'checked' : '' }} onchange="updateMultiMapelFilter('{{ $user->id }}', true)">
+                                            <label class="form-check-label d-flex justify-content-between align-items-center w-100 cursor-pointer" for="edit_mapel_{{ $user->id }}_{{ $mapel->id }}">
+                                                <span class="fw-medium text-dark">{{ $mapel->nama_mapel }}</span>
+                                                <span class="badge {{ $badgeClass }} border" style="font-size: 0.65rem;">Tingkat {{ $t }}</span>
+                                            </label>
+                                        </div>
                                     @endforeach
-                                </select>
+                                </div>
+                                <div class="form-text fs-8 text-muted mt-1"><i class="fa-solid fa-info-circle me-1"></i> Centang satu atau beberapa mata pelajaran yang diampu.</div>
                             </div>
+
+                            <!-- Kelas Diampu Edit -->
                             <div>
-                                <label class="form-label small fw-semibold mb-1">Kelas Diampu</label>
-                                <div class="row g-1 overflow-auto pe-1" style="max-height: 140px;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label small fw-semibold mb-0">Kelas Diampu</label>
+                                    <span class="badge bg-secondary-subtle text-secondary border" id="editKelasTingkatBadge{{ $user->id }}" style="font-size: 0.72rem;">Semua Tingkat</span>
+                                </div>
+                                <div class="row g-1 overflow-auto pe-1" id="editKelasContainer{{ $user->id }}" style="max-height: 140px;">
                                     @php $assigned = is_array($user->kelas_diampu) ? $user->kelas_diampu : []; @endphp
                                     @foreach($daftarKelas as $k)
-                                        <div class="col-6 col-sm-4">
+                                        @php
+                                            $t = 'Semua';
+                                            if (preg_match('/^(VIII|8)/i', trim($k))) $t = '8';
+                                            elseif (preg_match('/^(VII|7)/i', trim($k))) $t = '7';
+                                            elseif (preg_match('/^(IX|9)/i', trim($k))) $t = '9';
+                                        @endphp
+                                        <div class="col-6 col-sm-4 kelas-item" data-tingkat="{{ $t }}">
                                             <div class="form-check small">
                                                 <input class="form-check-input" type="checkbox" name="kelas_diampu[]" value="{{ $k }}" id="edit_kelas_{{ $user->id }}_{{ $loop->index }}" {{ in_array($k, $assigned) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="edit_kelas_{{ $user->id }}_{{ $loop->index }}">{{ $k }}</label>
@@ -275,8 +343,64 @@
         }
     }
 
+    function updateMultiMapelFilter(scope, isUserChange = false) {
+        const isCreate = scope === 'create';
+        const cbSelector = isCreate ? '.create-mapel-cb:checked' : '.edit-mapel-cb-' + scope + ':checked';
+        const countBadge = document.getElementById(isCreate ? 'createMapelCountBadge' : 'editMapelCountBadge' + scope);
+        const kelasContainer = document.getElementById(isCreate ? 'createKelasContainer' : 'editKelasContainer' + scope);
+        const badge = document.getElementById(isCreate ? 'createKelasTingkatBadge' : 'editKelasTingkatBadge' + scope);
+
+        const checkedBoxes = document.querySelectorAll(cbSelector);
+        if (countBadge) {
+            countBadge.textContent = checkedBoxes.length + ' dipilih';
+        }
+
+        const activeLevels = new Set();
+        checkedBoxes.forEach(function (cb) {
+            const t = cb.getAttribute('data-tingkat') || 'Semua';
+            activeLevels.add(t);
+        });
+
+        const isAll = activeLevels.has('Semua') || activeLevels.size === 0;
+
+        if (badge) {
+            if (isAll) {
+                badge.className = 'badge bg-secondary-subtle text-secondary border';
+                badge.textContent = checkedBoxes.length === 0 ? 'Semua Tingkat' : 'Semua (7, 8, 9)';
+            } else {
+                const sortedLevels = Array.from(activeLevels).sort();
+                badge.className = 'badge bg-primary text-white border-0';
+                badge.textContent = 'Tingkat ' + sortedLevels.join(' & ');
+            }
+        }
+
+        if (!kelasContainer) return;
+        const items = kelasContainer.querySelectorAll('.kelas-item');
+        items.forEach(function (item) {
+            const itemTingkat = item.getAttribute('data-tingkat');
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const shouldShow = isAll || activeLevels.has(itemTingkat);
+
+            if (shouldShow) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+                if (isUserChange && checkbox) {
+                    checkbox.checked = false;
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         handleRoleChange('createRoleSelect', 'createGuruFields');
+        updateMultiMapelFilter('create', false);
+
+        // Inisialisasi filter untuk tiap modal edit pengguna
+        document.querySelectorAll('[id^="editGuruFields"]').forEach(function (field) {
+            const userId = field.id.replace('editGuruFields', '');
+            updateMultiMapelFilter(userId, false);
+        });
     });
 </script>
 @endpush
