@@ -1,6 +1,6 @@
 @php
     $mapelCount = count($mapels);
-    $totalCols = 5 + $mapelCount + 2 + 4 + 1; // No, NIS, NISN, Nama, L/P + Mapels + Jml, Rata + S, I, A, Tot + Ket
+    $totalCols = 5 + $mapelCount + 2 + 1; // No, NIS, NISN, Nama, L/P + Mapels + Jml, Rata + Ket
 @endphp
 <table>
     <thead>
@@ -45,11 +45,6 @@
                 REKAP NILAI
             </th>
 
-            <!-- Kolom Absensi -->
-            <th colspan="4" style="font-weight: bold; background-color: #047857; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">
-                REKAP ABSENSI
-            </th>
-
             <th rowspan="2" style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">Keterangan</th>
         </tr>
 
@@ -64,12 +59,6 @@
             <!-- Sub Rekap Nilai -->
             <th style="font-weight: bold; background-color: #e0e7ff; border: 1px solid #000000; text-align: center;">Jumlah</th>
             <th style="font-weight: bold; background-color: #e0e7ff; border: 1px solid #000000; text-align: center;">Rata-Rata</th>
-
-            <!-- Sub Rekap Absensi -->
-            <th style="font-weight: bold; background-color: #d1fae5; border: 1px solid #000000; text-align: center;">S</th>
-            <th style="font-weight: bold; background-color: #d1fae5; border: 1px solid #000000; text-align: center;">I</th>
-            <th style="font-weight: bold; background-color: #d1fae5; border: 1px solid #000000; text-align: center;">A</th>
-            <th style="font-weight: bold; background-color: #d1fae5; border: 1px solid #000000; text-align: center;">JML</th>
         </tr>
     </thead>
     <tbody>
@@ -89,11 +78,6 @@
                 if ($overall !== null) {
                     $allOverallAvgs[] = $overall;
                 }
-
-                $sakit = $rek['sakit'] ?? 0;
-                $izin = $rek['izin'] ?? 0;
-                $alpha = $rek['alpha'] ?? 0;
-                $totalTidakHadir = $sakit + $izin + $alpha;
             @endphp
             <tr>
                 <td style="border: 1px solid #000000; text-align: center;">{{ $idx + 1 }}</td>
@@ -124,12 +108,6 @@
                     {{ $overall !== null ? number_format($overall, 1) : '-' }}
                 </td>
 
-                <!-- Absensi (S, I, A, Jml) -->
-                <td style="border: 1px solid #000000; text-align: center;">{{ $sakit > 0 ? $sakit : '-' }}</td>
-                <td style="border: 1px solid #000000; text-align: center;">{{ $izin > 0 ? $izin : '-' }}</td>
-                <td style="border: 1px solid #000000; text-align: center;">{{ $alpha > 0 ? $alpha : '-' }}</td>
-                <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ $totalTidakHadir > 0 ? $totalTidakHadir : '-' }}</td>
-
                 <!-- Keterangan -->
                 <td style="border: 1px solid #000000; text-align: center;">
                     @if($overall !== null)
@@ -157,7 +135,7 @@
             <td style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #e2e8f0;">
                 {{ count($allOverallAvgs) > 0 ? number_format(array_sum($allOverallAvgs) / count($allOverallAvgs), 1) : '-' }}
             </td>
-            <td colspan="5" style="border: 1px solid #000000; background-color: #f3f4f6;"></td>
+            <td style="border: 1px solid #000000; background-color: #f3f4f6;"></td>
         </tr>
 
         <!-- Baris Nilai Tertinggi -->
@@ -176,7 +154,7 @@
             <td style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #f9fafb;">
                 {{ count($allOverallAvgs) > 0 ? number_format(max($allOverallAvgs), 1) : '-' }}
             </td>
-            <td colspan="5" style="border: 1px solid #000000; background-color: #f9fafb;"></td>
+            <td style="border: 1px solid #000000; background-color: #f9fafb;"></td>
         </tr>
 
         <!-- Baris Nilai Terendah -->
@@ -195,7 +173,7 @@
             <td style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #f9fafb;">
                 {{ count($allOverallAvgs) > 0 ? number_format(min($allOverallAvgs), 1) : '-' }}
             </td>
-            <td colspan="5" style="border: 1px solid #000000; background-color: #f9fafb;"></td>
+            <td style="border: 1px solid #000000; background-color: #f9fafb;"></td>
         </tr>
     </tbody>
 </table>

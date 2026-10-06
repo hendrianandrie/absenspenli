@@ -163,7 +163,6 @@
                             </th>
                         @endforeach
                         <th class="py-2 px-2 bg-primary-subtle text-primary fw-bold" style="min-width: 90px;">Rata-Rata</th>
-                        <th class="py-2 px-2" style="min-width: 105px;">Absensi (H/S/I/A)</th>
                         <th class="py-2 px-2" style="min-width: 95px;">Rapor PDF</th>
                     </tr>
                 </thead>
@@ -213,14 +212,6 @@
                                 @endif
                             </td>
 
-                            <!-- Absensi Summary -->
-                            <td>
-                                <span class="badge bg-success-subtle text-success px-1.5 py-0.5 rounded-pill" title="Hadir" style="font-size: 10px;">{{ $rek['hadir'] ?? 0 }}H</span>
-                                <span class="badge bg-warning-subtle text-warning px-1.5 py-0.5 rounded-pill" title="Sakit" style="font-size: 10px;">{{ $rek['sakit'] ?? 0 }}S</span>
-                                <span class="badge bg-info-subtle text-info px-1.5 py-0.5 rounded-pill" title="Izin" style="font-size: 10px;">{{ $rek['izin'] ?? 0 }}I</span>
-                                <span class="badge bg-danger-subtle text-danger px-1.5 py-0.5 rounded-pill" title="Alpha" style="font-size: 10px;">{{ $rek['alpha'] ?? 0 }}A</span>
-                            </td>
-
                             <!-- Download Rapor PDF -->
                             <td>
                                 <a href="{{ route('nilai.raporSiswaPdf', $s->id) }}"
@@ -233,7 +224,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 6 + $mapels->count() }}" class="text-center py-4 text-slate-400">
+                            <td colspan="{{ 5 + $mapels->count() }}" class="text-center py-4 text-slate-400">
                                 <i class="fa-solid fa-users-slash fs-3 d-block mb-2"></i>
                                 Belum ada siswa yang terdaftar di kelas {{ $selectedKelas }}.
                             </td>
