@@ -120,100 +120,125 @@
     <!-- Tabel Daftar Pengguna -->
     <div class="col-lg-8">
         <div class="card card-custom p-4 bg-white shadow-sm">
-            <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-ul text-primary me-2"></i> Daftar Akun Terdaftar</h5>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.1rem;">
+                    <i class="fa-solid fa-users-gear text-primary me-2"></i> Daftar Akun Terdaftar
+                </h5>
+                <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
+                    {{ $users->count() }} Pengguna
+                </span>
+            </div>
             @if($users->isEmpty())
                 <div class="text-center py-4 text-muted">Belum ada akun terdaftar.</div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                        <thead class="bg-slate-50 border-bottom text-slate-600" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;">
                             <tr>
-                                <th>Pengguna</th>
-                                <th>Role</th>
-                                <th>Mapel & Kelas Diampu</th>
-                                <th class="text-end">Aksi</th>
+                                <th class="py-2.5 ps-3" style="min-width: 220px;">Pengguna</th>
+                                <th class="text-center py-2.5" style="width: 100px;">Role</th>
+                                <th class="py-2.5" style="min-width: 260px;">Mapel & Kelas Diampu</th>
+                                <th class="text-end py-2.5 pe-3" style="width: 150px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($users as $user)
                                 <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark">
-                                            <i class="fa-solid fa-user-circle text-secondary me-1"></i> {{ $user->name }}
-                                            @if($user->id === Auth::id())
-                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.7rem;">Anda</span>
-                                            @endif
-                                        </div>
-                                        <div class="d-flex flex-wrap align-items-center gap-1.5 mt-0.5">
-                                            <span class="badge bg-light text-slate-700 border font-monospace px-1.5 py-0.5 rounded" style="font-size: 0.68rem;">
-                                                <i class="fa-solid fa-at text-muted me-0.5"></i>{{ $user->username ?: strtolower(str_replace(' ', '', $user->name)) }}
-                                            </span>
-                                            @if($user->nip)
-                                                <span class="badge bg-light text-primary border font-monospace px-1.5 py-0.5 rounded" style="font-size: 0.68rem;">
-                                                    <i class="fa-solid fa-id-badge text-primary me-0.5"></i>NIP. {{ $user->nip }}
-                                                </span>
-                                            @endif
-                                            <small class="text-muted"><i class="fa-regular fa-envelope me-1"></i>{{ $user->email }}</small>
+                                    <td class="ps-3 py-2.5">
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                                                 style="width: 34px; height: 34px; font-size: 13px; background: {{ $user->role === 'admin' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : ($user->role === 'piket' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #6366f1, #4f46e5)') }};">
+                                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-1.5">
+                                                    <span class="fw-bold text-slate-800" style="font-size: 13px;">{{ $user->name }}</span>
+                                                    @if($user->id === Auth::id())
+                                                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 10px;">Anda</span>
+                                                    @endif
+                                                </div>
+                                                <div class="d-flex flex-wrap align-items-center gap-1.5 mt-1" style="font-size: 11px;">
+                                                    <span class="badge font-monospace px-1.5 py-0.5 rounded" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-size: 10.5px;">
+                                                        @ {{ $user->username ?: strtolower(str_replace(' ', '', $user->name)) }}
+                                                    </span>
+                                                    @if($user->nip)
+                                                        <span class="badge font-monospace px-1.5 py-0.5 rounded" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 10.5px;">
+                                                            NIP. {{ $user->nip }}
+                                                        </span>
+                                                    @endif
+                                                    <span class="text-slate-400" style="font-size: 11px;">
+                                                        <i class="fa-regular fa-envelope me-1"></i>{{ $user->email }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="text-center py-2.5">
                                         @if($user->role === 'admin')
-                                            <span class="badge bg-danger px-2 py-1"><i class="fa-solid fa-user-shield me-1"></i> Admin</span>
+                                            <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-size:11px;">
+                                                <i class="fa-solid fa-shield-halved me-1"></i> Admin
+                                            </span>
                                         @elseif($user->role === 'piket')
-                                            <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-id-card me-1"></i> Piket</span>
+                                            <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px;">
+                                                <i class="fa-solid fa-id-card me-1"></i> Piket
+                                            </span>
                                         @else
-                                            <span class="badge bg-success px-2 py-1"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru</span>
+                                            <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:11px;">
+                                                <i class="fa-solid fa-chalkboard-user me-1"></i> Guru
+                                            </span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="py-2.5">
                                         @if($user->role === 'guru')
                                             @php
                                                 $userMapels = $user->mataPelajarans->isNotEmpty() 
                                                     ? $user->mataPelajarans 
                                                     : ($user->mataPelajaran ? collect([$user->mataPelajaran]) : collect());
                                             @endphp
-                                            <div class="mb-1">
+                                            <div class="d-flex flex-wrap gap-1 mb-1">
                                                 @forelse($userMapels as $m)
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1 mb-1" style="font-size: 0.72rem;">
-                                                        <i class="fa-solid fa-book me-1"></i> {{ $m->nama_mapel }}
+                                                    <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 11px;">
+                                                        <i class="fa-solid fa-book-open me-1" style="font-size: 9.5px;"></i>{{ $m->nama_mapel }}
                                                         @if(isset($m->tingkat) && $m->tingkat !== 'Semua')
-                                                            <span class="badge bg-info text-dark ms-1" style="font-size: 0.62rem;">Tk. {{ $m->tingkat }}</span>
+                                                            <span class="badge rounded-pill px-1.5 py-0.2 ms-1" style="background: #dbeafe; color: #1d4ed8; font-size: 9px;">Tk. {{ $m->tingkat }}</span>
                                                         @endif
                                                     </span>
                                                 @empty
-                                                    <span class="text-muted small">Belum Diatur</span>
+                                                    <span class="text-slate-400 fst-italic" style="font-size: 11.5px;">Belum Diatur</span>
                                                 @endforelse
                                             </div>
-                                            <div>
+                                            <div class="d-flex flex-wrap gap-1">
                                                 @if(!empty($user->kelas_diampu) && is_array($user->kelas_diampu))
                                                     @foreach($user->kelas_diampu as $kls)
-                                                        <span class="badge bg-light text-dark border me-1 mb-1">{{ $kls }}</span>
+                                                        <span class="badge rounded-pill px-2 py-0.5 border" style="background: #f8fafc; color: #475569; border-color: #e2e8f0; font-size: 10px;">{{ $kls }}</span>
                                                     @endforeach
                                                 @else
-                                                    <span class="text-muted small">Semua / Belum Diatur</span>
+                                                    <span class="text-slate-400 fst-italic" style="font-size: 11.5px;">Semua Kelas</span>
                                                 @endif
                                             </div>
                                         @else
-                                            <span class="text-muted small">-</span>
+                                            <span class="text-slate-400">-</span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
-                                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
-                                        </button>
-                                        @if($user->id !== Auth::id())
-                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $user->name }}?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fa-solid fa-trash me-1"></i> Hapus
-                                                </button>
-                                            </form>
-                                        @else
-                                            <button class="btn btn-sm btn-outline-secondary" disabled title="Tidak dapat menghapus akun sendiri">
-                                                <i class="fa-solid fa-lock me-1"></i> Hapus
+                                    <td class="text-end pe-3 py-2.5" style="white-space: nowrap;">
+                                        <div class="d-inline-flex align-items-center gap-1.5">
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 shadow-sm" style="font-size: 11.5px;" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}" title="Edit Pengguna">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
                                             </button>
-                                        @endif
+                                            @if($user->id !== Auth::id())
+                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $user->name }}?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 shadow-sm" style="font-size: 11.5px;" title="Hapus Pengguna">
+                                                        <i class="fa-solid fa-trash me-1"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <button class="btn btn-sm btn-light border text-slate-400 rounded-pill px-2.5 py-1" style="font-size: 11.5px;" disabled title="Tidak dapat menghapus akun sendiri">
+                                                    <i class="fa-solid fa-lock me-1"></i> Hapus
+                                                </button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
