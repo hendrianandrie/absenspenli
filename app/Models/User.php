@@ -92,6 +92,13 @@ class User extends Authenticatable
 
     public function getIsWaliKelasAttribute(): bool
     {
-        return $this->waliKelas()->exists();
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('wali_kelas')) {
+                return false;
+            }
+            return $this->waliKelas()->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

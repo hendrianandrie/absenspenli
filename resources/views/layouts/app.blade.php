@@ -416,12 +416,12 @@
                         </a>
                     </div>
 
-                    @if(Auth::user()->is_wali_kelas)
+                    @if(Auth::user()->is_wali_kelas && Auth::user()->waliKelas)
                         <div class="mosaic-nav-section">Tugas Tambahan</div>
                         <div class="mosaic-nav-item">
                             <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') ? 'active' : '' }}" href="{{ route('walikelas.myClass') }}">
                                 <i class="fa-solid fa-user-tie" style="color: #f59e0b;"></i>
-                                <span>Wali Kelas {{ Auth::user()->waliKelas->kelas }}</span>
+                                <span>Wali Kelas {{ optional(Auth::user()->waliKelas)->kelas }}</span>
                             </a>
                         </div>
                     @endif
@@ -598,10 +598,10 @@
                                         </a>
                                     </li>
                                 @endif
-                                @if(Auth::user()->is_wali_kelas)
+                                @if(Auth::user()->is_wali_kelas && Auth::user()->waliKelas)
                                     <li>
                                         <a class="dropdown-item py-2 small" href="{{ route('walikelas.myClass') }}">
-                                            <i class="fa-solid fa-user-tie me-2 text-warning"></i> Wali Kelas ({{ Auth::user()->waliKelas->kelas }})
+                                            <i class="fa-solid fa-user-tie me-2 text-warning"></i> Wali Kelas ({{ optional(Auth::user()->waliKelas)->kelas }})
                                         </a>
                                     </li>
                                 @endif

@@ -250,7 +250,14 @@ class DashboardController extends Controller
         }
 
         // Cek apakah akun ini adalah Wali Kelas
-        $userWaliKelas = $user ? $user->waliKelas : null;
+        $userWaliKelas = null;
+        try {
+            if ($user && \Illuminate\Support\Facades\Schema::hasTable('wali_kelas')) {
+                $userWaliKelas = $user->waliKelas;
+            }
+        } catch (\Throwable $e) {
+            $userWaliKelas = null;
+        }
         $waliKelasStats = null;
         if ($userWaliKelas) {
             $klsBinaan = $userWaliKelas->kelas;

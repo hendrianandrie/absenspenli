@@ -70,5 +70,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');
         Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
         Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
+
+        // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
+        Route::get('/run-migrate', function () {
+            if (!\Illuminate\Support\Facades\Auth::check() || \Illuminate\Support\Facades\Auth::user()->role !== 'admin') {
+                abort(403, 'Akses terbatas untuk Administrator.');
+            }
+            try {
+                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                $output = \Illuminate\Support\Facades\Artisan::output();
+                return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:24px; border-radius:12px; background:#0f172a; color:#f8fafc; box-shadow:0 10px 25px rgba(0,0,0,0.3);'>
+                    <h3 style='color:#10b981; margin-top:0;'>✅ Migrasi Database Berhasil</h3>
+                    <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#e2e8f0; border:1px solid #334155;'>" . e($output ?: 'Database sudah ter-update (Nothing to migrate).') . "</pre>
+                    <a href='" . route('dashboard') . "' style='display:inline-block; margin-top:15px; background:#4f46e5; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;'>← Kembali ke Dashboard</a>
+                </div>";
+            } catch (\Throwable $e) {
+                return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:24px; border-radius:12px; background:#0f172a; color:#f8fafc;'>
+                    <h3 style='color:#ef4444; margin-top:0;'>❌ Terjadi Kesalahan Migrasi</h3>
+                    <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#fca5a5; border:1px solid #dc2626;'>" . e($e->getMessage()) . "</pre>
+                    <a href='" . route('dashboard') . "' style='display:inline-block; margin-top:15px; background:#475569; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;'>Kembali ke Dashboard</a>
+                </div>";
+            }
+        })->name('run.migrate');
     });
 });
