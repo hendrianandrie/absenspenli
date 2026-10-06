@@ -123,20 +123,35 @@ class AuthController extends Controller
         $loginInput = trim($request->input('login'));
         $password = $request->input('password');
 
-        // Cek apakah input berupa email atau username
-        $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $hasUsernameColumn = \Illuminate\Support\Facades\Schema::hasColumn('users', 'username');
+        $isEmail = (bool) filter_var($loginInput, FILTER_VALIDATE_EMAIL);
 
-        if (Auth::attempt([$field => $loginInput, 'password' => $password], $request->boolean('remember'))) {
-            $request->session()->regenerate();
+        if ($isEmail) {
+            if (Auth::attempt(['email' => $loginInput, 'password' => $password], $request->boolean('remember'))) {
+                $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+            }
+        } else {
+            $field = $hasUsernameColumn ? 'username' : 'name';
+            if (Auth::attempt([$field => $loginInput, 'password' => $password], $request->boolean('remember'))) {
+                $request->session()->regenerate();
+
+                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+            }
         }
 
-        // Fallback search berdasarkan username, email, atau name (nama lengkap)
-        $user = User::where('username', $loginInput)
-            ->orWhere('email', $loginInput)
-            ->orWhere('name', $loginInput)
-            ->first();
+        // Fallback search berdasarkan username (jika kolom ada), email, atau name (nama lengkap)
+        $userQuery = User::query();
+        if ($hasUsernameColumn) {
+            $userQuery->where('username', $loginInput)
+                ->orWhere('email', $loginInput)
+                ->orWhere('name', $loginInput);
+        } else {
+            $userQuery->where('email', $loginInput)
+                ->orWhere('name', $loginInput);
+        }
+        $user = $userQuery->first();
 
         if ($user && Auth::attempt(['email' => $user->email, 'password' => $password], $request->boolean('remember'))) {
             $request->session()->regenerate();
