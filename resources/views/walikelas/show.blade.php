@@ -26,9 +26,6 @@
                     <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Pengaturan
                 </a>
             @endif
-            <a href="{{ route('walikelas.exportExcel', ['kelas' => $selectedKelas]) }}" class="btn btn-success btn-sm rounded-pill px-3 py-1.5 shadow-sm text-white" style="font-size: 12px; background-color: #059669; border-color: #059669;">
-                <i class="fa-solid fa-file-excel me-1.5"></i> Download Rekap Excel
-            </a>
             <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5" style="font-size: 12px;">
                 <i class="fa-solid fa-print me-1"></i> Cetak Halaman
             </button>
