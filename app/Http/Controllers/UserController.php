@@ -41,7 +41,9 @@ class UserController extends Controller
         $userId = $request->id;
 
         $request->validate([
-            'name' => 'required|string|max:100|unique:users,name,'.$userId,
+            'name' => 'required|string|max:100',
+            'username' => 'required|string|max:50|alpha_dash|unique:users,username,'.$userId,
+            'nip' => 'nullable|string|max:35',
             'email' => 'required|email|max:150|unique:users,email,'.$userId,
             'password' => $userId ? 'nullable|string|min:6' : 'required|string|min:6',
             'role' => 'required|in:admin,piket,guru',
@@ -63,6 +65,8 @@ class UserController extends Controller
 
         $data = [
             'name' => $request->name,
+            'username' => strtolower(trim($request->username)),
+            'nip' => $request->filled('nip') ? trim($request->nip) : null,
             'email' => $request->email,
             'role' => $request->role,
             'mata_pelajaran_id' => $primaryMapelId,

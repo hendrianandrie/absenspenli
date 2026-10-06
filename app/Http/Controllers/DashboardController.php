@@ -249,6 +249,34 @@ class DashboardController extends Controller
             }
         }
 
+        // Cek apakah akun ini adalah Wali Kelas
+        $userWaliKelas = $user ? $user->waliKelas : null;
+        $waliKelasStats = null;
+        if ($userWaliKelas) {
+            $klsBinaan = $userWaliKelas->kelas;
+            $totalSiswaBinaan = Siswa::where('kelas', $klsBinaan)->count();
+
+            $absenBinaanToday = Absensi::join('siswas', 'absensis.siswa_id', '=', 'siswas.id')
+                ->where('siswas.kelas', $klsBinaan)
+                ->where('absensis.tanggal', $tanggal)
+                ->selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+
+            $tidakHadirBinaan = ($absenBinaanToday['Sakit'] ?? 0) + ($absenBinaanToday['Izin'] ?? 0) + ($absenBinaanToday['Alpha'] ?? 0);
+            $hadirBinaan = $totalSiswaBinaan - $tidakHadirBinaan;
+
+            $waliKelasStats = [
+                'kelas' => $klsBinaan,
+                'total_siswa' => $totalSiswaBinaan,
+                'hadir' => $hadirBinaan,
+                'sakit' => $absenBinaanToday['Sakit'] ?? 0,
+                'izin' => $absenBinaanToday['Izin'] ?? 0,
+                'alpha' => $absenBinaanToday['Alpha'] ?? 0,
+                'hadir_pct' => $totalSiswaBinaan > 0 ? round(($hadirBinaan / $totalSiswaBinaan) * 100, 1) : 0,
+            ];
+        }
+
         return view('dashboard', compact(
             'dataKelas',
             'tanggal',
@@ -273,7 +301,9 @@ class DashboardController extends Controller
             'guruKegiatans',
             'guruStats',
             'guruSiswasWithAbsen',
-            'guruAbsenStats'
+            'guruAbsenStats',
+            'userWaliKelas',
+            'waliKelasStats'
         ));
     }
 

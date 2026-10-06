@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Absensi;
+use App\Models\Kegiatan;
+use App\Models\MataPelajaran;
+use App\Models\Nilai;
+use App\Models\Siswa;
+use App\Models\User;
+use App\Models\WaliKelas;
+use Illuminate\Http\Request;
+
+class WaliKelasController extends Controller
+{
+    /**
+     * Admin: Pengaturan Wali Kelas untuk semua rombel
+     */
+    public function index()
+    {
+        // Urutkan kelas secara logis (VII, VIII, IX)
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
+        $daftarKelas = $rawKelas->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
+
+        $waliMap = WaliKelas::with('user')->get()->keyBy('kelas');
+        $siswaCounts = Siswa::selectRaw('kelas, count(*) as count')->groupBy('kelas')->pluck('count', 'kelas');
+        $users = User::orderBy('name')->get();
+
+        $totalKelas = $daftarKelas->count();
+        $assignedCount = $waliMap->filter(fn ($w) => !empty($w->user_id))->count();
+        $unassignedCount = $totalKelas - $assignedCount;
+
+        return view('walikelas.index', compact(
+            'daftarKelas',
+            'waliMap',
+            'siswaCounts',
+            'users',
+            'totalKelas',
+            'assignedCount',
+            'unassignedCount'
+        ));
+    }
+
+    /**
+     * Admin: Simpan atau perbarui penetapan wali kelas
+     */
+    public function assign(Request $request)
+    {
+        $request->validate([
+            'kelas' => 'required|string',
+            'user_id' => 'nullable|exists:users,id',
+        ]);
+
+        $kelas = $request->kelas;
+        $userId = $request->user_id ?: null;
+
+        if ($userId) {
+            // Jika akun ini sudah jadi wali kelas di rombel lain, lepas dari kelas sebelumnya atau beri opsi
+            WaliKelas::where('user_id', $userId)->where('kelas', '!=', $kelas)->update(['user_id' => null]);
+
+            WaliKelas::updateOrCreate(
+                ['kelas' => $kelas],
+                [
+                    'user_id' => $userId,
+                    'tahun_ajaran' => date('Y') . '/' . (date('Y') + 1)
+                ]
+            );
+            $user = User::find($userId);
+            return redirect()->back()->with('success', "Wali Kelas untuk {$kelas} berhasil ditetapkan kepada {$user->name}!");
+        } else {
+            WaliKelas::where('kelas', $kelas)->update(['user_id' => null]);
+            return redirect()->back()->with('success', "Wali Kelas untuk {$kelas} telah dikosongkan.");
+        }
+    }
+
+    /**
+     * Wali Kelas / Admin: Melihat data nilai & progres akademik siswa di kelasnya
+     */
+    public function myClass(Request $request)
+    {
+        $currentUser = auth()->user();
+        $selectedKelas = null;
+        $waliKelas = null;
+
+        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
+            $selectedKelas = $request->kelas;
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } else {
+            $waliKelas = $currentUser->waliKelas()->with('user')->first();
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : null;
+        }
+
+        if (!$selectedKelas) {
+            return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
+        }
+
+        $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
+        $tingkat = MataPelajaran::getTingkatFromKelas($selectedKelas);
+
+        // Filter mapel yang relevan untuk tingkat kelas ini
+        $mapelQuery = MataPelajaran::query();
+        if ($tingkat !== 'Semua') {
+            $mapelQuery->where(function ($q) use ($tingkat) {
+                $q->where('tingkat', $tingkat)
+                  ->orWhere('tingkat', 'Semua')
+                  ->orWhereNull('tingkat');
+            });
+        }
+        $mapels = $mapelQuery->orderBy('nama_mapel')->get();
+
+        // Ambil rekap absensi seluruh siswa kelas ini
+        $siswaIds = $siswas->pluck('id');
+        $absensiRaw = Absensi::whereIn('siswa_id', $siswaIds)
+            ->selectRaw('siswa_id, status, count(*) as count')
+            ->groupBy('siswa_id', 'status')
+            ->get();
+
+        $absensiMap = [];
+        foreach ($absensiRaw as $ab) {
+            $absensiMap[$ab->siswa_id][$ab->status] = $ab->count;
+        }
+
+        // Ambil semua kegiatan penilaian untuk kelas ini
+        $kegiatans = Kegiatan::where('kelas', $selectedKelas)->get();
+        $kegiatanIds = $kegiatans->pluck('id');
+        $kegiatanMapelMap = $kegiatans->groupBy('mata_pelajaran_id');
+
+        // Ambil semua nilai
+        $nilais = Nilai::whereIn('kegiatan_id', $kegiatanIds)
+            ->whereIn('siswa_id', $siswaIds)
+            ->get()
+            ->groupBy('siswa_id');
+
+        $rekapSiswa = [];
+        $classScoresAccum = [];
+
+        foreach ($siswas as $siswa) {
+            $siswaNilais = $nilais->get($siswa->id, collect())->keyBy('kegiatan_id');
+            $mapelScores = [];
+            $validFinalScores = [];
+            $tuntasMapelCount = 0;
+            $totalAssessedMapel = 0;
+
+            foreach ($mapels as $mapel) {
+                $mapelKegs = $kegiatanMapelMap->get($mapel->id, collect());
+                if ($mapelKegs->isEmpty()) {
+                    $mapelScores[$mapel->id] = null;
+                    continue;
+                }
+
+                $bTugas = $mapel->bobot_tugas ?? 20;
+                $bUh = $mapel->bobot_uh ?? 30;
+                $bUts = $mapel->bobot_uts ?? 25;
+                $bUas = $mapel->bobot_uas ?? 25;
+
+                $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
+                $allRawScores = [];
+
+                foreach ($mapelKegs as $keg) {
+                    $val = $siswaNilais->has($keg->id) ? $siswaNilais->get($keg->id)->nilai : null;
+                    if ($val !== null) {
+                        $allRawScores[] = $val;
+                        if (isset($scoresByJenis[$keg->jenis])) {
+                            $scoresByJenis[$keg->jenis][] = $val;
+                        }
+                    }
+                }
+
+                if (empty($allRawScores)) {
+                    $mapelScores[$mapel->id] = null;
+                    continue;
+                }
+
+                $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
+                $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
+                $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
+                $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+
+                $weightedSum = 0;
+                $weightTotal = 0;
+                if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
+                if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
+                if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
+                if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+
+                $final = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : round(array_sum($allRawScores) / count($allRawScores), 1);
+                $mapelScores[$mapel->id] = $final;
+                $validFinalScores[] = $final;
+                $totalAssessedMapel++;
+
+                if ($final >= ($mapel->kkm ?? 75)) {
+                    $tuntasMapelCount++;
+                }
+            }
+
+            $overallAvg = count($validFinalScores) > 0 ? round(array_sum($validFinalScores) / count($validFinalScores), 1) : null;
+            if ($overallAvg !== null) {
+                $classScoresAccum[] = $overallAvg;
+            }
+
+            $absen = $absensiMap[$siswa->id] ?? [];
+            $rekapSiswa[$siswa->id] = [
+                'scores' => $mapelScores,
+                'overall_avg' => $overallAvg,
+                'tuntas_mapel' => $tuntasMapelCount,
+                'total_mapel' => $totalAssessedMapel,
+                'hadir' => $absen['Hadir'] ?? 0,
+                'sakit' => $absen['Sakit'] ?? 0,
+                'izin' => $absen['Izin'] ?? 0,
+                'alpha' => $absen['Alpha'] ?? 0,
+            ];
+        }
+
+        $analytics = [
+            'total_siswa' => $siswas->count(),
+            'class_avg' => count($classScoresAccum) > 0 ? round(array_sum($classScoresAccum) / count($classScoresAccum), 1) : 0,
+            'highest' => count($classScoresAccum) > 0 ? max($classScoresAccum) : 0,
+            'lowest' => count($classScoresAccum) > 0 ? min($classScoresAccum) : 0,
+        ];
+
+        return view('walikelas.show', compact(
+            'selectedKelas',
+            'waliKelas',
+            'siswas',
+            'mapels',
+            'rekapSiswa',
+            'analytics',
+            'tingkat'
+        ));
+    }
+}

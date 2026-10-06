@@ -16,8 +16,22 @@
             <form action="{{ route('users.store') }}" method="POST">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label fw-semibold fs-7">Username / Nama Lengkap</label>
-                    <input type="text" name="name" class="form-control" placeholder="Contoh: guru_mtk" required>
+                    <label class="form-label fw-semibold fs-7">Nama Lengkap & Gelar <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" placeholder="Contoh: Dra. Hj. Siti Rohmah, M.Pd." required>
+                    <div class="form-text fs-8 text-muted">Gunakan nama lengkap beserta gelar akademik pendidik.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold fs-7">Username Login <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted fs-7">@</span>
+                        <input type="text" name="username" class="form-control" placeholder="Contoh: sitirohmah" required pattern="^[a-zA-Z0-9_\.]+$">
+                    </div>
+                    <div class="form-text fs-8 text-muted">Username unik tanpa spasi/gelar untuk login ke sistem.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold fs-7">NIP (Nomor Induk Pegawai)</label>
+                    <input type="text" name="nip" class="form-control" placeholder="Contoh: 19850712 201001 2 005">
+                    <div class="form-text fs-8 text-muted">Opsional untuk pendidik/tenaga kependidikan ber-NIP.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold fs-7">Email Login</label>
@@ -130,7 +144,17 @@
                                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.7rem;">Anda</span>
                                             @endif
                                         </div>
-                                        <small class="text-muted font-monospace"><i class="fa-regular fa-envelope me-1"></i>{{ $user->email }}</small>
+                                        <div class="d-flex flex-wrap align-items-center gap-1.5 mt-0.5">
+                                            <span class="badge bg-light text-slate-700 border font-monospace px-1.5 py-0.5 rounded" style="font-size: 0.68rem;">
+                                                <i class="fa-solid fa-at text-muted me-0.5"></i>{{ $user->username ?: strtolower(str_replace(' ', '', $user->name)) }}
+                                            </span>
+                                            @if($user->nip)
+                                                <span class="badge bg-light text-primary border font-monospace px-1.5 py-0.5 rounded" style="font-size: 0.68rem;">
+                                                    <i class="fa-solid fa-id-badge text-primary me-0.5"></i>NIP. {{ $user->nip }}
+                                                </span>
+                                            @endif
+                                            <small class="text-muted"><i class="fa-regular fa-envelope me-1"></i>{{ $user->email }}</small>
+                                        </div>
                                     </td>
                                     <td>
                                         @if($user->role === 'admin')
@@ -217,8 +241,22 @@
                     <input type="hidden" name="id" value="{{ $user->id }}">
                     <div class="modal-body p-4 text-start">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold fs-7">Username / Nama Lengkap</label>
+                            <label class="form-label fw-semibold fs-7">Nama Lengkap & Gelar <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                            <div class="form-text fs-8 text-muted">Nama lengkap pendidik beserta gelar akademik.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7">Username Login <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted fs-7">@</span>
+                                <input type="text" name="username" class="form-control" value="{{ $user->username ?: strtolower(str_replace(' ', '', $user->name)) }}" required pattern="^[a-zA-Z0-9_\.]+$">
+                            </div>
+                            <div class="form-text fs-8 text-muted">Username unik tanpa spasi/gelar untuk login ke sistem.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7">NIP (Nomor Induk Pegawai)</label>
+                            <input type="text" name="nip" class="form-control" value="{{ $user->nip }}" placeholder="Contoh: 19850712 201001 2 005">
+                            <div class="form-text fs-8 text-muted">Opsional untuk pendidik/tenaga kependidikan ber-NIP.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold fs-7">Email Login</label>

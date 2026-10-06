@@ -19,6 +19,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
+        'nip',
         'email',
         'password',
         'role',
@@ -76,5 +78,20 @@ class User extends Authenticatable
         }
 
         return $ids;
+    }
+
+    public function waliKelas()
+    {
+        return $this->hasOne(WaliKelas::class, 'user_id');
+    }
+
+    public function waliKelases()
+    {
+        return $this->hasMany(WaliKelas::class, 'user_id');
+    }
+
+    public function getIsWaliKelasAttribute(): bool
+    {
+        return $this->waliKelas()->exists();
     }
 }

@@ -123,8 +123,8 @@ class AuthController extends Controller
         $loginInput = trim($request->input('login'));
         $password = $request->input('password');
 
-        // Cek apakah input berupa email atau username (name)
-        $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        // Cek apakah input berupa email atau username
+        $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         if (Auth::attempt([$field => $loginInput, 'password' => $password], $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -132,8 +132,12 @@ class AuthController extends Controller
             return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
         }
 
-        // Fallback search
-        $user = User::where('name', 'LIKE', $loginInput)->orWhere('email', 'LIKE', $loginInput)->first();
+        // Fallback search berdasarkan username, email, atau name (nama lengkap)
+        $user = User::where('username', $loginInput)
+            ->orWhere('email', $loginInput)
+            ->orWhere('name', $loginInput)
+            ->first();
+
         if ($user && Auth::attempt(['email' => $user->email, 'password' => $password], $request->boolean('remember'))) {
             $request->session()->regenerate();
 

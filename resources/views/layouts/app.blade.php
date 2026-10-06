@@ -416,6 +416,16 @@
                         </a>
                     </div>
 
+                    @if(Auth::user()->is_wali_kelas)
+                        <div class="mosaic-nav-section">Tugas Tambahan</div>
+                        <div class="mosaic-nav-item">
+                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') ? 'active' : '' }}" href="{{ route('walikelas.myClass') }}">
+                                <i class="fa-solid fa-user-tie" style="color: #f59e0b;"></i>
+                                <span>Wali Kelas {{ Auth::user()->waliKelas->kelas }}</span>
+                            </a>
+                        </div>
+                    @endif
+
                 @else
                     <!-- MENU ADMINISTRATOR -->
                     <div class="mosaic-nav-section">Menu Utama</div>
@@ -451,6 +461,12 @@
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.*') ? 'active' : '' }}" href="{{ route('nilai.index') }}">
                             <i class="fa-solid fa-star"></i>
                             <span>Penilaian Siswa</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') ? 'active' : '' }}" href="{{ route('walikelas.index') }}">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <span>Wali Kelas</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
@@ -550,7 +566,8 @@
                                 <li class="px-3 py-2 border-bottom">
                                     <div class="fw-bold text-slate-800 small">{{ Auth::user()->name }}</div>
                                     <div class="text-slate-400" style="font-size: 11px;">
-                                        {{ Auth::user()->email ?? Auth::user()->username ?? 'Akun Terdaftar' }}
+                                        <span class="text-primary fw-medium font-monospace">@ {{ Auth::user()->username ?? strtolower(str_replace(' ', '', Auth::user()->name)) }}</span>
+                                        • {{ Auth::user()->email }}
                                     </div>
                                 </li>
                                 <li>
@@ -578,6 +595,13 @@
                                     <li>
                                         <a class="dropdown-item py-2 small" href="{{ route('nilai.kegiatan.create') }}">
                                             <i class="fa-solid fa-plus-circle me-2 text-success"></i> Input Nilai Baru
+                                        </a>
+                                    </li>
+                                @endif
+                                @if(Auth::user()->is_wali_kelas)
+                                    <li>
+                                        <a class="dropdown-item py-2 small" href="{{ route('walikelas.myClass') }}">
+                                            <i class="fa-solid fa-user-tie me-2 text-warning"></i> Wali Kelas ({{ Auth::user()->waliKelas->kelas }})
                                         </a>
                                     </li>
                                 @endif

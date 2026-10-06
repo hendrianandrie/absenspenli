@@ -7,6 +7,7 @@ use App\Http\Controllers\MataPelajaranController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WaliKelasController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -64,5 +65,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/nilai/rekap-excel', [NilaiController::class, 'rekapExcel'])->name('nilai.rekapExcel');
         Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
         Route::get('/nilai/rapor-siswa/{id}', [NilaiController::class, 'raporSiswaPdf'])->name('nilai.raporSiswaPdf');
+
+        // Wali Kelas (Pengaturan Admin & Monitoring Nilai Siswa)
+        Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');
+        Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
+        Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
     });
 });

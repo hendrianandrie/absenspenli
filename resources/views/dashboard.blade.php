@@ -132,6 +132,31 @@
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4">
+    @if(isset($userWaliKelas) && $userWaliKelas)
+        <div class="col-12 mb-1">
+            <div class="card p-3 p-md-3.5 rounded-4 border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%);">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <div class="text-white-50 mb-1 fw-medium" style="font-size: 11.5px; letter-spacing: 0.3px;">
+                            <i class="fa-solid fa-award text-warning me-1"></i> Tugas Tambahan
+                        </div>
+                        <h4 class="fw-bold mb-1 text-white" style="font-size: 1.25rem;">
+                            <i class="fa-solid fa-user-tie me-1.5"></i> Wali Kelas {{ $userWaliKelas->kelas }}
+                        </h4>
+                        <p class="text-white-50 mb-0 small" style="font-size: 12px;">
+                            Total Siswa: <strong>{{ $waliKelasStats['total_siswa'] ?? 0 }} siswa</strong> • Kehadiran Hari Ini: <strong>{{ $waliKelasStats['hadir'] ?? 0 }} hadir ({{ $waliKelasStats['hadir_pct'] ?? 0 }}%)</strong>
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('walikelas.myClass') }}" class="btn btn-light btn-sm fw-bold px-3 py-2 rounded-pill shadow-sm" style="color: #0f766e; font-size: 12px;">
+                            <i class="fa-solid fa-graduation-cap me-1"></i> Lihat Data Nilai Siswa Kelas {{ $userWaliKelas->kelas }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(isset($isGuru) && $isGuru)
         <!-- DASHBOARD KHUSUS GURU MATA PELAJARAN -->
         <div class="col-12 mb-2">

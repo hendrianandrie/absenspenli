@@ -413,7 +413,18 @@ class NilaiController extends Controller
     public function raporSiswaPdf($siswaId)
     {
         $siswa = Siswa::findOrFail($siswaId);
-        $mapels = MataPelajaran::orderBy('nama_mapel')->get();
+        $tingkat = MataPelajaran::getTingkatFromKelas($siswa->kelas);
+
+        // Filter mata pelajaran sesuai tingkat siswa (7, 8, 9, atau Semua)
+        $mapelQuery = MataPelajaran::query();
+        if ($tingkat !== 'Semua') {
+            $mapelQuery->where(function ($q) use ($tingkat) {
+                $q->where('tingkat', $tingkat)
+                  ->orWhere('tingkat', 'Semua')
+                  ->orWhereNull('tingkat');
+            });
+        }
+        $mapels = $mapelQuery->orderBy('nama_mapel')->get();
 
         // Rekap Absensi Siswa
         $absensiCounts = \App\Models\Absensi::where('siswa_id', $siswa->id)
@@ -428,12 +439,12 @@ class NilaiController extends Controller
             'alpha' => $absensiCounts['Alpha'] ?? 0,
         ];
 
-        // Rekap Nilai Siswa Semua Mapel
+        // Rekap Nilai Siswa Sesuai Mapel di Tingkat Tersebut
         $raporMapel = [];
         foreach ($mapels as $mapel) {
             $kegiatans = Kegiatan::where('mata_pelajaran_id', $mapel->id)
                 ->where('kelas', $siswa->kelas)
-                ->pluck('id');
+                ->get();
 
             if ($kegiatans->isEmpty()) {
                 $raporMapel[] = [
@@ -446,27 +457,60 @@ class NilaiController extends Controller
                 continue;
             }
 
-            $nilais = Nilai::whereIn('kegiatan_id', $kegiatans)
-                ->where('siswa_id', $siswa->id)
-                ->pluck('nilai');
+            $bTugas = $mapel->bobot_tugas ?? 20;
+            $bUh = $mapel->bobot_uh ?? 30;
+            $bUts = $mapel->bobot_uts ?? 25;
+            $bUas = $mapel->bobot_uas ?? 25;
 
-            $avg = $nilais->count() > 0 ? round($nilais->avg(), 1) : null;
+            $scores = [];
+            $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
+
+            foreach ($kegiatans as $kegiatan) {
+                $nilaiObj = Nilai::where('kegiatan_id', $kegiatan->id)
+                    ->where('siswa_id', $siswa->id)
+                    ->first();
+                $val = $nilaiObj ? $nilaiObj->nilai : null;
+                $scores[$kegiatan->id] = $val;
+
+                if ($val !== null && isset($scoresByJenis[$kegiatan->jenis])) {
+                    $scoresByJenis[$kegiatan->jenis][] = $val;
+                }
+            }
+
+            $validScores = array_filter($scores, fn ($n) => $n !== null);
+            $rataRataMurni = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 1) : null;
+
+            // Hitung Rata-Rata per Kategori untuk Bobot Penilaian
+            $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
+            $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
+            $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
+            $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+
+            $weightedSum = 0;
+            $weightTotal = 0;
+
+            if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
+            if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
+            if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
+            if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+
+            $nilaiAkhir = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : $rataRataMurni;
             $kkm = $mapel->kkm ?? 75;
 
             $predikat = '-';
             $status = '-';
             $deskripsi = 'Belum Mengikuti Penilaian';
 
-            if ($avg !== null) {
-                if ($avg >= 90) {
+            if ($nilaiAkhir !== null) {
+                if ($nilaiAkhir >= 90) {
                     $predikat = 'A';
                     $status = 'Sangat Baik';
                     $deskripsi = 'Menunjukkan penguasaan kompetensi yang sangat baik dalam seluruh materi.';
-                } elseif ($avg >= 80) {
+                } elseif ($nilaiAkhir >= 80) {
                     $predikat = 'B';
                     $status = 'Baik';
                     $deskripsi = 'Menunjukkan penguasaan kompetensi yang baik dalam materi pembelajaran.';
-                } elseif ($avg >= $kkm) {
+                } elseif ($nilaiAkhir >= $kkm) {
                     $predikat = 'C';
                     $status = 'Cukup';
                     $deskripsi = 'Telah mencapai kriteria ketuntasan minimal (KKM) yang ditetapkan.';
@@ -479,16 +523,22 @@ class NilaiController extends Controller
 
             $raporMapel[] = [
                 'mapel' => $mapel,
-                'nilai_akhir' => $avg,
+                'nilai_akhir' => $nilaiAkhir,
                 'predikat' => $predikat,
                 'status' => $status,
                 'deskripsi' => $deskripsi,
             ];
         }
 
-        $pdf = Pdf::loadView('nilai.pdf_rapor_siswa', compact('siswa', 'raporMapel', 'rekapAbsensi'))
+        $waliKelas = \App\Models\WaliKelas::where('kelas', $siswa->kelas)->with('user')->first();
+        $waliUser = $waliKelas ? $waliKelas->user : null;
+
+        $pdf = Pdf::loadView('nilai.pdf_rapor_siswa', compact('siswa', 'raporMapel', 'rekapAbsensi', 'waliUser'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Rapor_Siswa_'.$siswa->nis.'_'.str_replace(' ', '_', $siswa->nama).'.pdf');
+        $safeNis = $siswa->nis ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $siswa->nis) : $siswa->id;
+        $safeNama = preg_replace('/[^A-Za-z0-9_\-]/', '_', $siswa->nama);
+
+        return $pdf->download('Rapor_Siswa_'.$safeNis.'_'.$safeNama.'.pdf');
     }
 }
