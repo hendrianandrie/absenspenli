@@ -223,13 +223,21 @@
                         </div>
                     @endif
 
+                    <!-- Petunjuk Login Siswa -->
+                    <div class="p-2 mb-3 rounded-3 bg-indigo-50 border border-indigo-100 d-flex align-items-center gap-2" style="background: #eef2ff; border-color: #e0e7ff;">
+                        <i class="fa-solid fa-graduation-cap text-primary ms-1"></i>
+                        <span class="small text-slate-600" style="font-size: 12px;">
+                            <strong>Portal Siswa:</strong> Gunakan <strong>Username: NIS</strong> &amp; <strong>Password: NIS</strong>
+                        </span>
+                    </div>
+
                     <form method="POST" action="{{ route('login.post') }}">
                         @csrf
                         <div class="mb-3">
-                            <label for="login" class="form-label fw-semibold small text-dark">Username atau Email</label>
+                            <label for="login" class="form-label fw-semibold small text-dark">Username, Email, atau NIS</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-user"></i></span>
-                                <input type="text" name="login" id="login" class="form-control border-start-0 ps-0" placeholder="Masukkan username atau email" value="{{ old('login') }}" required autofocus>
+                                <input type="text" name="login" id="login" class="form-control border-start-0 ps-0" placeholder="Username, email, atau NIS Siswa" value="{{ old('login') }}" required autofocus>
                             </div>
                         </div>
 
@@ -237,7 +245,7 @@
                             <label for="password" class="form-label fw-semibold small text-dark">Password</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="password" id="password" class="form-control border-start-0 ps-0" placeholder="Masukkan password" required>
+                                <input type="password" name="password" id="password" class="form-control border-start-0 ps-0" placeholder="Password atau NIS Siswa" required>
                             </div>
                         </div>
 

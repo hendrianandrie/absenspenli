@@ -26,6 +26,7 @@ class User extends Authenticatable
         'role',
         'mata_pelajaran_id',
         'kelas_diampu',
+        'siswa_id',
     ];
 
     /**
@@ -100,5 +101,10 @@ class User extends Authenticatable
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 }

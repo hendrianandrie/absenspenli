@@ -14,6 +14,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        if (auth()->check() && auth()->user()->role === 'siswa') {
+            return redirect()->route('siswa.dashboard');
+        }
+
         $tanggal = Carbon::today()->toDateString();
 
         $totalSiswa = Siswa::count();

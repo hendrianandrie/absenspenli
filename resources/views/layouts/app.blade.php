@@ -342,7 +342,7 @@
         <aside id="mosaicSidebar" class="mosaic-sidebar">
             <!-- Sidebar Header / Brand -->
             <div class="mosaic-sidebar-brand">
-                <a href="{{ route('dashboard') }}" class="mosaic-brand-link">
+                <a href="{{ Auth::check() && Auth::user()->role === 'siswa' ? route('siswa.dashboard') : route('dashboard') }}" class="mosaic-brand-link">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo SPENLI" width="34" height="34" class="rounded-circle bg-white p-1 shadow-sm">
                     <div>
                         <div class="fw-bold fs-6 lh-1">SI-KASEP</div>
@@ -356,7 +356,31 @@
 
             <!-- Sidebar Navigation Links -->
             <div class="mosaic-sidebar-nav">
-                @if(Auth::check() && Auth::user()->role === 'piket')
+                @if(Auth::check() && Auth::user()->role === 'siswa')
+                    <!-- MENU KHUSUS SISWA -->
+                    <div class="mosaic-nav-section">Portal Siswa</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.dashboard') ? 'active' : '' }}" href="{{ route('siswa.dashboard') }}">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span>Dashboard Siswa</span>
+                        </a>
+                    </div>
+
+                    <div class="mosaic-nav-section">Akademik & Presensi</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.nilai') ? 'active' : '' }}" href="{{ route('siswa.nilai') }}">
+                            <i class="fa-solid fa-star"></i>
+                            <span>Rekap Nilai</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.absen') ? 'active' : '' }}" href="{{ route('siswa.absen') }}">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Rekap Absen</span>
+                        </a>
+                    </div>
+
+                @elseif(Auth::check() && Auth::user()->role === 'piket')
                     <!-- MENU PIKET -->
                     <div class="mosaic-nav-section">Menu Utama</div>
                     <div class="mosaic-nav-item">
@@ -503,6 +527,8 @@
                                     <span style="color: #a5b4fc;"><i class="fa-solid fa-shield-halved me-1"></i> Admin</span>
                                 @elseif(Auth::user()->role === 'guru')
                                     <span style="color: #6ee7b7;"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru Mapel</span>
+                                @elseif(Auth::user()->role === 'siswa')
+                                    <span style="color: #38bdf8;"><i class="fa-solid fa-user-graduate me-1"></i> Siswa {{ optional(Auth::user()->siswa)->kelas ? 'Kelas ' . Auth::user()->siswa->kelas : '' }}</span>
                                 @else
                                     <span style="color: #fcd34d;"><i class="fa-solid fa-clipboard-user me-1"></i> Piket</span>
                                 @endif
@@ -558,7 +584,7 @@
                                 </div>
                                 <span class="d-none d-sm-inline fw-semibold text-slate-800 small">{{ Auth::user()->name }}</span>
                                 <span class="badge rounded-pill ms-1 d-none d-md-inline" 
-                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (Auth::user()->role === 'guru' ? 'background:#e0e7ff; color:#3730a3;' : 'background:#fef3c7; color:#92400e;') }} font-size: 10px;">
+                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (Auth::user()->role === 'guru' ? 'background:#e0e7ff; color:#3730a3;' : (Auth::user()->role === 'siswa' ? 'background:#e0f2fe; color:#0369a1;' : 'background:#fef3c7; color:#92400e;')) }} font-size: 10px;">
                                     {{ ucfirst(Auth::user()->role) }}
                                 </span>
                             </button>
@@ -573,6 +599,10 @@
                                 @if(Auth::user()->nip)
                                     <li class="px-3 py-1 border-bottom bg-slate-50">
                                         <span class="text-slate-500 font-monospace" style="font-size: 10px;">NIP. {{ Auth::user()->nip }}</span>
+                                    </li>
+                                @elseif(Auth::user()->role === 'siswa' && Auth::user()->siswa)
+                                    <li class="px-3 py-1 border-bottom bg-slate-50">
+                                        <span class="text-slate-600 font-monospace" style="font-size: 11px;">NIS: {{ Auth::user()->siswa->nis }} &bull; Kelas {{ Auth::user()->siswa->kelas }}</span>
                                     </li>
                                 @endif
                                 @if(Auth::user()->role === 'admin')

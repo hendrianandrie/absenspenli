@@ -129,15 +129,17 @@ class AuthController extends Controller
         if ($isEmail) {
             if (Auth::attempt(['email' => $loginInput, 'password' => $password], $request->boolean('remember'))) {
                 $request->session()->regenerate();
+                $target = Auth::user()->role === 'siswa' ? route('siswa.dashboard') : route('dashboard');
 
-                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+                return redirect()->intended($target)->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
             }
         } else {
             $field = $hasUsernameColumn ? 'username' : 'name';
             if (Auth::attempt([$field => $loginInput, 'password' => $password], $request->boolean('remember'))) {
                 $request->session()->regenerate();
+                $target = Auth::user()->role === 'siswa' ? route('siswa.dashboard') : route('dashboard');
 
-                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+                return redirect()->intended($target)->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
             }
         }
 
@@ -155,8 +157,9 @@ class AuthController extends Controller
 
         if ($user && Auth::attempt(['email' => $user->email, 'password' => $password], $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $target = Auth::user()->role === 'siswa' ? route('siswa.dashboard') : route('dashboard');
 
-            return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
+            return redirect()->intended($target)->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
         }
 
         return back()->withErrors([

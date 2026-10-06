@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MataPelajaranController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\SiswaPortalController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WaliKelasController;
 use Illuminate\Support\Facades\Route;
@@ -21,26 +22,40 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes (Hanya dapat diakses setelah login)
 Route::middleware('auth')->group(function () {
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/cetak-pdf', [DashboardController::class, 'cetakPdf'])->name('dashboard.cetakPdf');
 
-    // Siswa
-    Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
-    Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
-    Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
-    Route::post('/siswa/hapus-kelas', [SiswaController::class, 'destroyKelas'])->name('siswa.destroyKelas');
-    Route::get('/siswa/import', [SiswaController::class, 'importForm'])->name('siswa.importForm');
-    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
-    Route::get('/siswa/download-template', [SiswaController::class, 'downloadTemplate'])->name('siswa.downloadTemplate');
+    // ==========================================
+    // PORTAL SISWA (Khusus Role Siswa)
+    // ==========================================
+    Route::middleware(\App\Http\Middleware\EnsureRoleSiswa::class)->prefix('portal-siswa')->group(function () {
+        Route::get('/dashboard', [SiswaPortalController::class, 'dashboard'])->name('siswa.dashboard');
+        Route::get('/nilai', [SiswaPortalController::class, 'rekapNilai'])->name('siswa.nilai');
+        Route::get('/absen', [SiswaPortalController::class, 'rekapAbsen'])->name('siswa.absen');
+    });
 
-    // Absensi Cepat Harian & Rekap
-    Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
-    Route::post('/absensi', [AbsensiController::class, 'store'])->name('absensi.store');
-    Route::get('/absensi/harian', [AbsensiController::class, 'harian'])->name('absensi.harian');
-    Route::post('/absensi/harian', [AbsensiController::class, 'simpanHarian'])->name('absensi.harian.simpan');
-    Route::get('/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
-    Route::get('/rekap/pdf', [AbsensiController::class, 'cetakPDF'])->name('absensi.cetakPDF');
+    // ==========================================
+    // ROUTES GURU / ADMIN / PIKET (Bukan Siswa)
+    // ==========================================
+    Route::middleware(\App\Http\Middleware\EnsureNotSiswa::class)->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/cetak-pdf', [DashboardController::class, 'cetakPdf'])->name('dashboard.cetakPdf');
+
+        // Siswa
+        Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
+        Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
+        Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
+        Route::post('/siswa/hapus-kelas', [SiswaController::class, 'destroyKelas'])->name('siswa.destroyKelas');
+        Route::get('/siswa/import', [SiswaController::class, 'importForm'])->name('siswa.importForm');
+        Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+        Route::get('/siswa/download-template', [SiswaController::class, 'downloadTemplate'])->name('siswa.downloadTemplate');
+
+        // Absensi Cepat Harian & Rekap
+        Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+        Route::post('/absensi', [AbsensiController::class, 'store'])->name('absensi.store');
+        Route::get('/absensi/harian', [AbsensiController::class, 'harian'])->name('absensi.harian');
+        Route::post('/absensi/harian', [AbsensiController::class, 'simpanHarian'])->name('absensi.harian.simpan');
+        Route::get('/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
+        Route::get('/rekap/pdf', [AbsensiController::class, 'cetakPDF'])->name('absensi.cetakPDF');
 
     // Routes khusus Guru / Admin (Bukan Piket)
     Route::middleware(\App\Http\Middleware\CheckNotPiket::class)->group(function () {
@@ -93,5 +108,6 @@ Route::middleware('auth')->group(function () {
                 </div>";
             }
         })->name('run.migrate');
+    });
     });
 });
