@@ -570,47 +570,21 @@
                                         • {{ Auth::user()->email }}
                                     </div>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item py-2 small" href="{{ route('dashboard') }}">
-                                        <i class="fa-solid fa-gauge-high me-2" style="color: #6366f1;"></i> Dashboard
-                                    </a>
-                                </li>
+                                @if(Auth::user()->nip)
+                                    <li class="px-3 py-1 border-bottom bg-slate-50">
+                                        <span class="text-slate-500 font-monospace" style="font-size: 10px;">NIP. {{ Auth::user()->nip }}</span>
+                                    </li>
+                                @endif
                                 @if(Auth::user()->role === 'admin')
                                     <li>
                                         <a class="dropdown-item py-2 small" href="{{ route('users.index') }}">
                                             <i class="fa-solid fa-users-gear me-2 text-primary"></i> Kelola Pengguna
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item py-2 small" href="{{ route('dashboard.cetakPdf') }}">
-                                            <i class="fa-solid fa-file-pdf me-2 text-danger"></i> Cetak Rekap PDF
-                                        </a>
-                                    </li>
-                                @elseif(Auth::user()->role === 'guru')
-                                    <li>
-                                        <a class="dropdown-item py-2 small" href="{{ route('nilai.index') }}">
-                                            <i class="fa-solid fa-star me-2 text-warning"></i> Manajemen Nilai
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item py-2 small" href="{{ route('nilai.kegiatan.create') }}">
-                                            <i class="fa-solid fa-plus-circle me-2 text-success"></i> Input Nilai Baru
-                                        </a>
-                                    </li>
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                @else
+                                    <li class="my-1"></li>
                                 @endif
-                                @if(Auth::user()->is_wali_kelas && Auth::user()->waliKelas)
-                                    <li>
-                                        <a class="dropdown-item py-2 small" href="{{ route('walikelas.myClass') }}">
-                                            <i class="fa-solid fa-user-tie me-2 text-warning"></i> Wali Kelas ({{ optional(Auth::user()->waliKelas)->kelas }})
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item py-2 small" href="{{ route('walikelas.exportExcel', ['kelas' => optional(Auth::user()->waliKelas)->kelas]) }}">
-                                            <i class="fa-solid fa-file-excel me-2 text-success"></i> Rekap Excel Kelas {{ optional(Auth::user()->waliKelas)->kelas }}
-                                        </a>
-                                    </li>
-                                @endif
-                                <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="m-0">
                                         @csrf
