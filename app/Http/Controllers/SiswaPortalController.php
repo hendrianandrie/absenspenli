@@ -25,7 +25,14 @@ class SiswaPortalController extends Controller
 
         $siswa = $user->siswa;
         if (!$siswa) {
-            abort(404, 'Data profil siswa tidak ditemukan atau belum terhubung.');
+            $siswa = \App\Models\Siswa::where('nis', $user->username)->first();
+            if ($siswa) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'siswa_id')) {
+                    $user->update(['siswa_id' => $siswa->id]);
+                }
+            } else {
+                abort(404, 'Data profil siswa tidak ditemukan atau belum terhubung.');
+            }
         }
 
         return $siswa;

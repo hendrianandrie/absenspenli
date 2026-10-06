@@ -143,4 +143,55 @@ class UserController extends Controller
 
         return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil dihapus!');
     }
+
+    public function syncSiswaAccounts()
+    {
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->route('dashboard')->with('error', 'Hanya Admin yang dapat melakukan sinkronisasi akun.');
+        }
+
+        // 1. Pastikan kolom siswa_id ada pada tabel users
+        if (\Illuminate\Support\Facades\Schema::hasTable('users') && !\Illuminate\Support\Facades\Schema::hasColumn('users', 'siswa_id')) {
+            try {
+                \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->unsignedBigInteger('siswa_id')->nullable()->after('id');
+                });
+            } catch (\Throwable $e) {
+                // Ignore jika sudah ada
+            }
+        }
+
+        $hasSiswaIdCol = \Illuminate\Support\Facades\Schema::hasColumn('users', 'siswa_id');
+        $siswas = Siswa::whereNotNull('nis')->where('nis', '!=', '')->get();
+        $synced = 0;
+
+        foreach ($siswas as $siswa) {
+            $user = User::where('username', $siswa->nis)->first();
+            if ($user) {
+                $updateData = [
+                    'name' => $siswa->nama,
+                    'role' => 'siswa',
+                ];
+                if ($hasSiswaIdCol && $user->siswa_id != $siswa->id) {
+                    $updateData['siswa_id'] = $siswa->id;
+                }
+                $user->update($updateData);
+            } else {
+                $userData = [
+                    'name' => $siswa->nama,
+                    'username' => $siswa->nis,
+                    'email' => $siswa->nis . '@siswa.smpn5ciamis.sch.id',
+                    'password' => Hash::make($siswa->nis),
+                    'role' => 'siswa',
+                ];
+                if ($hasSiswaIdCol) {
+                    $userData['siswa_id'] = $siswa->id;
+                }
+                User::create($userData);
+            }
+            $synced++;
+        }
+
+        return redirect()->route('users.index', ['role' => 'siswa'])->with('success', "Berhasil! {$synced} akun siswa berhasil disinkronkan dan dapat langsung login menggunakan NIS.");
+    }
 }

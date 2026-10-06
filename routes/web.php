@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
         // Kelola Pengguna (Admin Only)
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::post('/users/sync-siswa', [UserController::class, 'syncSiswaAccounts'])->name('users.syncSiswa');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
         // Mata Pelajaran

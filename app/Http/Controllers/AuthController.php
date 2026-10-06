@@ -162,6 +162,51 @@ class AuthController extends Controller
             return redirect()->intended($target)->with('success', 'Selamat datang kembali, '.Auth::user()->name.'!');
         }
 
+        // =========================================================================
+        // AUTO-PROVISIONING / DIRECT LOGIN SISWA VIA NIS
+        // Memastikan siswa selalu bisa login menggunakan NIS meskipun database
+        // online hosting belum menjalankan migrasi akun siswa secara batch.
+        // =========================================================================
+        $siswa = Siswa::where('nis', $loginInput)->first();
+        if ($siswa && $password === (string) $siswa->nis) {
+            // Pastikan kolom siswa_id ada pada tabel users (auto-migrasi jika belum ada di hosting)
+            if (\Illuminate\Support\Facades\Schema::hasTable('users') && !\Illuminate\Support\Facades\Schema::hasColumn('users', 'siswa_id')) {
+                try {
+                    \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->unsignedBigInteger('siswa_id')->nullable()->after('id');
+                    });
+                } catch (\Throwable $e) {
+                    // Abaikan jika sudah ada
+                }
+            }
+
+            $hasSiswaIdCol = \Illuminate\Support\Facades\Schema::hasColumn('users', 'siswa_id');
+            $userSiswa = User::where('username', $siswa->nis)->first();
+
+            $emailCandidate = $siswa->nis . '@siswa.smpn5ciamis.sch.id';
+            $userData = [
+                'name' => $siswa->nama,
+                'username' => $siswa->nis,
+                'email' => $emailCandidate,
+                'password' => \Illuminate\Support\Facades\Hash::make($siswa->nis),
+                'role' => 'siswa',
+            ];
+            if ($hasSiswaIdCol) {
+                $userData['siswa_id'] = $siswa->id;
+            }
+
+            if ($userSiswa) {
+                $userSiswa->update($userData);
+            } else {
+                $userSiswa = User::create($userData);
+            }
+
+            Auth::login($userSiswa, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            return redirect()->route('siswa.dashboard')->with('success', 'Selamat datang, ' . $userSiswa->name . '!');
+        }
+
         return back()->withErrors([
             'login' => 'Username/Email atau Password yang Anda masukkan tidak sesuai.',
         ])->withInput($request->only('login'));

@@ -129,7 +129,13 @@
                     </h5>
                     <small class="text-slate-400">Total {{ number_format($roleCounts['all'], 0, ',', '.') }} Akun dalam Sistem</small>
                 </div>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <form action="{{ route('users.syncSiswa') }}" method="POST" class="d-inline m-0" onsubmit="return confirm('Apakah Anda ingin menyinkronkan seluruh akun siswa dari data NIS siswa? Ini akan memastikan seluruh siswa dapat langsung login.')">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-xs fw-semibold" style="font-size: 11.5px;">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Sinkronkan Akun Siswa
+                        </button>
+                    </form>
                     <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
                         Menampilkan {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} dari {{ $users->total() }} Akun
                     </span>
