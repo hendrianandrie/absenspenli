@@ -424,12 +424,6 @@
                                 <span>Wali Kelas {{ optional(Auth::user()->waliKelas)->kelas }}</span>
                             </a>
                         </div>
-                        <div class="mosaic-nav-item">
-                            <a class="mosaic-nav-link" href="{{ route('walikelas.exportExcel', ['kelas' => optional(Auth::user()->waliKelas)->kelas]) }}">
-                                <i class="fa-solid fa-file-excel" style="color: #10b981;"></i>
-                                <span>Rekap Excel Kelas {{ optional(Auth::user()->waliKelas)->kelas }}</span>
-                            </a>
-                        </div>
                     @endif
 
                 @else
