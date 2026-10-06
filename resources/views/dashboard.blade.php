@@ -147,9 +147,12 @@
                             Total Siswa: <strong>{{ $waliKelasStats['total_siswa'] ?? 0 }} siswa</strong> • Kehadiran Hari Ini: <strong>{{ $waliKelasStats['hadir'] ?? 0 }} hadir ({{ $waliKelasStats['hadir_pct'] ?? 0 }}%)</strong>
                         </p>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('walikelas.exportExcel', ['kelas' => $userWaliKelas->kelas]) }}" class="btn btn-outline-light btn-sm fw-semibold px-3 py-2 rounded-pill shadow-sm" style="font-size: 12px; border-color: rgba(255,255,255,0.4);">
+                            <i class="fa-solid fa-file-excel me-1 text-warning"></i> Rekap Excel
+                        </a>
                         <a href="{{ route('walikelas.myClass') }}" class="btn btn-light btn-sm fw-bold px-3 py-2 rounded-pill shadow-sm" style="color: #0f766e; font-size: 12px;">
-                            <i class="fa-solid fa-graduation-cap me-1"></i> Lihat Data Nilai Siswa Kelas {{ $userWaliKelas->kelas }}
+                            <i class="fa-solid fa-graduation-cap me-1"></i> Data Nilai Siswa
                         </a>
                     </div>
                 </div>

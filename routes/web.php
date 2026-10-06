@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');
         Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
         Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
+        Route::get('/wali-kelas/export-excel', [WaliKelasController::class, 'exportExcel'])->name('walikelas.exportExcel');
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {

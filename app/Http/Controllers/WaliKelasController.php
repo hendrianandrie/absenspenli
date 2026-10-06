@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\LegerNilaiExport;
 use App\Models\Absensi;
 use App\Models\Kegiatan;
 use App\Models\MataPelajaran;
@@ -10,6 +11,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Models\WaliKelas;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WaliKelasController extends Controller
 {
@@ -100,6 +102,53 @@ class WaliKelasController extends Controller
             return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
         }
 
+        $data = $this->getRekapDataForClass($selectedKelas);
+
+        return view('walikelas.show', array_merge([
+            'selectedKelas' => $selectedKelas,
+            'waliKelas' => $waliKelas,
+        ], $data));
+    }
+
+    /**
+     * Download Rekapitulasi Nilai Siswa Per Mata Pelajaran (Leger Nilai) dalam format Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $currentUser = auth()->user();
+        $selectedKelas = null;
+        $waliKelas = null;
+
+        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
+            $selectedKelas = $request->kelas;
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } else {
+            $waliKelas = $currentUser ? $currentUser->waliKelas()->with('user')->first() : null;
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : $request->get('kelas');
+        }
+
+        if (!$selectedKelas) {
+            return redirect()->back()->with('error', 'Kelas belum ditentukan atau Anda belum ditetapkan sebagai Wali Kelas.');
+        }
+
+        if (!$waliKelas) {
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        }
+
+        $data = $this->getRekapDataForClass($selectedKelas);
+        $fileName = 'Rekapitulasi_Nilai_Siswa_Per_Mapel_Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas) . '.xlsx';
+
+        return Excel::download(
+            new LegerNilaiExport($selectedKelas, $waliKelas, $data),
+            $fileName
+        );
+    }
+
+    /**
+     * Helper: Menghitung rekapitulasi nilai berbobot dan absensi per siswa di kelas tertentu
+     */
+    protected function getRekapDataForClass(string $selectedKelas): array
+    {
         $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
         $tingkat = MataPelajaran::getTingkatFromKelas($selectedKelas);
 
@@ -207,6 +256,7 @@ class WaliKelasController extends Controller
             $absen = $absensiMap[$siswa->id] ?? [];
             $rekapSiswa[$siswa->id] = [
                 'scores' => $mapelScores,
+                'total_nilai' => count($validFinalScores) > 0 ? round(array_sum($validFinalScores), 1) : 0,
                 'overall_avg' => $overallAvg,
                 'tuntas_mapel' => $tuntasMapelCount,
                 'total_mapel' => $totalAssessedMapel,
@@ -224,14 +274,12 @@ class WaliKelasController extends Controller
             'lowest' => count($classScoresAccum) > 0 ? min($classScoresAccum) : 0,
         ];
 
-        return view('walikelas.show', compact(
-            'selectedKelas',
-            'waliKelas',
+        return compact(
             'siswas',
             'mapels',
             'rekapSiswa',
             'analytics',
             'tingkat'
-        ));
+        );
     }
 }

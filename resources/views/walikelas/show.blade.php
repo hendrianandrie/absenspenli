@@ -26,6 +26,9 @@
                     <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Pengaturan
                 </a>
             @endif
+            <a href="{{ route('walikelas.exportExcel', ['kelas' => $selectedKelas]) }}" class="btn btn-success btn-sm rounded-pill px-3 py-1.5 shadow-sm text-white" style="font-size: 12px; background-color: #059669; border-color: #059669;">
+                <i class="fa-solid fa-file-excel me-1.5"></i> Download Rekap Excel
+            </a>
             <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5" style="font-size: 12px;">
                 <i class="fa-solid fa-print me-1"></i> Cetak Halaman
             </button>
@@ -119,10 +122,35 @@
                 </span>
             </div>
 
-            <!-- Search box -->
-            <div class="position-relative" style="width: 240px;">
-                <input type="text" id="searchInput" class="form-control form-control-sm rounded-pill ps-4" placeholder="Cari nama atau NIS siswa..." style="font-size: 12px;">
-                <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-2.5 text-slate-400" style="font-size: 11px;"></i>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Dropdown Download Excel -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 11.5px;">
+                        <i class="fa-solid fa-file-excel me-1 text-success"></i> Unduh Excel
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 12px; min-width: 250px;">
+                        <li>
+                            <a class="dropdown-item py-2 fw-semibold text-success" href="{{ route('walikelas.exportExcel', ['kelas' => $selectedKelas]) }}">
+                                <i class="fa-solid fa-table-cells me-2"></i> Rekap Semua Mapel (Leger Nilai)
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li class="dropdown-header text-uppercase text-slate-400 fw-bold" style="font-size: 10px;">Unduh Per Mata Pelajaran:</li>
+                        @foreach($mapels as $m)
+                            <li>
+                                <a class="dropdown-item py-1.5" href="{{ route('nilai.rekapExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $m->id]) }}">
+                                    <i class="fa-regular fa-file-excel text-muted me-2"></i> {{ $m->nama_mapel }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <!-- Search box -->
+                <div class="position-relative" style="width: 220px;">
+                    <input type="text" id="searchInput" class="form-control form-control-sm rounded-pill ps-4" placeholder="Cari nama atau NIS..." style="font-size: 11.5px;">
+                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-2.5 text-slate-400" style="font-size: 11px;"></i>
+                </div>
             </div>
         </div>
 
