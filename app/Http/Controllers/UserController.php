@@ -10,13 +10,52 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (auth()->user()->role !== 'admin') {
             return redirect()->route('dashboard')->with('error', 'Hanya Admin yang dapat mengelola akun pengguna.');
         }
 
-        $users = User::with(['mataPelajaran', 'mataPelajarans'])->orderBy('role')->orderBy('name')->get();
+        $selectedRole = $request->get('role', 'all');
+        $search = trim($request->get('q', ''));
+        $perPage = $request->get('per_page', 25);
+
+        // Counter untuk setiap role akun
+        $roleCounts = [
+            'all' => User::count(),
+            'admin' => User::where('role', 'admin')->count(),
+            'guru' => User::where('role', 'guru')->count(),
+            'piket' => User::where('role', 'piket')->count(),
+            'siswa' => User::where('role', 'siswa')->count(),
+        ];
+
+        $query = User::with(['mataPelajaran', 'mataPelajarans', 'siswa']);
+
+        if ($selectedRole && $selectedRole !== 'all') {
+            $query->where('role', $selectedRole);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        // Urutkan akun prioritas: Admin -> Guru -> Piket -> Siswa, lalu Nama
+        $users = $query->orderByRaw("CASE 
+                WHEN role = 'admin' THEN 1 
+                WHEN role = 'guru' THEN 2 
+                WHEN role = 'piket' THEN 3 
+                WHEN role = 'siswa' THEN 4 
+                ELSE 5 
+            END")
+            ->orderBy('name')
+            ->paginate($perPage === 'all' ? 1000 : (int)$perPage)
+            ->withQueryString();
+
         $mapels = MataPelajaran::orderBy('nama_mapel')->get();
         $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
         $daftarKelas = $rawKelas->sort(function ($a, $b) {
@@ -29,7 +68,7 @@ class UserController extends Controller
             return strnatcasecmp($a, $b);
         })->values();
 
-        return view('users.index', compact('users', 'mapels', 'daftarKelas'));
+        return view('users.index', compact('users', 'mapels', 'daftarKelas', 'selectedRole', 'search', 'roleCounts', 'perPage'));
     }
 
     public function store(Request $request)
@@ -46,7 +85,7 @@ class UserController extends Controller
             'nip' => 'nullable|string|max:35',
             'email' => 'required|email|max:150|unique:users,email,'.$userId,
             'password' => $userId ? 'nullable|string|min:6' : 'required|string|min:6',
-            'role' => 'required|in:admin,piket,guru',
+            'role' => 'required|in:admin,piket,guru,siswa',
             'mata_pelajaran_ids' => 'nullable|array',
             'mata_pelajaran_ids.*' => 'exists:mata_pelajarans,id',
             'mata_pelajaran_id' => 'nullable|exists:mata_pelajarans,id',

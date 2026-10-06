@@ -52,6 +52,7 @@
                         <option value="guru" selected>Guru Mata Pelajaran</option>
                         <option value="piket">Petugas Piket (Absensi)</option>
                         <option value="admin">Administrator (Full Access)</option>
+                        <option value="siswa">Siswa</option>
                     </select>
                 </div>
 
@@ -120,16 +121,69 @@
     <!-- Tabel Daftar Pengguna -->
     <div class="col-lg-8">
         <div class="card card-custom p-4 bg-white shadow-sm">
+            <!-- Header & Role Filter Tabs -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.1rem;">
-                    <i class="fa-solid fa-users-gear text-primary me-2"></i> Daftar Akun Terdaftar
-                </h5>
-                <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
-                    {{ $users->count() }} Pengguna
-                </span>
+                <div>
+                    <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.1rem;">
+                        <i class="fa-solid fa-users-gear text-primary me-2"></i> Daftar Akun Terdaftar
+                    </h5>
+                    <small class="text-slate-400">Total {{ number_format($roleCounts['all'], 0, ',', '.') }} Akun dalam Sistem</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
+                        Menampilkan {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} dari {{ $users->total() }} Akun
+                    </span>
+                </div>
             </div>
+
+            <!-- Role Filter Pills & Search Form -->
+            <div class="bg-slate-50 p-2.5 rounded-3 border mb-3">
+                <form action="{{ route('users.index') }}" method="GET" id="userFilterForm" class="row g-2 align-items-center">
+                    <input type="hidden" name="role" id="filterRoleInput" value="{{ $selectedRole }}">
+                    
+                    <div class="col-12 col-xl-7">
+                        <div class="d-flex flex-wrap align-items-center gap-1.5">
+                            <span class="small text-slate-500 fw-semibold me-1 d-none d-sm-inline" style="font-size: 12px;">Filter Role:</span>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'all' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('all')">
+                                Semua <span class="badge {{ $selectedRole === 'all' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['all'] }}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'guru' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('guru')">
+                                <i class="fa-solid fa-chalkboard-user me-1 {{ $selectedRole === 'guru' ? 'text-white' : 'text-success' }}"></i> Guru <span class="badge {{ $selectedRole === 'guru' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['guru'] }}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'admin' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('admin')">
+                                <i class="fa-solid fa-shield-halved me-1 {{ $selectedRole === 'admin' ? 'text-white' : 'text-danger' }}"></i> Admin <span class="badge {{ $selectedRole === 'admin' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['admin'] }}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'piket' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('piket')">
+                                <i class="fa-solid fa-id-card me-1 {{ $selectedRole === 'piket' ? 'text-white' : 'text-warning' }}"></i> Piket <span class="badge {{ $selectedRole === 'piket' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['piket'] }}</span>
+                            </button>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'siswa' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('siswa')">
+                                <i class="fa-solid fa-user-graduate me-1 {{ $selectedRole === 'siswa' ? 'text-white' : 'text-info' }}"></i> Siswa <span class="badge {{ $selectedRole === 'siswa' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['siswa'] }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" name="q" value="{{ $search }}" class="form-control border-start-0 ps-0" placeholder="Cari nama, username, NIS, atau email..." style="font-size: 12px;">
+                            @if(!empty($search))
+                                <a href="{{ route('users.index', ['role' => $selectedRole]) }}" class="btn btn-outline-secondary border-start-0" title="Hapus pencarian">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            @endif
+                            <button type="submit" class="btn btn-primary px-2.5">
+                                Cari
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             @if($users->isEmpty())
-                <div class="text-center py-4 text-muted">Belum ada akun terdaftar.</div>
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-regular fa-folder-open fs-2 mb-2 text-slate-300"></i>
+                    <p class="mb-0">Tidak ada akun yang sesuai dengan filter atau kata kunci pencarian.</p>
+                </div>
             @else
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
@@ -137,7 +191,7 @@
                             <tr>
                                 <th class="py-2.5 ps-3" style="min-width: 220px;">Pengguna</th>
                                 <th class="text-center py-2.5" style="width: 100px;">Role</th>
-                                <th class="py-2.5" style="min-width: 260px;">Mapel & Kelas Diampu</th>
+                                <th class="py-2.5" style="min-width: 260px;">Mapel / Kelas</th>
                                 <th class="text-end py-2.5 pe-3" style="width: 150px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
@@ -147,7 +201,7 @@
                                     <td class="ps-3 py-2.5">
                                         <div class="d-flex align-items-center gap-2.5">
                                             <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
-                                                 style="width: 34px; height: 34px; font-size: 13px; background: {{ $user->role === 'admin' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : ($user->role === 'piket' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #6366f1, #4f46e5)') }};">
+                                                 style="width: 34px; height: 34px; font-size: 13px; background: {{ $user->role === 'admin' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : ($user->role === 'piket' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ($user->role === 'siswa' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'linear-gradient(135deg, #6366f1, #4f46e5)')) }};">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                             <div>
@@ -182,6 +236,10 @@
                                             <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px;">
                                                 <i class="fa-solid fa-id-card me-1"></i> Piket
                                             </span>
+                                        @elseif($user->role === 'siswa')
+                                            <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px;">
+                                                <i class="fa-solid fa-user-graduate me-1"></i> Siswa
+                                            </span>
                                         @else
                                             <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:11px;">
                                                 <i class="fa-solid fa-chalkboard-user me-1"></i> Guru
@@ -200,7 +258,7 @@
                                                     <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 11px;">
                                                         <i class="fa-solid fa-book-open me-1" style="font-size: 9.5px;"></i>{{ $m->nama_mapel }}
                                                         @if(isset($m->tingkat) && $m->tingkat !== 'Semua')
-                                                            <span class="badge rounded-pill px-1.5 py-0.2 ms-1" style="background: #dbeafe; color: #1d4ed8; font-size: 9px;">Tk. {{ $m->tingkat }}</span>
+                                                             <span class="badge rounded-pill px-1.5 py-0.2 ms-1" style="background: #dbeafe; color: #1d4ed8; font-size: 9px;">Tk. {{ $m->tingkat }}</span>
                                                         @endif
                                                     </span>
                                                 @empty
@@ -216,6 +274,19 @@
                                                     <span class="text-slate-400 fst-italic" style="font-size: 11.5px;">Semua Kelas</span>
                                                 @endif
                                             </div>
+                                        @elseif($user->role === 'siswa')
+                                            @if($user->siswa)
+                                                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 11px;">
+                                                        <i class="fa-solid fa-chalkboard-user me-1"></i> Kelas {{ $user->siswa->kelas }}
+                                                    </span>
+                                                    <span class="badge font-monospace px-1.5 py-0.5 rounded text-slate-500 bg-light border" style="font-size: 10px;">
+                                                        NIS: {{ $user->siswa->nis }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="badge bg-light text-slate-500 border rounded-pill px-2 py-0.5" style="font-size: 10.5px;">Akun Siswa</span>
+                                            @endif
                                         @else
                                             <span class="text-slate-400">-</span>
                                         @endif
@@ -244,6 +315,16 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination Container -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 pt-3 mt-2 border-top">
+                    <div class="text-slate-500 small">
+                        Menampilkan <strong>{{ $users->firstItem() ?? 0 }}</strong> s.d. <strong>{{ $users->lastItem() ?? 0 }}</strong> dari <strong>{{ $users->total() }}</strong> akun
+                    </div>
+                    <div>
+                        {{ $users->links() }}
+                    </div>
                 </div>
             @endif
         </div>
@@ -304,8 +385,18 @@
                                 <option value="guru" {{ $user->role === 'guru' ? 'selected' : '' }}>Guru Mata Pelajaran</option>
                                 <option value="piket" {{ $user->role === 'piket' ? 'selected' : '' }}>Petugas Piket (Absensi)</option>
                                 <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrator (Full Access)</option>
+                                <option value="siswa" {{ $user->role === 'siswa' ? 'selected' : '' }}>Siswa</option>
                             </select>
                         </div>
+
+                        @if($user->role === 'siswa' && $user->siswa)
+                            <div class="alert alert-info py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2 rounded-3" style="background:#e0f2fe; color:#0369a1;">
+                                <i class="fa-solid fa-graduation-cap fs-5"></i>
+                                <div>
+                                    <strong>Data Siswa:</strong> Kelas {{ $user->siswa->kelas }} &bull; NIS: {{ $user->siswa->nis }}
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Section Khusus Role Guru Edit -->
                         <div id="editGuruFields{{ $user->id }}" class="bg-light p-3 rounded mb-3 border" style="{{ $user->role === 'guru' ? '' : 'display: none;' }}">
@@ -394,6 +485,11 @@
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
+    }
+
+    function applyRoleFilter(role) {
+        document.getElementById('filterRoleInput').value = role;
+        document.getElementById('userFilterForm').submit();
     }
 
     function handleRoleChange(selectId, targetContainerId) {
