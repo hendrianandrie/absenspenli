@@ -20,16 +20,13 @@
             </p>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-            @if(Auth::check() && Auth::user()->role === 'admin')
+        @if(Auth::check() && Auth::user()->role === 'admin')
+            <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('walikelas.index') }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5" style="font-size: 12px;">
                     <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Pengaturan
                 </a>
-            @endif
-            <button type="button" onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5" style="font-size: 12px;">
-                <i class="fa-solid fa-print me-1"></i> Cetak Halaman
-            </button>
-        </div>
+            </div>
+        @endif
     </div>
 
     <!-- Analytics KPI Cards -->
