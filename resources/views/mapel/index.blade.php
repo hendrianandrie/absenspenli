@@ -74,7 +74,14 @@
     <!-- Tabel Daftar Mapel & Edit KKM -->
     <div class="{{ (!empty($isGuru) && $isGuru) ? 'col-md-12' : 'col-md-8' }}">
         <div class="card card-custom p-4 bg-white shadow-sm">
-            <h5 class="fw-bold mb-3"><i class="fa-solid fa-list text-primary me-2"></i> Daftar Mata Pelajaran & Bobot</h5>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.1rem;">
+                    <i class="fa-solid fa-list-check text-primary me-2"></i> Daftar Mata Pelajaran & Bobot
+                </h5>
+                <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
+                    {{ $mapels->count() }} Mapel Terdaftar
+                </span>
+            </div>
             @if($mapels->isEmpty())
                 <div class="text-center py-4 text-muted">
                     @if(!empty($isGuru) && $isGuru)
@@ -85,51 +92,70 @@
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                        <thead class="bg-slate-50 border-bottom text-slate-600" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;">
                             <tr>
-                                <th>Kode</th>
-                                <th>Nama Mata Pelajaran</th>
-                                <th class="text-center">Tingkat</th>
-                                <th class="text-center">KKM</th>
-                                <th class="text-center">Bobot Penilaian (T/UH/UTS/UAS)</th>
-                                <th class="text-end">Aksi</th>
+                                <th class="py-2.5 ps-2" style="width: 100px;">Kode</th>
+                                <th class="py-2.5">Nama Mata Pelajaran</th>
+                                <th class="text-center py-2.5" style="width: 120px;">Tingkat</th>
+                                <th class="text-center py-2.5" style="width: 85px;">KKM</th>
+                                <th class="text-center py-2.5" style="min-width: 260px;">Bobot Rapor (T/UH/UTS/UAS)</th>
+                                <th class="text-end py-2.5 pe-2" style="width: 150px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($mapels as $mapel)
                                 <tr>
-                                    <td><span class="badge bg-secondary font-monospace fs-6">{{ $mapel->kode_mapel }}</span></td>
-                                    <td class="fw-semibold">{{ $mapel->nama_mapel }}</td>
+                                    <td class="ps-2">
+                                        <span class="badge font-monospace rounded-2 px-2 py-1" style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:11.5px; letter-spacing:0.3px;">
+                                            {{ $mapel->kode_mapel }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-slate-800" style="font-size: 13px;">{{ $mapel->nama_mapel }}</div>
+                                    </td>
                                     <td class="text-center">
-                                        @if(($mapel->tingkat ?? 'Semua') == 'Semua')
-                                            <span class="badge bg-secondary">Semua (7,8,9)</span>
+                                        @php
+                                            $t = $mapel->tingkat ?? 'Semua';
+                                        @endphp
+                                        @if($t === '7')
+                                            <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px;">Tingkat 7</span>
+                                        @elseif($t === '8')
+                                            <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background:#ede9fe; color:#5b21b6; border:1px solid #ddd6fe; font-size:11px;">Tingkat 8</span>
+                                        @elseif($t === '9')
+                                            <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px;">Tingkat 9</span>
                                         @else
-                                            <span class="badge bg-info text-dark">Tingkat {{ $mapel->tingkat }}</span>
+                                            <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:11px;">Semua (7,8,9)</span>
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary fs-6 px-3 py-2"><i class="fa-solid fa-star text-warning me-1"></i> {{ $mapel->kkm }}</span>
+                                        <span class="badge rounded-pill fw-bold px-2.5 py-1" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 12px;">
+                                            <i class="fa-solid fa-star text-warning me-1" style="font-size: 10px;"></i>{{ $mapel->kkm }}
+                                        </span>
                                     </td>
-                                    <td class="text-center small">
-                                        <span class="badge bg-light text-dark border">Tugas: {{ $mapel->bobot_tugas ?? 20 }}%</span>
-                                        <span class="badge bg-light text-dark border">UH: {{ $mapel->bobot_uh ?? 30 }}%</span>
-                                        <span class="badge bg-light text-dark border">UTS: {{ $mapel->bobot_uts ?? 25 }}%</span>
-                                        <span class="badge bg-light text-dark border">UAS: {{ $mapel->bobot_uas ?? 25 }}%</span>
+                                    <td class="text-center">
+                                        <div class="d-inline-flex align-items-center gap-1 flex-wrap justify-content-center" style="font-size: 11px;">
+                                            <span class="badge bg-light text-slate-700 border px-1.5 py-0.5" style="font-size: 10.5px;">T: <strong class="text-slate-900">{{ $mapel->bobot_tugas ?? 20 }}%</strong></span>
+                                            <span class="badge bg-light text-slate-700 border px-1.5 py-0.5" style="font-size: 10.5px;">UH: <strong class="text-slate-900">{{ $mapel->bobot_uh ?? 30 }}%</strong></span>
+                                            <span class="badge bg-light text-slate-700 border px-1.5 py-0.5" style="font-size: 10.5px;">UTS: <strong class="text-slate-900">{{ $mapel->bobot_uts ?? 25 }}%</strong></span>
+                                            <span class="badge bg-light text-slate-700 border px-1.5 py-0.5" style="font-size: 10.5px;">UAS: <strong class="text-slate-900">{{ $mapel->bobot_uas ?? 25 }}%</strong></span>
+                                        </div>
                                     </td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $mapel->id }}">
-                                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit KKM & Bobot
-                                        </button>
-                                        @if(empty($isGuru) || !$isGuru)
-                                            <form action="{{ route('mapel.destroy', $mapel->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus mata pelajaran ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fa-solid fa-trash me-1"></i> Hapus
-                                                </button>
-                                            </form>
-                                        @endif
+                                    <td class="text-end pe-2" style="white-space: nowrap;">
+                                        <div class="d-inline-flex align-items-center gap-1.5">
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 shadow-sm" style="font-size: 11.5px;" data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $mapel->id }}" title="Edit KKM & Bobot">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                                            </button>
+                                            @if(empty($isGuru) || !$isGuru)
+                                                <form action="{{ route('mapel.destroy', $mapel->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('Hapus mata pelajaran {{ $mapel->nama_mapel }}?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 shadow-sm" style="font-size: 11.5px;" title="Hapus Mapel">
+                                                        <i class="fa-solid fa-trash me-1"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
