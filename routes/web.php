@@ -82,11 +82,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
         Route::get('/nilai/rapor-siswa/{id}', [NilaiController::class, 'raporSiswaPdf'])->name('nilai.raporSiswaPdf');
 
-        // Wali Kelas (Pengaturan Admin & Monitoring Nilai Siswa)
+        // Wali Kelas (Pengaturan Admin, Monitoring Nilai & Rekap Kehadiran)
         Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');
         Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
         Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
         Route::get('/wali-kelas/export-excel', [WaliKelasController::class, 'exportExcel'])->name('walikelas.exportExcel');
+        Route::get('/wali-kelas/kehadiran', [WaliKelasController::class, 'kehadiranKelas'])->name('walikelas.kehadiran');
+        Route::get('/wali-kelas/kehadiran/export-excel', [WaliKelasController::class, 'exportKehadiranExcel'])->name('walikelas.kehadiran.exportExcel');
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {

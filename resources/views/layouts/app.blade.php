@@ -441,11 +441,21 @@
                     </div>
 
                     @if(Auth::user()->is_wali_kelas && Auth::user()->waliKelas)
+                        @php
+                            $myWaliKelas = Auth::user()->waliKelas->first() ?? Auth::user()->waliKelas;
+                            $myKelasName = optional($myWaliKelas)->kelas;
+                        @endphp
                         <div class="mosaic-nav-section">Tugas Tambahan</div>
                         <div class="mosaic-nav-item">
-                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') ? 'active' : '' }}" href="{{ route('walikelas.myClass') }}">
+                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.myClass') ? 'active' : '' }}" href="{{ route('walikelas.myClass') }}">
                                 <i class="fa-solid fa-user-tie" style="color: #f59e0b;"></i>
-                                <span>Wali Kelas {{ optional(Auth::user()->waliKelas)->kelas }}</span>
+                                <span>Nilai Kelas {{ $myKelasName }}</span>
+                            </a>
+                        </div>
+                        <div class="mosaic-nav-item">
+                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran') }}">
+                                <i class="fa-solid fa-clipboard-user" style="color: #38bdf8;"></i>
+                                <span>Rekap Kehadiran</span>
                             </a>
                         </div>
                     @endif

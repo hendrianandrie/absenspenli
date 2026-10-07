@@ -20,13 +20,16 @@
             </p>
         </div>
 
-        @if(Auth::check() && Auth::user()->role === 'admin')
-            <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ route('walikelas.kehadiran', ['kelas' => $selectedKelas]) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
+                <i class="fa-solid fa-clipboard-user me-1.5"></i> Rekap Kehadiran
+            </a>
+            @if(Auth::check() && Auth::user()->role === 'admin')
                 <a href="{{ route('walikelas.index') }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5" style="font-size: 12px;">
                     <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Pengaturan
                 </a>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     <!-- Analytics KPI Cards -->

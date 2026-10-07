@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\LegerNilaiExport;
+use App\Exports\RekapKehadiranKelasExport;
 use App\Models\Absensi;
 use App\Models\Kegiatan;
 use App\Models\MataPelajaran;
@@ -142,6 +143,173 @@ class WaliKelasController extends Controller
             new LegerNilaiExport($selectedKelas, $waliKelas, $data),
             $fileName
         );
+    }
+
+    /**
+     * Wali Kelas / Admin: Melihat rekapitulasi kehadiran / presensi bulanan siswa kelas binaan
+     */
+    public function kehadiranKelas(Request $request)
+    {
+        $currentUser = auth()->user();
+        $selectedKelas = null;
+        $waliKelas = null;
+
+        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
+            $selectedKelas = $request->kelas;
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } else {
+            $waliKelas = $currentUser->waliKelas()->with('user')->first();
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : ($currentUser->role === 'admin' ? $request->get('kelas', 'VII A') : null);
+        }
+
+        if (!$selectedKelas) {
+            return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
+        }
+
+        if (!$waliKelas) {
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        }
+
+        $bulan = (int) $request->get('bulan', date('n'));
+        $tahun = (int) $request->get('tahun', date('Y'));
+
+        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun);
+
+        // Daftar nama bulan
+        $daftarBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $daftarTahun = range(date('Y') - 2, date('Y') + 1);
+
+        // Jika admin, sediakan daftar semua kelas untuk opsi ganti rombel
+        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+
+        return view('walikelas.kehadiran', array_merge([
+            'selectedKelas' => $selectedKelas,
+            'waliKelas' => $waliKelas,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'daftarBulan' => $daftarBulan,
+            'daftarTahun' => $daftarTahun,
+            'daftarKelas' => $daftarKelas,
+        ], $data));
+    }
+
+    /**
+     * Download Rekapitulasi Kehadiran Siswa Kelas Binaan dalam format Excel
+     */
+    public function exportKehadiranExcel(Request $request)
+    {
+        $currentUser = auth()->user();
+        $selectedKelas = null;
+        $waliKelas = null;
+
+        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
+            $selectedKelas = $request->kelas;
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } else {
+            $waliKelas = $currentUser ? $currentUser->waliKelas()->with('user')->first() : null;
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : $request->get('kelas');
+        }
+
+        if (!$selectedKelas) {
+            return redirect()->back()->with('error', 'Kelas belum ditentukan atau Anda bukan Wali Kelas.');
+        }
+
+        if (!$waliKelas) {
+            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        }
+
+        $bulan = (int) $request->get('bulan', date('n'));
+        $tahun = (int) $request->get('tahun', date('Y'));
+
+        $daftarBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun);
+        $namaBulan = $daftarBulan[$bulan] ?? 'Bulan_' . $bulan;
+        $fileName = 'Rekap_Kehadiran_Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas) . '_' . $namaBulan . '_' . $tahun . '.xlsx';
+
+        return Excel::download(
+            new RekapKehadiranKelasExport($selectedKelas, $waliKelas, $bulan, $tahun, $namaBulan, $data),
+            $fileName
+        );
+    }
+
+    /**
+     * Helper: Menghitung rekapitulasi kehadiran per siswa di kelas tertentu berdasarkan bulan & tahun
+     */
+    protected function getRekapKehadiranData(string $selectedKelas, int $bulan, int $tahun): array
+    {
+        $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
+        $siswaIds = $siswas->pluck('id');
+
+        $absensis = Absensi::whereIn('siswa_id', $siswaIds)
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->get();
+
+        // Hitung tanggal unik presensi diambil di kelas ini pada bulan tersebut
+        $distinctDates = $absensis->pluck('tanggal')->unique();
+        $totalHariEfektif = $distinctDates->count();
+
+        // Kelompokkan per siswa_id
+        $absensiGrouped = $absensis->groupBy('siswa_id');
+
+        $rekapSiswa = [];
+        $totalKelasHadir = 0;
+        $totalKelasSakit = 0;
+        $totalKelasIzin = 0;
+        $totalKelasAlpha = 0;
+        $persenAccum = [];
+
+        foreach ($siswas as $siswa) {
+            $records = $absensiGrouped->get($siswa->id, collect());
+            $hadir = $records->where('status', 'Hadir')->count();
+            $sakit = $records->where('status', 'Sakit')->count();
+            $izin = $records->where('status', 'Izin')->count();
+            $alpha = $records->where('status', 'Alpha')->count();
+            $totalTercatat = $hadir + $sakit + $izin + $alpha;
+
+            // Persentase kehadiran siswa
+            $persen = $totalTercatat > 0 ? round(($hadir / $totalTercatat) * 100, 1) : 100.0;
+            $persenAccum[] = $persen;
+
+            $totalKelasHadir += $hadir;
+            $totalKelasSakit += $sakit;
+            $totalKelasIzin += $izin;
+            $totalKelasAlpha += $alpha;
+
+            $rekapSiswa[$siswa->id] = [
+                'siswa' => $siswa,
+                'hadir' => $hadir,
+                'sakit' => $sakit,
+                'izin' => $izin,
+                'alpha' => $alpha,
+                'total' => $totalTercatat,
+                'persen' => $persen,
+            ];
+        }
+
+        $totalSiswa = $siswas->count();
+        $avgPersenKelas = count($persenAccum) > 0 ? round(array_sum($persenAccum) / count($persenAccum), 1) : 100.0;
+
+        $analytics = [
+            'total_siswa' => $totalSiswa,
+            'total_hari_efektif' => $totalHariEfektif,
+            'total_hadir' => $totalKelasHadir,
+            'total_sakit' => $totalKelasSakit,
+            'total_izin' => $totalKelasIzin,
+            'total_alpha' => $totalKelasAlpha,
+            'avg_persen' => $avgPersenKelas,
+        ];
+
+        return compact('siswas', 'rekapSiswa', 'analytics');
     }
 
     /**
