@@ -17,13 +17,13 @@
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Kelas: {{ $isSemua ? 'Semua Kelas (Seluruh Siswa)' : $kelas }} | Bulan: {{ $namaBulan }} {{ $tahun }} | Tahun Ajaran: {{ $waliKelas->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
+                Kelas: {{ $isSemua ? 'Semua Kelas (Seluruh Siswa)' : $kelas }} | Bulan: {{ $namaBulan }} {{ $tahun }} | Tahun Ajaran: {{ $waliKelas?->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
             </th>
         </tr>
         @if(!$isSemua)
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Wali Kelas: {{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }} @if(optional($waliKelas->user)->nip) | NIP: '{{ optional($waliKelas->user)->nip }} @endif
+                Wali Kelas: {{ $waliKelas?->user?->name ?? 'Belum Ditentukan' }} @if($waliKelas?->user?->nip) | NIP: '{{ $waliKelas?->user?->nip }} @endif
             </th>
         </tr>
         @endif
@@ -127,7 +127,7 @@
             </td>
             <td colspan="4"></td>
             <td colspan="4" style="text-align: center; font-weight: bold; text-decoration: underline;">
-                {{ $isSemua ? (auth()->user()->name ?? 'Administrator') : (optional($waliKelas->user)->name ?? '( .................................................... )') }}
+                {{ $isSemua ? (auth()->user()?->name ?? 'Administrator') : ($waliKelas?->user?->name ?? '( .................................................... )') }}
             </td>
         </tr>
         <tr>
@@ -136,10 +136,10 @@
             </td>
             <td colspan="4"></td>
             <td colspan="4" style="text-align: center;">
-                @if(!$isSemua && optional($waliKelas->user)->nip)
-                    NIP. '{{ optional($waliKelas->user)->nip }}
-                @elseif($isSemua && auth()->user()->nip)
-                    NIP. '{{ auth()->user()->nip }}
+                @if(!$isSemua && $waliKelas?->user?->nip)
+                    NIP. '{{ $waliKelas?->user?->nip }}
+                @elseif($isSemua && auth()->user()?->nip)
+                    NIP. '{{ auth()->user()?->nip }}
                 @else
                     NIP. -
                 @endif

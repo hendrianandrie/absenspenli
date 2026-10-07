@@ -10,7 +10,7 @@
                     <i class="fa-solid fa-user-tie me-1"></i> Kelas Binaan
                 </span>
                 <span class="text-slate-400" style="font-size: 12px;">•</span>
-                <span class="text-slate-500 small" style="font-size: 12px;">Wali Kelas: <strong>{{ $waliKelas->user->name ?? 'Belum Ditentukan' }}</strong></span>
+                <span class="text-slate-500 small" style="font-size: 12px;">Wali Kelas: <strong>{{ $waliKelas?->user?->name ?? 'Belum Ditentukan' }}</strong></span>
             </div>
             <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
                 <i class="fa-solid fa-graduation-cap text-teal me-2" style="color: #0f766e;"></i> Data Nilai Siswa — Kelas {{ $selectedKelas }}

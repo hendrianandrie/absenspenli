@@ -17,12 +17,12 @@
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Kelas: {{ $kelas }} | Tingkat: {{ $tingkat }} | Semester / Tahun Ajaran: {{ $waliKelas->tahun_ajaran ?? '2025/2026' }}
+                Kelas: {{ $kelas }} | Tingkat: {{ $tingkat }} | Semester / Tahun Ajaran: {{ $waliKelas?->tahun_ajaran ?? '2025/2026' }}
             </th>
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Wali Kelas: {{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }} @if(optional($waliKelas->user)->nip) | NIP: '{{ optional($waliKelas->user)->nip }} @endif
+                Wali Kelas: {{ $waliKelas?->user?->name ?? 'Belum Ditentukan' }} @if($waliKelas?->user?->nip) | NIP: '{{ $waliKelas?->user?->nip }} @endif
             </th>
         </tr>
         <tr></tr>
@@ -192,8 +192,8 @@
         <td colspan="4" style="text-align: center;">
             Ciamis, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
             Wali Kelas {{ $kelas }}<br><br><br><br>
-            <strong><u>{{ optional($waliKelas->user)->name ?? '....................................' }}</u></strong><br>
-            NIP. {{ optional($waliKelas->user)->nip ?? '....................................' }}
+            <strong><u>{{ $waliKelas?->user?->name ?? '....................................' }}</u></strong><br>
+            NIP. {{ $waliKelas?->user?->nip ?? '....................................' }}
         </td>
     </tr>
 </table>

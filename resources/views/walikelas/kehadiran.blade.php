@@ -20,7 +20,7 @@
                     </span>
                     <span class="text-slate-400" style="font-size: 12px;">•</span>
                     <span class="text-slate-500 small" style="font-size: 12px;">
-                        Wali Kelas: <strong>{{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }}</strong>
+                        Wali Kelas: <strong>{{ $waliKelas?->user?->name ?? 'Belum Ditentukan' }}</strong>
                     </span>
                 @endif
             </div>
