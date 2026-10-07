@@ -1,5 +1,6 @@
 @php
-    $totalCols = 11;
+    $isSemua = ($kelas === 'Semua');
+    $totalCols = $isSemua ? 12 : 11;
 @endphp
 <table>
     <thead>
@@ -16,14 +17,16 @@
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Kelas: {{ $kelas }} | Bulan: {{ $namaBulan }} {{ $tahun }} | Tahun Ajaran: {{ $waliKelas->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
+                Kelas: {{ $isSemua ? 'Semua Kelas (Seluruh Siswa)' : $kelas }} | Bulan: {{ $namaBulan }} {{ $tahun }} | Tahun Ajaran: {{ $waliKelas->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
             </th>
         </tr>
+        @if(!$isSemua)
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
                 Wali Kelas: {{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }} @if(optional($waliKelas->user)->nip) | NIP: '{{ optional($waliKelas->user)->nip }} @endif
             </th>
         </tr>
+        @endif
         <tr></tr>
 
         <!-- Header Tabel Kolom -->
@@ -31,6 +34,9 @@
             <th style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">No</th>
             <th style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">NIS</th>
             <th style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: left; vertical-align: middle;">Nama Siswa</th>
+            @if($isSemua)
+                <th style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">Kelas</th>
+            @endif
             <th style="font-weight: bold; background-color: #0284c7; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">L/P</th>
             <th style="font-weight: bold; background-color: #16a34a; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">Hadir (H)</th>
             <th style="font-weight: bold; background-color: #d97706; color: #ffffff; border: 1px solid #000000; text-align: center; vertical-align: middle;">Sakit (S)</th>
@@ -54,6 +60,9 @@
                 <td style="border: 1px solid #000000; text-align: center;">{{ $idx + 1 }}</td>
                 <td style="border: 1px solid #000000; text-align: center;">'{{ $s->nis }}</td>
                 <td style="border: 1px solid #000000; text-align: left;">{{ $s->nama }}</td>
+                @if($isSemua)
+                    <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ $s->kelas }}</td>
+                @endif
                 <td style="border: 1px solid #000000; text-align: center;">{{ $s->jenis_kelamin }}</td>
                 <td style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #f0fdf4;">{{ $item['hadir'] }}</td>
                 <td style="border: 1px solid #000000; text-align: center; background-color: #fffbeb;">{{ $item['sakit'] }}</td>
@@ -67,8 +76,8 @@
 
         <!-- Baris Total & Ringkasan Kelas -->
         <tr style="font-weight: bold; background-color: #f8fafc;">
-            <td colspan="4" style="border: 1px solid #000000; text-align: center; font-weight: bold;">
-                TOTAL / RATA-RATA KELAS
+            <td colspan="{{ $isSemua ? 5 : 4 }}" style="border: 1px solid #000000; text-align: center; font-weight: bold;">
+                TOTAL / RATA-RATA {{ $isSemua ? 'SEMUA KELAS' : 'KELAS' }}
             </td>
             <td style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #dcfce7;">
                 {{ $analytics['total_hadir'] }}
@@ -99,36 +108,38 @@
         <tr></tr>
         <tr></tr>
         <tr>
-            <td colspan="3" style="text-align: center;">
+            <td colspan="{{ $isSemua ? 4 : 3 }}" style="text-align: center;">
                 Mengetahui,<br>
                 Kepala SMP Negeri 5 Ciamis
             </td>
             <td colspan="4"></td>
             <td colspan="4" style="text-align: center;">
                 Ciamis, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
-                Wali Kelas {{ $kelas }}
+                {{ $isSemua ? 'Petugas / Administrator' : 'Wali Kelas ' . $kelas }}
             </td>
         </tr>
         <tr></tr>
         <tr></tr>
         <tr></tr>
         <tr>
-            <td colspan="3" style="text-align: center; font-weight: bold; text-decoration: underline;">
+            <td colspan="{{ $isSemua ? 4 : 3 }}" style="text-align: center; font-weight: bold; text-decoration: underline;">
                 ( .................................................... )
             </td>
             <td colspan="4"></td>
             <td colspan="4" style="text-align: center; font-weight: bold; text-decoration: underline;">
-                {{ optional($waliKelas->user)->name ?? '( .................................................... )' }}
+                {{ $isSemua ? (auth()->user()->name ?? 'Administrator') : (optional($waliKelas->user)->name ?? '( .................................................... )') }}
             </td>
         </tr>
         <tr>
-            <td colspan="3" style="text-align: center;">
+            <td colspan="{{ $isSemua ? 4 : 3 }}" style="text-align: center;">
                 NIP. .............................................
             </td>
             <td colspan="4"></td>
             <td colspan="4" style="text-align: center;">
-                @if(optional($waliKelas->user)->nip)
+                @if(!$isSemua && optional($waliKelas->user)->nip)
                     NIP. '{{ optional($waliKelas->user)->nip }}
+                @elseif($isSemua && auth()->user()->nip)
+                    NIP. '{{ auth()->user()->nip }}
                 @else
                     NIP. -
                 @endif

@@ -489,6 +489,12 @@
                             <span>Rekap Absensi</span>
                         </a>
                     </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <span>Rekap Bulanan</span>
+                        </a>
+                    </div>
 
                     <div class="mosaic-nav-section">Akademik & Kurikulum</div>
                     <div class="mosaic-nav-item">
@@ -498,7 +504,7 @@
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
-                        <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') ? 'active' : '' }}" href="{{ route('walikelas.index') }}">
+                        <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') && !request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.index') }}">
                             <i class="fa-solid fa-user-tie"></i>
                             <span>Wali Kelas</span>
                         </a>

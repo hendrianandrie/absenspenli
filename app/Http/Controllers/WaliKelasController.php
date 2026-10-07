@@ -154,19 +154,21 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
-            $selectedKelas = $request->kelas;
-            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        if ($currentUser && $currentUser->role === 'admin') {
+            $selectedKelas = $request->get('kelas', 'Semua');
+            if ($selectedKelas !== 'Semua') {
+                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+            }
         } else {
             $waliKelas = $currentUser->waliKelas()->with('user')->first();
-            $selectedKelas = $waliKelas ? $waliKelas->kelas : ($currentUser->role === 'admin' ? $request->get('kelas', 'VII A') : null);
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : null;
         }
 
         if (!$selectedKelas) {
             return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
         }
 
-        if (!$waliKelas) {
+        if (!$waliKelas && $selectedKelas !== 'Semua') {
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
         }
 
@@ -183,8 +185,15 @@ class WaliKelasController extends Controller
         ];
         $daftarTahun = range(date('Y') - 2, date('Y') + 1);
 
-        // Jika admin, sediakan daftar semua kelas untuk opsi ganti rombel
-        $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        // Jika admin, sediakan daftar semua kelas untuk opsi ganti rombel (terurut logis VII, VIII, IX)
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
+        $daftarKelas = $rawKelas->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
 
         return view('walikelas.kehadiran', array_merge([
             'selectedKelas' => $selectedKelas,
@@ -206,9 +215,11 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        if ($currentUser && $currentUser->role === 'admin' && $request->filled('kelas')) {
-            $selectedKelas = $request->kelas;
-            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        if ($currentUser && $currentUser->role === 'admin') {
+            $selectedKelas = $request->get('kelas', 'Semua');
+            if ($selectedKelas !== 'Semua') {
+                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+            }
         } else {
             $waliKelas = $currentUser ? $currentUser->waliKelas()->with('user')->first() : null;
             $selectedKelas = $waliKelas ? $waliKelas->kelas : $request->get('kelas');
@@ -218,7 +229,7 @@ class WaliKelasController extends Controller
             return redirect()->back()->with('error', 'Kelas belum ditentukan atau Anda bukan Wali Kelas.');
         }
 
-        if (!$waliKelas) {
+        if (!$waliKelas && $selectedKelas !== 'Semua') {
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
         }
 
@@ -233,7 +244,8 @@ class WaliKelasController extends Controller
 
         $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun);
         $namaBulan = $daftarBulan[$bulan] ?? 'Bulan_' . $bulan;
-        $fileName = 'Rekap_Kehadiran_Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas) . '_' . $namaBulan . '_' . $tahun . '.xlsx';
+        $fileKelasSlug = $selectedKelas === 'Semua' ? 'Semua_Kelas' : 'Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas);
+        $fileName = 'Rekap_Kehadiran_' . $fileKelasSlug . '_' . $namaBulan . '_' . $tahun . '.xlsx';
 
         return Excel::download(
             new RekapKehadiranKelasExport($selectedKelas, $waliKelas, $bulan, $tahun, $namaBulan, $data),
@@ -246,7 +258,21 @@ class WaliKelasController extends Controller
      */
     protected function getRekapKehadiranData(string $selectedKelas, int $bulan, int $tahun): array
     {
-        $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        if ($selectedKelas === 'Semua') {
+            $allSiswas = Siswa::all();
+            $siswas = $allSiswas->sort(function ($a, $b) use ($order) {
+                $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a->kelas))] ?? 99;
+                $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b->kelas))] ?? 99;
+                if ($tA !== $tB) return $tA <=> $tB;
+                $cmpKelas = strnatcasecmp($a->kelas, $b->kelas);
+                if ($cmpKelas !== 0) return $cmpKelas;
+                return strnatcasecmp($a->nama, $b->nama);
+            })->values();
+        } else {
+            $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
+        }
+
         $siswaIds = $siswas->pluck('id');
 
         $absensis = Absensi::whereIn('siswa_id', $siswaIds)

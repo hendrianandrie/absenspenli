@@ -6,16 +6,26 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
-                    <i class="fa-solid fa-clipboard-user me-1"></i> Kehadiran Kelas Binaan
-                </span>
-                <span class="text-slate-400" style="font-size: 12px;">•</span>
-                <span class="text-slate-500 small" style="font-size: 12px;">
-                    Wali Kelas: <strong>{{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }}</strong>
-                </span>
+                @if($selectedKelas === 'Semua')
+                    <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
+                        <i class="fa-solid fa-users me-1"></i> Rekap Seluruh Kelas
+                    </span>
+                    <span class="text-slate-400" style="font-size: 12px;">•</span>
+                    <span class="text-slate-500 small" style="font-size: 12px;">
+                        Cakupan: <strong>Semua Siswa Terdaftar</strong>
+                    </span>
+                @else
+                    <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
+                        <i class="fa-solid fa-clipboard-user me-1"></i> Kehadiran Kelas Binaan
+                    </span>
+                    <span class="text-slate-400" style="font-size: 12px;">•</span>
+                    <span class="text-slate-500 small" style="font-size: 12px;">
+                        Wali Kelas: <strong>{{ optional($waliKelas->user)->name ?? 'Belum Ditentukan' }}</strong>
+                    </span>
+                @endif
             </div>
             <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
-                <i class="fa-solid fa-calendar-check text-primary me-2"></i> Rekap Kehadiran Siswa — Kelas {{ $selectedKelas }}
+                <i class="fa-solid fa-calendar-check text-primary me-2"></i> Rekap Kehadiran Siswa — {{ $selectedKelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $selectedKelas }}
             </h2>
             <p class="text-slate-500 mb-0" style="font-size: 13px;">
                 Pantau rekapitulasi absensi bulanan siswa (Hadir, Sakit, Izin, Alpa) dan unduh berkas rekap resmi dalam format Excel.
@@ -23,9 +33,11 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <a href="{{ route('walikelas.myClass', ['kelas' => $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
-                <i class="fa-solid fa-graduation-cap me-1.5 text-warning"></i> Nilai Kelas
-            </a>
+            @if($selectedKelas !== 'Semua')
+                <a href="{{ route('walikelas.myClass', ['kelas' => $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
+                    <i class="fa-solid fa-graduation-cap me-1.5 text-warning"></i> Nilai Kelas
+                </a>
+            @endif
             <a href="{{ route('walikelas.kehadiran.exportExcel', ['kelas' => $selectedKelas, 'bulan' => $bulan, 'tahun' => $tahun]) }}" 
                class="btn btn-success btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
                 <i class="fa-solid fa-file-excel me-1.5"></i> Download Rekap Excel
@@ -43,6 +55,7 @@
                             <i class="fa-solid fa-chalkboard text-primary me-1"></i> Pilih Rombel Kelas:
                         </label>
                         <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterKehadiranForm').submit()">
+                            <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
                             @foreach($daftarKelas as $k)
                                 <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                             @endforeach
@@ -109,7 +122,7 @@
                     </div>
                 </div>
                 <div class="fw-bold text-slate-800 fs-5 mb-0">{{ $analytics['total_siswa'] }}</div>
-                <small class="text-slate-400" style="font-size: 10.5px;">Kelas {{ $selectedKelas }}</small>
+                <small class="text-slate-400" style="font-size: 10.5px;">{{ $selectedKelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $selectedKelas }}</small>
             </div>
         </div>
 
@@ -184,7 +197,7 @@
                     </div>
                 </div>
                 <div class="fw-bold text-indigo fs-5 mb-0" style="color: #6366f1;">{{ $analytics['avg_persen'] }}%</div>
-                <small class="text-slate-400" style="font-size: 10.5px;">Kehadiran kelas</small>
+                <small class="text-slate-400" style="font-size: 10.5px;">{{ $selectedKelas === 'Semua' ? 'Seluruh Siswa' : 'Kehadiran kelas' }}</small>
             </div>
         </div>
     </div>
@@ -214,7 +227,7 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
                     <input type="text" id="tableSearchInput" class="form-control form-control-sm border-start-0 ps-0 bg-slate-50" 
-                           placeholder="Cari siswa atau NIS..." style="font-size: 12px;" onkeyup="filterStudentTable()">
+                           placeholder="{{ $selectedKelas === 'Semua' ? 'Cari nama, NIS, atau kelas...' : 'Cari siswa atau NIS...' }}" style="font-size: 12px;" onkeyup="filterStudentTable()">
                 </div>
             </div>
         </div>
@@ -226,6 +239,9 @@
                         <th class="ps-3.5 text-slate-500 font-semibold" style="font-size: 11.5px; width: 50px;">NO</th>
                         <th class="text-slate-500 font-semibold" style="font-size: 11.5px; width: 110px;">NIS</th>
                         <th class="text-slate-500 font-semibold" style="font-size: 11.5px; min-width: 200px;">NAMA LENGKAP SISWA</th>
+                        @if($selectedKelas === 'Semua')
+                            <th class="text-slate-500 font-semibold text-center" style="font-size: 11.5px; width: 85px;">KELAS</th>
+                        @endif
                         <th class="text-slate-500 font-semibold text-center" style="font-size: 11.5px; width: 60px;">L/P</th>
                         <th class="text-slate-500 font-semibold text-center" style="font-size: 11.5px; width: 90px;">HADIR (H)</th>
                         <th class="text-slate-500 font-semibold text-center" style="font-size: 11.5px; width: 90px;">SAKIT (S)</th>
@@ -255,6 +271,13 @@
                                     <span class="fw-semibold text-slate-800 student-name">{{ $siswa->nama }}</span>
                                 </div>
                             </td>
+                            @if($selectedKelas === 'Semua')
+                                <td class="text-center">
+                                    <span class="badge bg-light text-slate-700 border fw-bold px-2 py-1 student-kelas" style="font-size: 11px;">
+                                        {{ $siswa->kelas }}
+                                    </span>
+                                </td>
+                            @endif
                             <td class="text-center">
                                 <span class="badge rounded-pill {{ $siswa->jenis_kelamin === 'P' ? 'bg-pink-subtle text-pink' : 'bg-primary-subtle text-primary' }}" 
                                       style="font-size: 10.5px; {{ $siswa->jenis_kelamin === 'P' ? 'background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8;' : 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;' }}">
@@ -312,11 +335,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center py-5 text-slate-400">
+                            <td colspan="{{ $selectedKelas === 'Semua' ? 11 : 10 }}" class="text-center py-5 text-slate-400">
                                 <div class="py-4">
                                     <i class="fa-regular fa-folder-open fs-1 mb-2 text-slate-300"></i>
                                     <h6 class="fw-semibold text-slate-700">Belum Ada Data Siswa</h6>
-                                    <p class="small text-slate-400 mb-0">Tidak ada siswa yang terdaftar di rombel kelas {{ $selectedKelas }}.</p>
+                                    <p class="small text-slate-400 mb-0">Tidak ada siswa yang terdaftar {{ $selectedKelas === 'Semua' ? '' : 'di rombel kelas ' . $selectedKelas }}.</p>
                                 </div>
                             </td>
                         </tr>
@@ -325,7 +348,9 @@
                 <!-- Footer Total -->
                 <tfoot class="table-light border-top">
                     <tr class="fw-bold text-slate-700" style="font-size: 12px;">
-                        <td colspan="4" class="ps-3.5 py-2.5 text-uppercase">TOTAL KELAS {{ $selectedKelas }}</td>
+                        <td colspan="{{ $selectedKelas === 'Semua' ? 5 : 4 }}" class="ps-3.5 py-2.5 text-uppercase">
+                            TOTAL {{ $selectedKelas === 'Semua' ? 'SEMUA KELAS' : 'KELAS ' . $selectedKelas }}
+                        </td>
                         <td class="text-center text-success py-2.5">{{ $analytics['total_hadir'] }}</td>
                         <td class="text-center text-warning py-2.5">{{ $analytics['total_sakit'] }}</td>
                         <td class="text-center text-primary py-2.5">{{ $analytics['total_izin'] }}</td>
@@ -350,7 +375,9 @@
         rows.forEach(row => {
             const name = row.querySelector('.student-name').textContent.toLowerCase();
             const nis = row.querySelector('.student-nis').textContent.toLowerCase();
-            if (name.includes(query) || nis.includes(query)) {
+            const kelasElem = row.querySelector('.student-kelas');
+            const kelas = kelasElem ? kelasElem.textContent.toLowerCase() : '';
+            if (name.includes(query) || nis.includes(query) || kelas.includes(query)) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
