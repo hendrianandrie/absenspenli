@@ -80,6 +80,47 @@
         from { transform: translateY(-20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
+
+    /* Fullscreen Mode Styling */
+    .scanner-viewport:fullscreen,
+    .scanner-viewport:-webkit-full-screen {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        max-width: 100vw !important;
+        background: #000 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .scanner-viewport:fullscreen #scannerVideo,
+    .scanner-viewport:-webkit-full-screen #scannerVideo {
+        width: 100vw !important;
+        height: 100vh !important;
+        object-fit: cover !important;
+    }
+    .scanner-viewport:fullscreen #scannerCanvas,
+    .scanner-viewport:-webkit-full-screen #scannerCanvas {
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+    .scanner-viewport:fullscreen .success-popup,
+    .scanner-viewport:-webkit-full-screen .success-popup {
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 680px;
+        font-size: 1.15rem;
+        padding: 20px 24px;
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
+    }
+    .scanner-viewport:fullscreen .scan-status-overlay,
+    .scanner-viewport:-webkit-full-screen .scan-status-overlay {
+        bottom: 40px;
+        font-size: 14.5px;
+        padding: 10px 28px;
+    }
 </style>
 @endpush
 
@@ -106,6 +147,9 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
+            <button type="button" id="fullscreenToggleBtn" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px;">
+                <i class="fa-solid fa-expand me-1.5"></i> Layar Penuh (Full Screen)
+            </button>
             <a href="{{ route('face.enroll', ['kelas' => $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
                 <i class="fa-solid fa-user-plus me-1.5 text-primary"></i> Rekam Siswa Baru
             </a>
@@ -140,6 +184,16 @@
 
                 <!-- Viewport Kamera Scanner -->
                 <div class="scanner-viewport">
+                    <!-- Overlay Top Bar (Live Clock & Viewport Fullscreen Toggle) -->
+                    <div class="d-flex align-items-center justify-content-between p-3 position-absolute top-0 start-0 end-0" style="z-index: 15; pointer-events: none;">
+                        <div class="badge bg-dark bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-3 py-1.5 shadow-sm" style="pointer-events: auto; backdrop-filter: blur(4px);">
+                            <i class="fa-solid fa-school me-1.5 text-info"></i> SMPN 5 Ciamis &bull; <span id="kioskLiveClock">--:--:--</span>
+                        </div>
+                        <button type="button" id="viewportFullscreenToggleBtn" class="btn btn-sm btn-dark bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-3 py-1.5 shadow-sm" style="pointer-events: auto; font-size: 11.5px; backdrop-filter: blur(4px);">
+                            <i class="fa-solid fa-expand me-1"></i> <span id="vpFsLabel">Layar Penuh</span>
+                        </button>
+                    </div>
+
                     <video id="scannerVideo" autoplay playsinline muted></video>
                     <canvas id="scannerCanvas"></canvas>
                     <div class="scan-line"></div>
@@ -504,7 +558,73 @@
         window.location.href = `{{ route('face.scanner') }}?kelas=${encodeURIComponent(kelas)}`;
     }
 
-    window.addEventListener('load', initScanner);
+    // Fullscreen Mode Controls
+    const fsToggleBtn = document.getElementById('fullscreenToggleBtn');
+    const vpFsToggleBtn = document.getElementById('viewportFullscreenToggleBtn');
+    const vpFsLabel = document.getElementById('vpFsLabel');
+    const scannerViewport = document.querySelector('.scanner-viewport');
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (scannerViewport.requestFullscreen) {
+                scannerViewport.requestFullscreen();
+            } else if (scannerViewport.webkitRequestFullscreen) {
+                scannerViewport.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+
+    if (fsToggleBtn) fsToggleBtn.addEventListener('click', toggleFullScreen);
+    if (vpFsToggleBtn) vpFsToggleBtn.addEventListener('click', toggleFullScreen);
+
+    function handleFullscreenChange() {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        if (fsToggleBtn) {
+            fsToggleBtn.innerHTML = isFs 
+                ? '<i class="fa-solid fa-compress me-1.5"></i> Keluar Full Screen' 
+                : '<i class="fa-solid fa-expand me-1.5"></i> Layar Penuh (Full Screen)';
+        }
+        if (vpFsLabel) {
+            vpFsLabel.textContent = isFs ? 'Keluar Full Screen' : 'Layar Penuh';
+        }
+
+        setTimeout(() => {
+            const displaySize = { 
+                width: video.videoWidth || video.clientWidth, 
+                height: video.videoHeight || video.clientHeight 
+            };
+            faceapi.matchDimensions(canvas, displaySize);
+        }, 300);
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    // Live Digital Clock
+    function startKioskClock() {
+        const clockElem = document.getElementById('kioskLiveClock');
+        if (!clockElem) return;
+        const update = () => {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            clockElem.textContent = `${h}:${m}:${s} WIB`;
+        };
+        update();
+        setInterval(update, 1000);
+    }
+
+    window.addEventListener('load', () => {
+        startKioskClock();
+        initScanner();
+    });
 </script>
 @endpush
 @endsection
