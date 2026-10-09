@@ -182,7 +182,12 @@
                         <div id="siswaAvatarContainer">
                             @if(optional($currentSiswa)->foto_wajah)
                                 <img src="{{ asset('storage/' . $currentSiswa->foto_wajah) }}" id="siswaPreviewFoto" 
-                                     alt="Foto Wajah" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60">
+                                     alt="Foto Wajah" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60"
+                                     onerror="this.onerror=null; this.style.display='none'; const el = document.getElementById('siswaInitialAvatar'); if(el){el.classList.remove('d-none'); el.classList.add('d-flex');}">
+                                <div id="siswaInitialAvatar" class="rounded-circle text-white fw-bold align-items-center justify-content-center shadow-xs d-none"
+                                     style="width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    {{ strtoupper(substr(optional($currentSiswa)->nama ?? 'S', 0, 1)) }}
+                                </div>
                             @else
                                 <div id="siswaInitialAvatar" class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs"
                                      style="width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
@@ -421,10 +426,10 @@
         }
 
         const avatarContainer = document.getElementById('siswaAvatarContainer');
+        const initial = opt.dataset.nama ? opt.dataset.nama.charAt(0).toUpperCase() : 'S';
         if (opt.dataset.foto) {
-            avatarContainer.innerHTML = `<img src="${opt.dataset.foto}" alt="Foto" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60">`;
+            avatarContainer.innerHTML = `<img src="${opt.dataset.foto}" alt="Foto" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60" onerror="this.onerror=null; this.outerHTML='<div class=\\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs\\' style=\\'width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);\\'>${initial}</div>';">`;
         } else {
-            const initial = opt.dataset.nama ? opt.dataset.nama.charAt(0).toUpperCase() : 'S';
             avatarContainer.innerHTML = `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs" style="width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${initial}</div>`;
         }
     }

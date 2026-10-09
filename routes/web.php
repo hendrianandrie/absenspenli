@@ -142,10 +142,22 @@ Route::middleware('auth')->group(function () {
                     $messages[] = "✓ Berhasil mencatat status migrasi di tabel `migrations`";
                 }
 
+                // 4. Pastikan symlink public/storage aktif di hosting
+                try {
+                    if (!file_exists(public_path('storage'))) {
+                        \Illuminate\Support\Facades\Artisan::call('storage:link');
+                        $messages[] = "✓ Berhasil membuat symlink public/storage via storage:link";
+                    } else {
+                        $messages[] = "✓ Symlink public/storage sudah ada";
+                    }
+                } catch (\Throwable $eStorage) {
+                    $messages[] = "! Info storage:link: " . $eStorage->getMessage() . " (Rute fallback Laravel tetap aktif melayani foto)";
+                }
+
                 $output = implode("\n", $messages);
 
                 return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:24px; border-radius:12px; background:#0f172a; color:#f8fafc; box-shadow:0 10px 25px rgba(0,0,0,0.3);'>
-                    <h3 style='color:#10b981; margin-top:0;'>✅ Database Berhasil Diperbarui</h3>
+                    <h3 style='color:#10b981; margin-top:0;'>✅ Database & Storage Berhasil Diperbarui</h3>
                     <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#e2e8f0; border:1px solid #334155;'>" . e($output) . "</pre>
                     <a href='" . route('dashboard') . "' style='display:inline-block; margin-top:15px; background:#4f46e5; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;'>← Kembali ke Dashboard</a>
                 </div>";
@@ -160,3 +172,19 @@ Route::middleware('auth')->group(function () {
     });
     });
 });
+
+// Fallback Route untuk penyajian file Storage Publik (Foto Wajah dll) di Hosting cPanel/Nginx/Apache
+// Menjamin gambar tetap tampil meskipun hosting melarang pembuatan symlink
+Route::get('/storage/{path}', function ($path) {
+    if (str_contains($path, '..')) {
+        abort(403);
+    }
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath, [
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*');
+
