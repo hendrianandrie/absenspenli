@@ -253,7 +253,11 @@
                                 @if(optional($sc->siswa)->foto_wajah)
                                     <img src="{{ asset('storage/' . $sc->siswa->foto_wajah) }}" alt="Foto" 
                                          class="rounded-circle object-fit-cover border" width="34" height="34"
-                                         onerror="this.onerror=null; this.outerHTML='<div class=\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center\' style=\'width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);\'>{{ strtoupper(substr(optional($sc->siswa)->nama ?? \'S\', 0, 1)) }}</div>';">
+                                         onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                    <div class="rounded-circle text-white fw-bold align-items-center justify-content-center"
+                                         style="display: none; width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                        {{ strtoupper(substr(optional($sc->siswa)->nama ?? 'S', 0, 1)) }}
+                                    </div>
                                 @else
                                     <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
                                          style="width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
@@ -535,7 +539,7 @@
             <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 mb-2 bg-slate-50 border border-slate-200 scan-item" style="animation: slideDown 0.3s ease;">
                 <div class="d-flex align-items-center gap-2.5">
                     ${siswa.foto_url 
-                        ? `<img src="${siswa.foto_url}" alt="Foto" class="rounded-circle object-fit-cover border" width="34" height="34" onerror="this.onerror=null; this.outerHTML='<div class=\\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center\\' style=\\'width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);\\'>${siswa.nama.charAt(0).toUpperCase()}</div>';">`
+                        ? `<img src="${siswa.foto_url}" alt="Foto" class="rounded-circle object-fit-cover border" width="34" height="34" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><div class="rounded-circle text-white fw-bold align-items-center justify-content-center" style="display: none; width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
                         : `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
                     }
                     <div>

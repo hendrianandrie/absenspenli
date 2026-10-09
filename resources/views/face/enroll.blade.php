@@ -366,8 +366,12 @@
                 document.getElementById('cardStatusText').textContent = 'Sudah Terekam';
 
                 if (result.siswa && result.siswa.foto_url) {
+                    const sInit = (result.siswa.nama || 'S').charAt(0).toUpperCase();
                     document.getElementById('siswaAvatarContainer').innerHTML = 
-                        `<img src="${result.siswa.foto_url}" alt="Foto Wajah" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60">`;
+                        `<img src="${result.siswa.foto_url}" alt="Foto Wajah" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60"
+                              onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                         <div class="rounded-circle text-white fw-bold align-items-center justify-content-center shadow-xs"
+                              style="display: none; width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${sInit}</div>`;
                 }
 
                 // Update label option dropdown
@@ -428,7 +432,12 @@
         const avatarContainer = document.getElementById('siswaAvatarContainer');
         const initial = opt.dataset.nama ? opt.dataset.nama.charAt(0).toUpperCase() : 'S';
         if (opt.dataset.foto) {
-            avatarContainer.innerHTML = `<img src="${opt.dataset.foto}" alt="Foto" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60" onerror="this.onerror=null; this.outerHTML='<div class=\\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs\\' style=\\'width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);\\'>${initial}</div>';">`;
+            avatarContainer.innerHTML = `
+                <img src="${opt.dataset.foto}" alt="Foto" class="rounded-circle object-fit-cover border shadow-xs" width="60" height="60" 
+                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                <div class="rounded-circle text-white fw-bold align-items-center justify-content-center shadow-xs" 
+                     style="display: none; width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${initial}</div>
+            `;
         } else {
             avatarContainer.innerHTML = `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs" style="width: 60px; height: 60px; font-size: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${initial}</div>`;
         }

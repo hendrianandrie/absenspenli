@@ -112,7 +112,11 @@
                                     @if($s->foto_wajah)
                                         <img src="{{ asset('storage/' . $s->foto_wajah) }}" alt="Foto" 
                                              class="rounded-circle object-fit-cover border" width="30" height="30"
-                                             onerror="this.onerror=null; this.outerHTML='<div class=\'rounded-circle text-white fw-bold d-flex align-items-center justify-content-center\' style=\'width: 30px; height: 30px; font-size: 11.5px; background: {{ $s->jenis_kelamin === \'P\' ? \'linear-gradient(135deg, #ec4899, #db2777)\' : \'linear-gradient(135deg, #3b82f6, #1d4ed8)\' }};\'>{{ strtoupper(substr($s->nama, 0, 1)) }}</div>';">
+                                             onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                        <div class="rounded-circle text-white fw-bold align-items-center justify-content-center"
+                                             style="display: none; width: 30px; height: 30px; font-size: 11.5px; background: {{ $s->jenis_kelamin === 'P' ? 'linear-gradient(135deg, #ec4899, #db2777)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }};">
+                                            {{ strtoupper(substr($s->nama, 0, 1)) }}
+                                        </div>
                                     @else
                                         <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
                                              style="width: 30px; height: 30px; font-size: 11.5px; background: {{ $s->jenis_kelamin === 'P' ? 'linear-gradient(135deg, #ec4899, #db2777)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }};">
