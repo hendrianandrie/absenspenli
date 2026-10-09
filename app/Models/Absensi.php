@@ -13,6 +13,8 @@ class Absensi extends Model
         'siswa_id',
         'tanggal',
         'status',
+        'metode',
+        'foto_scan',
     ];
 
     // relasi ke model Siswa (opsional, tapi berguna nanti)

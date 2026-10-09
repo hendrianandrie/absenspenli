@@ -3,6 +3,7 @@
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\MataPelajaranController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\SiswaController;
@@ -89,6 +90,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/wali-kelas/export-excel', [WaliKelasController::class, 'exportExcel'])->name('walikelas.exportExcel');
         Route::get('/wali-kelas/kehadiran', [WaliKelasController::class, 'kehadiranKelas'])->name('walikelas.kehadiran');
         Route::get('/wali-kelas/kehadiran/export-excel', [WaliKelasController::class, 'exportKehadiranExcel'])->name('walikelas.kehadiran.exportExcel');
+
+        // Presensi Berbasis Wajah (Face Recognition - Uji Coba / Beta)
+        Route::prefix('face-recognition')->name('face.')->group(function () {
+            Route::get('/', [FaceRecognitionController::class, 'index'])->name('index');
+            Route::get('/enroll', [FaceRecognitionController::class, 'enrollView'])->name('enroll');
+            Route::post('/enroll/{siswa}', [FaceRecognitionController::class, 'saveEnrollment'])->name('enroll.save');
+            Route::delete('/enroll/{siswa}', [FaceRecognitionController::class, 'deleteEnrollment'])->name('enroll.delete');
+            Route::get('/scanner', [FaceRecognitionController::class, 'scannerView'])->name('scanner');
+            Route::get('/enrolled-students', [FaceRecognitionController::class, 'getEnrolledStudents'])->name('enrolledStudents');
+            Route::post('/record-attendance', [FaceRecognitionController::class, 'recordAttendance'])->name('recordAttendance');
+            Route::get('/unattended', [FaceRecognitionController::class, 'unattendedView'])->name('unattended');
+            Route::post('/mark-status', [FaceRecognitionController::class, 'markStatus'])->name('markStatus');
+            Route::post('/mark-bulk-alpa', [FaceRecognitionController::class, 'markBulkAlpa'])->name('markBulkAlpa');
+        });
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {

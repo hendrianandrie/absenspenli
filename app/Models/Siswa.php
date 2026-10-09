@@ -14,6 +14,9 @@ class Siswa extends Model
         'nama',
         'kelas',
         'jenis_kelamin',
+        'foto_wajah',
+        'face_descriptor',
+        'face_enrolled_at',
     ];
 
     protected static function booted()

@@ -495,6 +495,12 @@
                             <span>Rekap Bulanan</span>
                         </a>
                     </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index', ['kelas' => 'IX E']) }}">
+                            <i class="fa-solid fa-camera-retro" style="color: #38bdf8;"></i>
+                            <span>Presensi Wajah (Beta)</span>
+                        </a>
+                    </div>
 
                     <div class="mosaic-nav-section">Akademik & Kurikulum</div>
                     <div class="mosaic-nav-item">
