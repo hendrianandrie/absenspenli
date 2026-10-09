@@ -110,17 +110,48 @@ Route::middleware('auth')->group(function () {
             if (!\Illuminate\Support\Facades\Auth::check() || \Illuminate\Support\Facades\Auth::user()->role !== 'admin') {
                 abort(403, 'Akses terbatas untuk Administrator.');
             }
+            @set_time_limit(180);
             try {
-                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-                $output = \Illuminate\Support\Facades\Artisan::output();
+                $messages = [];
+
+                // 1. Tambah kolom tabel siswas jika belum ada (instan < 0.1 detik)
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('siswas', 'face_descriptor')) {
+                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE `siswas` ADD `foto_wajah` VARCHAR(255) NULL AFTER `jenis_kelamin`, ADD `face_descriptor` LONGTEXT NULL AFTER `foto_wajah`, ADD `face_enrolled_at` TIMESTAMP NULL AFTER `face_descriptor`");
+                    $messages[] = "✓ Berhasil menambahkan kolom biometrik pada tabel `siswas`";
+                } else {
+                    $messages[] = "✓ Kolom biometrik tabel `siswas` sudah ada";
+                }
+
+                // 2. Tambah kolom tabel absensis jika belum ada (instan < 0.1 detik)
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('absensis', 'metode')) {
+                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE `absensis` ADD `metode` VARCHAR(20) NOT NULL DEFAULT 'manual' AFTER `status`, ADD `foto_scan` VARCHAR(255) NULL AFTER `metode`");
+                    $messages[] = "✓ Berhasil menambahkan kolom `metode` dan `foto_scan` pada tabel `absensis`";
+                } else {
+                    $messages[] = "✓ Kolom tabel `absensis` sudah ada";
+                }
+
+                // 3. Catat di tabel migrations agar sinkron dengan Artisan
+                $migName = '2026_10_09_084534_add_face_recognition_columns_to_siswas_and_absensis_tables';
+                $exists = \Illuminate\Support\Facades\DB::table('migrations')->where('migration', $migName)->exists();
+                if (!$exists) {
+                    $maxBatch = \Illuminate\Support\Facades\DB::table('migrations')->max('batch') ?? 0;
+                    \Illuminate\Support\Facades\DB::table('migrations')->insert([
+                        'migration' => $migName,
+                        'batch' => $maxBatch + 1
+                    ]);
+                    $messages[] = "✓ Berhasil mencatat status migrasi di tabel `migrations`";
+                }
+
+                $output = implode("\n", $messages);
+
                 return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:24px; border-radius:12px; background:#0f172a; color:#f8fafc; box-shadow:0 10px 25px rgba(0,0,0,0.3);'>
-                    <h3 style='color:#10b981; margin-top:0;'>✅ Migrasi Database Berhasil</h3>
-                    <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#e2e8f0; border:1px solid #334155;'>" . e($output ?: 'Database sudah ter-update (Nothing to migrate).') . "</pre>
+                    <h3 style='color:#10b981; margin-top:0;'>✅ Database Berhasil Diperbarui</h3>
+                    <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#e2e8f0; border:1px solid #334155;'>" . e($output) . "</pre>
                     <a href='" . route('dashboard') . "' style='display:inline-block; margin-top:15px; background:#4f46e5; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;'>← Kembali ke Dashboard</a>
                 </div>";
             } catch (\Throwable $e) {
                 return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:24px; border-radius:12px; background:#0f172a; color:#f8fafc;'>
-                    <h3 style='color:#ef4444; margin-top:0;'>❌ Terjadi Kesalahan Migrasi</h3>
+                    <h3 style='color:#ef4444; margin-top:0;'>❌ Terjadi Kesalahan</h3>
                     <pre style='background:#1e293b; padding:15px; border-radius:8px; overflow-x:auto; font-size:13px; color:#fca5a5; border:1px solid #dc2626;'>" . e($e->getMessage()) . "</pre>
                     <a href='" . route('dashboard') . "' style='display:inline-block; margin-top:15px; background:#475569; color:#fff; text-decoration:none; padding:10px 20px; border-radius:8px; font-weight:600;'>Kembali ke Dashboard</a>
                 </div>";
