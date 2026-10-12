@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\MataPelajaranController;
 use App\Http\Controllers\NilaiController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SiswaPortalController;
 use App\Http\Controllers\UserController;
@@ -23,6 +24,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes (Hanya dapat diakses setelah login)
 Route::middleware('auth')->group(function () {
+
+    // ==========================================
+    // PENGATURAN PROFIL & PASSWORD (Semua Akun)
+    // ==========================================
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // ==========================================
     // PORTAL SISWA (Khusus Role Siswa)

@@ -442,7 +442,10 @@
 
                     @if(Auth::user()->is_wali_kelas && Auth::user()->waliKelas)
                         @php
-                            $myWaliKelas = Auth::user()->waliKelas->first() ?? Auth::user()->waliKelas;
+                            $myWaliKelas = Auth::user()->waliKelas;
+                            if ($myWaliKelas instanceof \Illuminate\Support\Collection) {
+                                $myWaliKelas = $myWaliKelas->first();
+                            }
                             $myKelasName = optional($myWaliKelas)->kelas;
                         @endphp
                         <div class="mosaic-nav-section">Tugas Tambahan</div>
@@ -536,32 +539,39 @@
             @auth
                 <div class="mosaic-sidebar-footer">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
-                             style="width: 38px; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); font-size: 14px; flex-shrink: 0;">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <div class="text-white fw-semibold text-truncate small" style="line-height: 1.2;">
-                                {{ Auth::user()->name }}
+                        <a href="{{ route('profile.edit') }}" class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden text-decoration-none" title="Buka Pengaturan Profil & Password">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
+                                 style="width: 38px; height: 38px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); font-size: 14px; flex-shrink: 0;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
-                            <div class="text-slate-400" style="font-size: 11px;">
-                                @if(Auth::user()->role === 'admin')
-                                    <span style="color: #a5b4fc;"><i class="fa-solid fa-shield-halved me-1"></i> Admin</span>
-                                @elseif(Auth::user()->role === 'guru')
-                                    <span style="color: #6ee7b7;"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru Mapel</span>
-                                @elseif(Auth::user()->role === 'siswa')
-                                    <span style="color: #38bdf8;"><i class="fa-solid fa-user-graduate me-1"></i> Siswa {{ optional(Auth::user()->siswa)->kelas ? 'Kelas ' . Auth::user()->siswa->kelas : '' }}</span>
-                                @else
-                                    <span style="color: #fcd34d;"><i class="fa-solid fa-clipboard-user me-1"></i> Piket</span>
-                                @endif
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="text-white fw-semibold text-truncate small" style="line-height: 1.2;">
+                                    {{ Auth::user()->name }}
+                                </div>
+                                <div class="text-slate-400" style="font-size: 11px;">
+                                    @if(Auth::user()->role === 'admin')
+                                        <span style="color: #a5b4fc;"><i class="fa-solid fa-shield-halved me-1"></i> Admin</span>
+                                    @elseif(Auth::user()->role === 'guru')
+                                        <span style="color: #6ee7b7;"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru Mapel</span>
+                                    @elseif(Auth::user()->role === 'siswa')
+                                        <span style="color: #38bdf8;"><i class="fa-solid fa-user-graduate me-1"></i> Siswa {{ optional(Auth::user()->siswa)->kelas ? 'Kelas ' . Auth::user()->siswa->kelas : '' }}</span>
+                                    @else
+                                        <span style="color: #fcd34d;"><i class="fa-solid fa-clipboard-user me-1"></i> Piket</span>
+                                    @endif
+                                </div>
                             </div>
+                        </a>
+                        <div class="d-flex align-items-center gap-1">
+                            <a href="{{ route('profile.edit') }}" class="btn btn-sm p-1 text-slate-400" title="Edit Profil & Password" style="background: transparent; border: none;">
+                                <i class="fa-solid fa-gear fs-6"></i>
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" class="btn btn-sm p-1 text-slate-400" title="Keluar dari sistem" style="background: transparent; border: none;">
+                                    <i class="fa-solid fa-right-from-bracket fs-6"></i>
+                                </button>
+                            </form>
                         </div>
-                        <form action="{{ route('logout') }}" method="POST" class="m-0">
-                            @csrf
-                            <button type="submit" class="btn btn-sm p-1 text-slate-400" title="Keluar dari sistem" style="background: transparent; border: none;">
-                                <i class="fa-solid fa-right-from-bracket fs-6"></i>
-                            </button>
-                        </form>
                     </div>
                 </div>
             @endauth
@@ -627,16 +637,19 @@
                                         <span class="text-slate-600 font-monospace" style="font-size: 11px;">NIS: {{ Auth::user()->siswa->nis }} &bull; Kelas {{ Auth::user()->siswa->kelas }}</span>
                                     </li>
                                 @endif
+                                <li class="mt-1">
+                                    <a class="dropdown-item py-2 small {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
+                                        <i class="fa-solid fa-user-pen me-2 text-primary"></i> Edit Profil & Password
+                                    </a>
+                                </li>
                                 @if(Auth::user()->role === 'admin')
                                     <li>
                                         <a class="dropdown-item py-2 small" href="{{ route('users.index') }}">
                                             <i class="fa-solid fa-users-gear me-2 text-primary"></i> Kelola Pengguna
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider my-1"></li>
-                                @else
-                                    <li class="my-1"></li>
                                 @endif
+                                <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="m-0">
                                         @csrf
