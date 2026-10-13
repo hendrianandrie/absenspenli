@@ -160,9 +160,9 @@
                         <th class="py-2 px-2" style="width: 50px;">L/P</th>
                         <!-- Dynamic Mapel Columns -->
                         @foreach($mapels as $m)
-                            <th class="py-2 px-2 text-nowrap" style="min-width: 85px;" title="{{ $m->nama_mapel }} (KKM: {{ $m->kkm ?? 75 }})">
-                                <div class="fw-bold text-truncate" style="max-width: 100px;">{{ $m->nama_mapel }}</div>
-                                <span class="badge bg-light text-secondary border" style="font-size: 9.5px;">KKM {{ $m->kkm ?? 75 }}</span>
+                            <th class="py-2.5 px-2 text-center align-middle" style="min-width: 130px; white-space: normal;" title="{{ $m->nama_mapel }} (KKM: {{ $m->kkm ?? 75 }})">
+                                <div class="fw-bold text-slate-800" style="line-height: 1.3; font-size: 11px;">{{ $m->nama_mapel }}</div>
+                                <span class="badge bg-light text-secondary border mt-1" style="font-size: 9.5px;">KKM {{ $m->kkm ?? 75 }}</span>
                             </th>
                         @endforeach
                         <th class="py-2 px-2 bg-primary-subtle text-primary fw-bold" style="min-width: 90px;">Rata-Rata</th>
