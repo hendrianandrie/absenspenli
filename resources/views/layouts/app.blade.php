@@ -410,8 +410,8 @@
                         </a>
                     </div>
 
-                @elseif(Auth::check() && Auth::user()->role === 'guru')
-                    <!-- MENU GURU MAPEL -->
+                @elseif(Auth::check() && in_array(Auth::user()->role, ['guru', 'walikelas']))
+                    <!-- MENU GURU MAPEL & WALI KELAS -->
                     <div class="mosaic-nav-section">Menu Utama</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -551,6 +551,8 @@
                                 <div class="text-slate-400" style="font-size: 11px;">
                                     @if(Auth::user()->role === 'admin')
                                         <span style="color: #a5b4fc;"><i class="fa-solid fa-shield-halved me-1"></i> Admin</span>
+                                    @elseif(Auth::user()->role === 'walikelas')
+                                        <span style="color: #c7d2fe;"><i class="fa-solid fa-user-tie me-1"></i> Wali Kelas</span>
                                     @elseif(Auth::user()->role === 'guru')
                                         <span style="color: #6ee7b7;"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru Mapel</span>
                                     @elseif(Auth::user()->role === 'siswa')
@@ -616,8 +618,8 @@
                                 </div>
                                 <span class="d-none d-sm-inline fw-semibold text-slate-800 small">{{ Auth::user()->name }}</span>
                                 <span class="badge rounded-pill ms-1 d-none d-md-inline" 
-                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (Auth::user()->role === 'guru' ? 'background:#e0e7ff; color:#3730a3;' : (Auth::user()->role === 'siswa' ? 'background:#e0f2fe; color:#0369a1;' : 'background:#fef3c7; color:#92400e;')) }} font-size: 10px;">
-                                    {{ ucfirst(Auth::user()->role) }}
+                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (in_array(Auth::user()->role, ['guru', 'walikelas']) ? 'background:#e0e7ff; color:#3730a3;' : (Auth::user()->role === 'siswa' ? 'background:#e0f2fe; color:#0369a1;' : 'background:#fef3c7; color:#92400e;')) }} font-size: 10px;">
+                                    {{ Auth::user()->role === 'walikelas' ? 'Wali Kelas' : ucfirst(Auth::user()->role) }}
                                 </span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2" style="min-width: 230px;">

@@ -50,6 +50,7 @@
                     <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-shield-halved me-1 text-primary"></i> Role / Peran Akun</label>
                     <select name="role" id="createRoleSelect" class="form-select" onchange="handleRoleChange('createRoleSelect', 'createGuruFields')" required>
                         <option value="guru" selected>Guru Mata Pelajaran</option>
+                        <option value="walikelas">Wali Kelas</option>
                         <option value="piket">Petugas Piket (Absensi)</option>
                         <option value="admin">Administrator (Full Access)</option>
                         <option value="siswa">Siswa</option>
@@ -156,6 +157,9 @@
                             <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'guru' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('guru')">
                                 <i class="fa-solid fa-chalkboard-user me-1 {{ $selectedRole === 'guru' ? 'text-white' : 'text-success' }}"></i> Guru <span class="badge {{ $selectedRole === 'guru' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['guru'] }}</span>
                             </button>
+                            <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'walikelas' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('walikelas')">
+                                <i class="fa-solid fa-user-tie me-1 {{ $selectedRole === 'walikelas' ? 'text-white' : 'text-primary' }}"></i> Wali Kelas <span class="badge {{ $selectedRole === 'walikelas' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['walikelas'] }}</span>
+                            </button>
                             <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 {{ $selectedRole === 'admin' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" style="font-size: 11.5px;" onclick="applyRoleFilter('admin')">
                                 <i class="fa-solid fa-shield-halved me-1 {{ $selectedRole === 'admin' ? 'text-white' : 'text-danger' }}"></i> Admin <span class="badge {{ $selectedRole === 'admin' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $roleCounts['admin'] }}</span>
                             </button>
@@ -207,7 +211,7 @@
                                     <td class="ps-3 py-2.5">
                                         <div class="d-flex align-items-center gap-2.5">
                                             <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
-                                                 style="width: 34px; height: 34px; font-size: 13px; background: {{ $user->role === 'admin' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : ($user->role === 'piket' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ($user->role === 'siswa' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'linear-gradient(135deg, #6366f1, #4f46e5)')) }};">
+                                                 style="width: 34px; height: 34px; font-size: 13px; background: {{ $user->role === 'admin' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : ($user->role === 'piket' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ($user->role === 'siswa' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : ($user->role === 'walikelas' ? 'linear-gradient(135deg, #4f46e5, #4338ca)' : 'linear-gradient(135deg, #6366f1, #4f46e5)'))) }};">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                             <div>
@@ -238,6 +242,10 @@
                                             <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-size:11px;">
                                                 <i class="fa-solid fa-shield-halved me-1"></i> Admin
                                             </span>
+                                        @elseif($user->role === 'walikelas')
+                                            <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; font-size:11px;">
+                                                <i class="fa-solid fa-user-tie me-1"></i> Wali Kelas
+                                            </span>
                                         @elseif($user->role === 'piket')
                                             <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px;">
                                                 <i class="fa-solid fa-id-card me-1"></i> Piket
@@ -253,7 +261,7 @@
                                         @endif
                                     </td>
                                     <td class="py-2.5">
-                                        @if($user->role === 'guru')
+                                        @if(in_array($user->role, ['guru', 'walikelas']))
                                             @php
                                                 $userMapels = $user->mataPelajarans->isNotEmpty() 
                                                     ? $user->mataPelajarans 
@@ -389,6 +397,7 @@
                             <label class="form-label fw-semibold fs-7">Role / Peran Akun</label>
                             <select name="role" id="editRoleSelect{{ $user->id }}" class="form-select" onchange="handleRoleChange('editRoleSelect{{ $user->id }}', 'editGuruFields{{ $user->id }}')" required>
                                 <option value="guru" {{ $user->role === 'guru' ? 'selected' : '' }}>Guru Mata Pelajaran</option>
+                                <option value="walikelas" {{ $user->role === 'walikelas' ? 'selected' : '' }}>Wali Kelas</option>
                                 <option value="piket" {{ $user->role === 'piket' ? 'selected' : '' }}>Petugas Piket (Absensi)</option>
                                 <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrator (Full Access)</option>
                                 <option value="siswa" {{ $user->role === 'siswa' ? 'selected' : '' }}>Siswa</option>
@@ -405,7 +414,7 @@
                         @endif
 
                         <!-- Section Khusus Role Guru Edit -->
-                        <div id="editGuruFields{{ $user->id }}" class="bg-light p-3 rounded mb-3 border" style="{{ $user->role === 'guru' ? '' : 'display: none;' }}">
+                        <div id="editGuruFields{{ $user->id }}" class="bg-light p-3 rounded mb-3 border" style="{{ in_array($user->role, ['guru', 'walikelas']) ? '' : 'display: none;' }}">
                             <h6 class="fw-bold text-dark fs-7 mb-2"><i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> Pengaturan Akses Guru</h6>
                             
                             @php
@@ -501,10 +510,12 @@
     function handleRoleChange(selectId, targetContainerId) {
         const select = document.getElementById(selectId);
         const target = document.getElementById(targetContainerId);
-        if (select.value === 'guru') {
-            target.style.display = 'block';
-        } else {
-            target.style.display = 'none';
+        if (select && target) {
+            if (select.value === 'guru' || select.value === 'walikelas') {
+                target.style.display = 'block';
+            } else {
+                target.style.display = 'none';
+            }
         }
     }
 

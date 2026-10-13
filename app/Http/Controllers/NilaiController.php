@@ -16,7 +16,7 @@ class NilaiController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $isGuru = $user && $user->role === 'guru';
+        $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
         // Filter Mapel & Kelas jika Role Guru
         if ($isGuru) {
@@ -187,7 +187,7 @@ class NilaiController extends Controller
     public function createKegiatan(Request $request)
     {
         $user = auth()->user();
-        $isGuru = $user && $user->role === 'guru';
+        $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
         if ($isGuru) {
             $assignedIds = $user->assigned_mapel_ids;

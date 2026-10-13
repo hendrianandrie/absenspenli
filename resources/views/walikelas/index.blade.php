@@ -219,14 +219,24 @@
                         </label>
                         <select name="user_id" id="modalUserIdSelect" class="form-select form-select-sm" style="font-size: 12.5px;">
                             <option value="">-- Kosongkan / Belum Ada Wali --</option>
-                            @foreach($users as $u)
+                            @forelse($users as $u)
+                                @php
+                                    $assignedKelas = $u->waliKelas ? $u->waliKelas->kelas : null;
+                                @endphp
                                 <option value="{{ $u->id }}">
-                                    {{ $u->name }} (@ {{ $u->username ?: strtolower(str_replace(' ', '', $u->name)) }} — {{ ucfirst($u->role) }})
+                                    {{ $u->name }} (@ {{ $u->username ?: strtolower(str_replace(' ', '', $u->name)) }})
+                                    @if($assignedKelas)
+                                        — [Wali Kelas {{ $assignedKelas }}]
+                                    @else
+                                        — [Tersedia]
+                                    @endif
                                 </option>
-                            @endforeach
+                            @empty
+                                <option value="" disabled>-- Belum ada akun guru / wali kelas terdaftar --</option>
+                            @endforelse
                         </select>
                         <small class="text-slate-400 mt-1 d-block" style="font-size: 11px;">
-                            Akun yang dipilih akan mendapatkan menu khusus <strong>Wali Kelas</strong> pada dashboard akunnya.
+                            <i class="fa-solid fa-circle-info me-1 text-primary"></i> Hanya menampilkan akun Guru/Wali Kelas. Akun yang dipilih akan mendapatkan menu khusus <strong>Wali Kelas</strong> pada dashboard akunnya.
                         </small>
                     </div>
                 </div>

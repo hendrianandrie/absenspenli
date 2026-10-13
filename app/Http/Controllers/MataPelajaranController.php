@@ -10,7 +10,7 @@ class MataPelajaranController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $isGuru = $user && $user->role === 'guru';
+        $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
         if ($isGuru) {
             $assignedIds = $user->assigned_mapel_ids;
@@ -27,7 +27,7 @@ class MataPelajaranController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $isGuru = $user && $user->role === 'guru';
+        $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
         // Jika guru mencoba menambah mapel baru tanpa ID mapel diampu
         if ($isGuru && ! $request->id) {
@@ -69,7 +69,7 @@ class MataPelajaranController extends Controller
 
     public function destroy($id)
     {
-        if (auth()->user()->role === 'guru') {
+        if (in_array(auth()->user()->role, ['guru', 'walikelas'])) {
             return redirect()->route('mapel.index')->with('error', 'Hanya Admin yang dapat menghapus mata pelajaran.');
         }
 

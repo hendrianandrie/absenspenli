@@ -25,6 +25,7 @@ class UserController extends Controller
             'all' => User::count(),
             'admin' => User::where('role', 'admin')->count(),
             'guru' => User::where('role', 'guru')->count(),
+            'walikelas' => User::where('role', 'walikelas')->count(),
             'piket' => User::where('role', 'piket')->count(),
             'siswa' => User::where('role', 'siswa')->count(),
         ];
@@ -44,13 +45,14 @@ class UserController extends Controller
             });
         }
 
-        // Urutkan akun prioritas: Admin -> Guru -> Piket -> Siswa, lalu Nama
+        // Urutkan akun prioritas: Admin -> Guru -> Wali Kelas -> Piket -> Siswa, lalu Nama
         $users = $query->orderByRaw("CASE 
                 WHEN role = 'admin' THEN 1 
                 WHEN role = 'guru' THEN 2 
-                WHEN role = 'piket' THEN 3 
-                WHEN role = 'siswa' THEN 4 
-                ELSE 5 
+                WHEN role = 'walikelas' THEN 3 
+                WHEN role = 'piket' THEN 4 
+                WHEN role = 'siswa' THEN 5 
+                ELSE 6 
             END")
             ->orderBy('name')
             ->paginate($perPage === 'all' ? 1000 : (int)$perPage)
@@ -85,15 +87,16 @@ class UserController extends Controller
             'nip' => 'nullable|string|max:35',
             'email' => 'required|email|max:150|unique:users,email,'.$userId,
             'password' => $userId ? 'nullable|string|min:6' : 'required|string|min:6',
-            'role' => 'required|in:admin,piket,guru,siswa',
+            'role' => 'required|in:admin,piket,guru,walikelas,siswa',
             'mata_pelajaran_ids' => 'nullable|array',
             'mata_pelajaran_ids.*' => 'exists:mata_pelajarans,id',
             'mata_pelajaran_id' => 'nullable|exists:mata_pelajarans,id',
             'kelas_diampu' => 'nullable|array',
         ]);
 
+        $isTeacherRole = in_array($request->role, ['guru', 'walikelas']);
         $mapelIds = [];
-        if ($request->role === 'guru') {
+        if ($isTeacherRole) {
             if ($request->has('mata_pelajaran_ids')) {
                 $mapelIds = array_values(array_filter((array) $request->mata_pelajaran_ids));
             } elseif ($request->filled('mata_pelajaran_id')) {
@@ -109,7 +112,7 @@ class UserController extends Controller
             'email' => $request->email,
             'role' => $request->role,
             'mata_pelajaran_id' => $primaryMapelId,
-            'kelas_diampu' => $request->role === 'guru' ? ($request->kelas_diampu ?? []) : null,
+            'kelas_diampu' => $isTeacherRole ? ($request->kelas_diampu ?? []) : null,
         ];
 
         if ($request->filled('password')) {
@@ -118,7 +121,7 @@ class UserController extends Controller
 
         $user = User::updateOrCreate(['id' => $userId], $data);
 
-        if ($request->role === 'guru') {
+        if ($isTeacherRole) {
             $user->mataPelajarans()->sync($mapelIds);
         } else {
             $user->mataPelajarans()->detach();

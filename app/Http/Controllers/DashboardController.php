@@ -107,7 +107,7 @@ class DashboardController extends Controller
         $statsKeseluruhan = $calcStats();
 
         $user = auth()->user();
-        $isGuru = $user && $user->role === 'guru';
+        $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
         $guruMapel = null;
         $guruMapels = collect();

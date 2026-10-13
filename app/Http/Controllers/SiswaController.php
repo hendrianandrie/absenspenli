@@ -11,7 +11,7 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->check() && auth()->user()->role === 'guru') {
+        if (auth()->check() && in_array(auth()->user()->role, ['guru', 'walikelas'])) {
             return redirect()->route('dashboard')->with('error', 'Akses ke Data Siswa hanya untuk Admin / Piket.');
         }
 

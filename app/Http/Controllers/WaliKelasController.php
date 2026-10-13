@@ -33,7 +33,16 @@ class WaliKelasController extends Controller
 
         $waliMap = WaliKelas::with('user')->get()->keyBy('kelas');
         $siswaCounts = Siswa::selectRaw('kelas, count(*) as count')->groupBy('kelas')->pluck('count', 'kelas');
-        $users = User::orderBy('name')->get();
+        
+        // Hanya tampilkan akun pendidik (Guru & Wali Kelas) atau akun yang sudah pernah ditugaskan (bukan siswa / bukan admin biasa)
+        $assignedUserIds = $waliMap->pluck('user_id')->filter()->unique();
+        $users = User::where(function ($query) use ($assignedUserIds) {
+                $query->whereIn('role', ['guru', 'walikelas'])
+                      ->orWhereIn('id', $assignedUserIds);
+            })
+            ->with('waliKelas')
+            ->orderBy('name')
+            ->get();
 
         $totalKelas = $daftarKelas->count();
         $assignedCount = $waliMap->filter(fn ($w) => !empty($w->user_id))->count();
@@ -64,6 +73,11 @@ class WaliKelasController extends Controller
         $userId = $request->user_id ?: null;
 
         if ($userId) {
+            $user = User::findOrFail($userId);
+            if ($user->role === 'siswa') {
+                return redirect()->back()->with('error', 'Akun siswa tidak dapat ditetapkan sebagai Wali Kelas!');
+            }
+
             // Jika akun ini sudah jadi wali kelas di rombel lain, lepas dari kelas sebelumnya atau beri opsi
             WaliKelas::where('user_id', $userId)->where('kelas', '!=', $kelas)->update(['user_id' => null]);
 
