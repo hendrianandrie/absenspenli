@@ -329,6 +329,48 @@
             color: #b91c1c;
             border: 1px solid #fecaca;
         }
+
+        /* Pagination Styling & SVG Sizing Fix */
+        .pagination svg, 
+        nav svg, 
+        .page-link svg {
+            width: 14px !important;
+            height: 14px !important;
+            max-width: 14px !important;
+            max-height: 14px !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+        .pagination {
+            margin-bottom: 0;
+            gap: 2px;
+        }
+        .pagination .page-item .page-link {
+            color: #475569;
+            border-color: #e2e8f0;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            min-width: 32px;
+            text-align: center;
+            transition: all 0.15s ease-in-out;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #eef2ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #94a3b8;
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
     </style>
     @stack('styles')
 </head>
