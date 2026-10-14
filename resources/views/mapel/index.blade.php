@@ -78,11 +78,74 @@
                 <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.1rem;">
                     <i class="fa-solid fa-list-check text-primary me-2"></i> Daftar Mata Pelajaran & Bobot
                 </h5>
-                <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" style="font-size: 11.5px;">
+                <span class="badge bg-light text-slate-600 border rounded-pill px-2.5 py-1" id="mapelCountBadge" style="font-size: 11.5px;">
                     {{ $mapels->count() }} Mapel Terdaftar
                 </span>
             </div>
-            @if($mapels->isEmpty())
+
+            <!-- Toolbar Filter Tingkat & Pencarian Mapel -->
+            <div class="bg-slate-50 p-2.5 rounded-3 border mb-3">
+                <form action="{{ route('mapel.index') }}" method="GET" id="mapelFilterForm" class="row g-2 align-items-center">
+                    <input type="hidden" name="tingkat" id="filterTingkatInput" value="{{ $selectedTingkat ?? 'all' }}">
+                    
+                    <div class="col-12 col-xl-7">
+                        <div class="d-flex flex-wrap align-items-center gap-1.5">
+                            <span class="small text-slate-500 fw-semibold me-1 d-none d-sm-inline" style="font-size: 12px;">
+                                <i class="fa-solid fa-layer-group text-primary me-1"></i> Filter Tingkat:
+                            </span>
+                            <button type="button" 
+                                    class="btn btn-sm rounded-pill px-2.5 py-1 filter-tingkat-btn {{ ($selectedTingkat ?? 'all') === 'all' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" 
+                                    style="font-size: 11.5px;" 
+                                    onclick="applyTingkatFilter('all', this)">
+                                Semua <span class="badge {{ ($selectedTingkat ?? 'all') === 'all' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $tingkatCounts['all'] ?? $mapels->count() }}</span>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm rounded-pill px-2.5 py-1 filter-tingkat-btn {{ ($selectedTingkat ?? '') === '7' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" 
+                                    style="font-size: 11.5px;" 
+                                    onclick="applyTingkatFilter('7', this)">
+                                <span class="badge rounded-circle p-1 me-1" style="background:#e0f2fe; color:#0369a1;">7</span> Tingkat 7 <span class="badge {{ ($selectedTingkat ?? '') === '7' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $tingkatCounts['7'] ?? 0 }}</span>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm rounded-pill px-2.5 py-1 filter-tingkat-btn {{ ($selectedTingkat ?? '') === '8' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" 
+                                    style="font-size: 11.5px;" 
+                                    onclick="applyTingkatFilter('8', this)">
+                                <span class="badge rounded-circle p-1 me-1" style="background:#ede9fe; color:#5b21b6;">8</span> Tingkat 8 <span class="badge {{ ($selectedTingkat ?? '') === '8' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $tingkatCounts['8'] ?? 0 }}</span>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm rounded-pill px-2.5 py-1 filter-tingkat-btn {{ ($selectedTingkat ?? '') === '9' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" 
+                                    style="font-size: 11.5px;" 
+                                    onclick="applyTingkatFilter('9', this)">
+                                <span class="badge rounded-circle p-1 me-1" style="background:#fef3c7; color:#92400e;">9</span> Tingkat 9 <span class="badge {{ ($selectedTingkat ?? '') === '9' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $tingkatCounts['9'] ?? 0 }}</span>
+                            </button>
+                            @if(!empty($tingkatCounts['Semua']) && $tingkatCounts['Semua'] > 0)
+                                <button type="button" 
+                                        class="btn btn-sm rounded-pill px-2.5 py-1 filter-tingkat-btn {{ ($selectedTingkat ?? '') === 'Semua' ? 'btn-primary' : 'btn-white bg-white border text-slate-600' }}" 
+                                        style="font-size: 11.5px;" 
+                                        onclick="applyTingkatFilter('Semua', this)">
+                                    Semua Tingkat <span class="badge {{ ($selectedTingkat ?? '') === 'Semua' ? 'bg-white text-primary' : 'bg-slate-100 text-slate-600' }} rounded-pill ms-1">{{ $tingkatCounts['Semua'] }}</span>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" name="q" id="mapelSearchInput" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Cari kode atau nama mapel..." style="font-size: 12px;" oninput="filterMapelTable()">
+                            @if(!empty($search))
+                                <a href="{{ route('mapel.index', ['tingkat' => $selectedTingkat ?? 'all']) }}" class="btn btn-outline-secondary border-start-0" title="Hapus pencarian">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            @endif
+                            <button type="submit" class="btn btn-primary px-2.5">
+                                Cari
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            @if($mapels->isEmpty() && empty($search) && ($selectedTingkat ?? 'all') === 'all')
                 <div class="text-center py-4 text-muted">
                     @if(!empty($isGuru) && $isGuru)
                         Belum ada mata pelajaran yang ditugaskan ke akun Anda oleh Admin.
@@ -103,9 +166,9 @@
                                 <th class="text-end py-2.5 pe-2" style="width: 150px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="mapelTableBody">
                             @foreach($mapels as $mapel)
-                                <tr>
+                                <tr class="mapel-row" data-tingkat="{{ $mapel->tingkat ?? 'Semua' }}" data-nama="{{ strtolower($mapel->nama_mapel) }}" data-kode="{{ strtolower($mapel->kode_mapel) }}">
                                     <td class="ps-2">
                                         <span class="badge font-monospace rounded-2 px-2 py-1" style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; font-size:11.5px; letter-spacing:0.3px;">
                                             {{ $mapel->kode_mapel }}
@@ -159,6 +222,12 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr id="emptyFilterNotice" style="display: none;">
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="fa-regular fa-folder-open fs-2 mb-2 text-slate-300 d-block"></i>
+                                    Tidak ada mata pelajaran yang sesuai dengan filter tingkat atau kata kunci pencarian.
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -235,4 +304,75 @@
         </div>
     </div>
 @endforeach
+
+@push('scripts')
+<script>
+    function applyTingkatFilter(tingkat, btn) {
+        const input = document.getElementById('filterTingkatInput');
+        if (input) input.value = tingkat;
+
+        // Perbarui styling tombol aktif
+        document.querySelectorAll('.filter-tingkat-btn').forEach(function(b) {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-white', 'bg-white', 'border', 'text-slate-600');
+            const badge = b.querySelector('.badge:last-child');
+            if (badge) {
+                badge.className = 'badge bg-slate-100 text-slate-600 rounded-pill ms-1';
+            }
+        });
+
+        if (btn) {
+            btn.classList.remove('btn-white', 'bg-white', 'border', 'text-slate-600');
+            btn.classList.add('btn-primary');
+            const badge = btn.querySelector('.badge:last-child');
+            if (badge) {
+                badge.className = 'badge bg-white text-primary rounded-pill ms-1';
+            }
+        }
+
+        filterMapelTable();
+    }
+
+    function filterMapelTable() {
+        const selectedTingkat = document.getElementById('filterTingkatInput')?.value || 'all';
+        const searchInput = document.getElementById('mapelSearchInput');
+        const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.mapel-row');
+        let visibleCount = 0;
+
+        rows.forEach(function(row) {
+            const rowTingkat = row.getAttribute('data-tingkat') || '';
+            const rowNama = row.getAttribute('data-nama') || '';
+            const rowKode = row.getAttribute('data-kode') || '';
+
+            const matchTingkat = (selectedTingkat === 'all') 
+                || (rowTingkat === selectedTingkat) 
+                || (selectedTingkat !== 'Semua' && rowTingkat === 'Semua');
+
+            const matchQuery = !query || rowNama.includes(query) || rowKode.includes(query);
+
+            if (matchTingkat && matchQuery) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const emptyNotice = document.getElementById('emptyFilterNotice');
+        if (emptyNotice) {
+            emptyNotice.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+        }
+
+        const countBadge = document.getElementById('mapelCountBadge');
+        if (countBadge) {
+            countBadge.textContent = visibleCount + ' Mapel Ditampilkan';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        filterMapelTable();
+    });
+</script>
+@endpush
 @endsection

@@ -7,21 +7,56 @@ use Illuminate\Http\Request;
 
 class MataPelajaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $isGuru = $user && in_array($user->role, ['guru', 'walikelas']);
 
+        $selectedTingkat = $request->get('tingkat', 'all');
+        $search = trim($request->get('q', ''));
+
         if ($isGuru) {
             $assignedIds = $user->assigned_mapel_ids;
-            $mapels = !empty($assignedIds)
-                ? MataPelajaran::whereIn('id', $assignedIds)->orderBy('tingkat')->orderBy('nama_mapel')->get()
-                : collect();
+            $baseQuery = !empty($assignedIds)
+                ? MataPelajaran::whereIn('id', $assignedIds)
+                : MataPelajaran::whereRaw('1 = 0');
         } else {
-            $mapels = MataPelajaran::orderBy('tingkat')->orderBy('nama_mapel')->get();
+            $baseQuery = MataPelajaran::query();
         }
 
-        return view('mapel.index', compact('mapels', 'isGuru'));
+        // Hitung total mapel per tingkat
+        $allMapels = (clone $baseQuery)->get();
+        $tingkatCounts = [
+            'all' => $allMapels->count(),
+            '7' => $allMapels->where('tingkat', '7')->count(),
+            '8' => $allMapels->where('tingkat', '8')->count(),
+            '9' => $allMapels->where('tingkat', '9')->count(),
+            'Semua' => $allMapels->where('tingkat', 'Semua')->count(),
+        ];
+
+        $query = clone $baseQuery;
+
+        if ($selectedTingkat && $selectedTingkat !== 'all') {
+            if ($selectedTingkat === 'Semua') {
+                $query->where('tingkat', 'Semua');
+            } else {
+                $query->where(function ($q) use ($selectedTingkat) {
+                    $q->where('tingkat', $selectedTingkat)
+                      ->orWhere('tingkat', 'Semua');
+                });
+            }
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_mapel', 'like', "%{$search}%")
+                  ->orWhere('kode_mapel', 'like', "%{$search}%");
+            });
+        }
+
+        $mapels = $query->orderBy('tingkat')->orderBy('nama_mapel')->get();
+
+        return view('mapel.index', compact('mapels', 'isGuru', 'selectedTingkat', 'search', 'tingkatCounts'));
     }
 
     public function store(Request $request)
