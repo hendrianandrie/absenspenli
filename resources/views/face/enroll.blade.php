@@ -113,6 +113,11 @@
                     <video id="videoElement" autoplay playsinline muted></video>
                     <canvas id="canvasOverlay"></canvas>
                     <div class="oval-guide" id="ovalGuide"></div>
+                    <!-- Camera Diagnostic / Troubleshooting Overlay -->
+                    <div id="enrollTroubleshootOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center p-3 text-center" 
+                         style="z-index: 25; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px);">
+                        <div id="enrollTroubleshootContent" class="text-white" style="max-width: 380px;"></div>
+                    </div>
                     <div class="status-pill" id="statusPill">
                         <i class="fa-solid fa-spinner fa-spin me-1"></i> Memuat Model AI Browser...
                     </div>
@@ -268,19 +273,112 @@
         }
     }
 
-    // Nyalakan Webcam
-    function startVideo() {
-        navigator.mediaDevices.getUserMedia({
+    // Nyalakan Webcam dengan Validasi HTTPS & Dual Fallback
+    async function startVideo() {
+        const overlay = document.getElementById('enrollTroubleshootOverlay');
+        const content = document.getElementById('enrollTroubleshootContent');
+
+        // 1. Cek HTTPS
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (location.protocol !== 'https:' && !isLocalhost) {
+            const httpsUrl = 'https://' + location.host + location.pathname + location.search;
+            if (overlay && content) {
+                content.innerHTML = `
+                    <div class="mb-2">
+                        <i class="fa-solid fa-lock text-warning fs-3"></i>
+                    </div>
+                    <h6 class="fw-bold text-white mb-1" style="font-size: 13.5px;">Kamera Wajib Akses HTTPS</h6>
+                    <p class="text-white-50 small mb-2.5" style="font-size: 11px;">
+                        Browser melarang sensor kamera pada domain online jika dibuka lewat HTTP biasa.<br>
+                        Silakan buka situs menggunakan <strong>https://</strong>
+                    </p>
+                    <a href="${httpsUrl}" class="btn btn-warning btn-sm rounded-pill px-3 py-1.5 fw-semibold text-dark shadow-sm" style="font-size: 11.5px;">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Buka dengan HTTPS
+                    </a>
+                `;
+                overlay.classList.remove('d-none');
+                overlay.classList.add('d-flex');
+            }
+            statusPill.innerHTML = '<i class="fa-solid fa-lock text-warning me-1"></i> Wajib Koneksi HTTPS';
+            return;
+        }
+
+        // 2. Cek navigator.mediaDevices
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (overlay && content) {
+                content.innerHTML = `
+                    <div class="mb-2">
+                        <i class="fa-solid fa-triangle-exclamation text-danger fs-3"></i>
+                    </div>
+                    <h6 class="fw-bold text-white mb-1" style="font-size: 13.5px;">Browser Memblokir Kamera</h6>
+                    <p class="text-white-50 small mb-0" style="font-size: 11px;">
+                        API sensor kamera dinonaktifkan oleh browser karena situs tidak menggunakan sertifikat SSL/HTTPS yang valid.
+                    </p>
+                `;
+                overlay.classList.remove('d-none');
+                overlay.classList.add('d-flex');
+            }
+            statusPill.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> MediaDevices Tidak Didukung';
+            return;
+        }
+
+        const constraints = {
             video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
             audio: false
-        })
-        .then(stream => {
+        };
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
-        })
-        .catch(err => {
-            console.error('Gagal akses kamera:', err);
-            statusPill.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Akses Kamera Ditolak / Tidak Ditemukan';
-        });
+            if (overlay) {
+                overlay.classList.add('d-none');
+                overlay.classList.remove('d-flex');
+            }
+        } catch (err) {
+            console.warn('Gagal constraint 640x480, mencoba fallback dasar...', err);
+            try {
+                const streamFallback = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = streamFallback;
+                if (overlay) {
+                    overlay.classList.add('d-none');
+                    overlay.classList.remove('d-flex');
+                }
+            } catch (err2) {
+                console.error('Gagal akses kamera:', err2);
+                let judul = 'Akses Kamera Ditolak';
+                let instruksi = `
+                    1. Klik ikon <strong>gembok / izin situs</strong> di sebelah kiri alamat URL browser.<br>
+                    2. Pada baris <strong>Kamera</strong>, ubah menjadi <strong>Izinkan (Allow)</strong>.<br>
+                    3. Klik tombol coba hubungkan kembali di bawah.
+                `;
+
+                if (err2.name === 'NotFoundError' || err2.name === 'DevicesNotFoundError') {
+                    judul = 'Kamera Tidak Ditemukan';
+                    instruksi = 'Pastikan webcam sudah tercolok dan terhubung dengan baik ke komputer Anda.';
+                } else if (err2.name === 'NotReadableError' || err2.name === 'TrackStartError') {
+                    judul = 'Kamera Sedang Dipakai Aplikasi Lain';
+                    instruksi = 'Tutup aplikasi Zoom, OBS Studio, Google Meet, atau software lain yang sedang memakai webcam.';
+                }
+
+                if (overlay && content) {
+                    content.innerHTML = `
+                        <div class="mb-2">
+                            <i class="fa-solid fa-video-slash text-danger fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-white mb-1" style="font-size: 13.5px;">${judul}</h6>
+                        <div class="alert text-start small mb-2.5 p-2 rounded-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); font-size: 11px; color: #cbd5e1;">
+                            ${instruksi}
+                        </div>
+                        <button type="button" onclick="startVideo()" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 fw-semibold shadow-sm" style="font-size: 11.5px;">
+                            <i class="fa-solid fa-rotate-right me-1"></i> Coba Hubungkan Lagi
+                        </button>
+                    `;
+                    overlay.classList.remove('d-none');
+                    overlay.classList.add('d-flex');
+                }
+                statusPill.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> ${judul}`;
+            }
+        }
     }
 
     // Saat video mulai diputar

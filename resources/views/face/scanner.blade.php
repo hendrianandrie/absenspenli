@@ -425,6 +425,12 @@
                         </div>
                     </div>
 
+                    <!-- Camera Diagnostic / Troubleshooting Overlay -->
+                    <div id="cameraTroubleshootOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center p-4 text-center" 
+                         style="z-index: 30; background: rgba(10, 15, 29, 0.94); backdrop-filter: blur(8px);">
+                        <div id="troubleshootContent" class="text-white" style="max-width: 440px;"></div>
+                    </div>
+
                     <!-- Bottom Status Overlay Pill -->
                     <div class="scan-status-overlay" id="scannerStatus">
                         <i class="fa-solid fa-spinner fa-spin me-1.5"></i> Memuat Model AI Biometrik...
@@ -793,6 +799,56 @@
     }
 
     async function startScannerVideo() {
+        const overlay = document.getElementById('cameraTroubleshootOverlay');
+        const content = document.getElementById('troubleshootContent');
+
+        // 1. Validasi HTTPS (Kamera di browser modern wajib HTTPS jika online)
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (location.protocol !== 'https:' && !isLocalhost) {
+            const httpsUrl = 'https://' + location.host + location.pathname + location.search;
+            if (overlay && content) {
+                content.innerHTML = `
+                    <div class="mb-3">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: rgba(245, 158, 11, 0.15); border: 2px solid #f59e0b;">
+                            <i class="fa-solid fa-lock text-warning fs-2"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Kamera Wajib Menggunakan HTTPS</h5>
+                    <p class="text-white-50 small mb-3">
+                        Browser melarang akses kamera jika situs dibuka melalui <strong>http://</strong> biasa.<br>
+                        Silakan akses web menggunakan koneksi aman <strong>https://</strong>
+                    </p>
+                    <a href="${httpsUrl}" class="btn btn-warning rounded-pill px-4 py-2 fw-semibold text-dark shadow-sm" style="font-size: 13px;">
+                        <i class="fa-solid fa-shield-halved me-1.5"></i> Buka via HTTPS Sekarang
+                    </a>
+                `;
+                overlay.classList.remove('d-none');
+                overlay.classList.add('d-flex');
+            }
+            scannerStatus.innerHTML = '<i class="fa-solid fa-lock text-warning me-1.5"></i> Akses Kamera Wajib HTTPS';
+            return;
+        }
+
+        // 2. Cek ketersediaan navigator.mediaDevices
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (overlay && content) {
+                content.innerHTML = `
+                    <div class="mb-3">
+                        <i class="fa-solid fa-triangle-exclamation text-danger fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Fitur Kamera Tidak Didukung</h5>
+                    <p class="text-white-50 small mb-0">
+                        Browser Anda menolak API kamera karena situs belum menggunakan sertifikat SSL/HTTPS yang valid.
+                    </p>
+                `;
+                overlay.classList.remove('d-none');
+                overlay.classList.add('d-flex');
+            }
+            scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> MediaDevices Tidak Didukung';
+            return;
+        }
+
+        // 3. Coba aktifkan kamera dengan fallback
         const constraints = {
             video: currentDeviceId 
                 ? { deviceId: { exact: currentDeviceId } }
@@ -803,9 +859,63 @@
         try {
             currentStream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = currentStream;
+            if (overlay) {
+                overlay.classList.add('d-none');
+                overlay.classList.remove('d-flex');
+            }
+            scannerStatus.innerHTML = '<i class="fa-solid fa-face-smile text-success me-1.5"></i> Scanner Siap! Arahkan wajah ke kamera.';
         } catch (err) {
-            console.error('Gagal buka kamera:', err);
-            scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Akses Kamera Ditolak / Tidak Tersedia';
+            console.warn('Gagal dengan constraint ideal, mencoba fallback dasar...', err);
+            try {
+                // Fallback kedua: tanpa batasan resolusi/facingMode
+                currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = currentStream;
+                if (overlay) {
+                    overlay.classList.add('d-none');
+                    overlay.classList.remove('d-flex');
+                }
+                scannerStatus.innerHTML = '<i class="fa-solid fa-face-smile text-success me-1.5"></i> Scanner Siap (Kamera Dasar)!';
+            } catch (err2) {
+                console.error('Gagal total buka kamera:', err2);
+                let judul = 'Akses Kamera Ditolak';
+                let penjelasan = 'Browser memblokir perizinan kamera untuk situs ini.';
+                let instruksi = `
+                    1. Klik ikon <strong>gembok / perizinan situs</strong> di sebelah kiri alamat URL browser.<br>
+                    2. Pada baris <strong>Kamera (Camera)</strong>, ubah dari <em>Blokir</em> menjadi <strong>Izinkan (Allow)</strong>.<br>
+                    3. Klik tombol di bawah untuk mencoba kembali.
+                `;
+
+                if (err2.name === 'NotFoundError' || err2.name === 'DevicesNotFoundError') {
+                    judul = 'Perangkat Kamera Tidak Ditemukan';
+                    penjelasan = 'Tidak ada webcam atau modul kamera fisik yang terhubung pada perangkat ini.';
+                    instruksi = 'Pastikan webcam USB sudah tercolok dengan baik ke port komputer Anda.';
+                } else if (err2.name === 'NotReadableError' || err2.name === 'TrackStartError') {
+                    judul = 'Kamera Sedang Dipakai Aplikasi Lain';
+                    penjelasan = 'Sensor kamera sedang digunakan oleh aplikasi lain.';
+                    instruksi = 'Tutup aplikasi seperti Zoom, OBS Studio, Google Meet, Skype, atau tab browser lain yang sedang memakai webcam.';
+                }
+
+                if (overlay && content) {
+                    content.innerHTML = `
+                        <div class="mb-3">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444;">
+                                <i class="fa-solid fa-video-slash text-danger fs-2"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-white mb-2">${judul}</h5>
+                        <p class="text-white-50 small mb-2">${penjelasan}</p>
+                        <div class="alert text-start small mb-3 p-2.5 rounded-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); font-size: 11.5px; color: #cbd5e1;">
+                            ${instruksi}
+                        </div>
+                        <button type="button" onclick="startScannerVideo()" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm" style="font-size: 12.5px;">
+                            <i class="fa-solid fa-rotate-right me-1.5"></i> Coba Hubungkan Kamera Lagi
+                        </button>
+                    `;
+                    overlay.classList.remove('d-none');
+                    overlay.classList.add('d-flex');
+                }
+                scannerStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> ${judul}`;
+            }
         }
     }
 
