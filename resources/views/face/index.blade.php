@@ -7,18 +7,18 @@
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
-                    <i class="fa-solid fa-microchip me-1"></i> Modul Inovasi Biometrik
+                    <i class="fa-solid fa-microchip me-1"></i> Modul Biometrik Sekolah
                 </span>
                 <span class="text-slate-400" style="font-size: 12px;">•</span>
-                <span class="badge bg-amber-subtle text-amber rounded-pill px-2 py-0.5" style="background: #fef3c7; color: #b45309; font-size: 11px;">
-                    <i class="fa-solid fa-flask me-1"></i> Tahap Uji Coba (Beta)
+                <span class="badge rounded-pill px-2.5 py-1" style="background: #dcfce7; color: #15803d; font-size: 11px;">
+                    <i class="fa-solid fa-circle-check me-1"></i> Sistem Aktif / Seluruh Kelas
                 </span>
             </div>
             <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
-                <i class="fa-solid fa-camera-retro text-primary me-2"></i> Presensi Wajah (Face Recognition) — Kelas {{ $selectedKelas }}
+                <i class="fa-solid fa-camera-retro text-primary me-2"></i> Presensi Wajah — {{ $selectedKelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $selectedKelas }}
             </h2>
             <p class="text-slate-500 mb-0" style="font-size: 13px;">
-                Uji coba absensi cerdas berbasis kamera web browser. Tidak membebani server dan tidak mengganggu presensi manual yang sedang berjalan.
+                Sistem absensi cerdas berbasis kamera biometrik terintegrasi untuk seluruh rombel kelas VII, VIII, dan IX SMPN 5 Ciamis.
             </p>
         </div>
 
@@ -26,7 +26,7 @@
             <a href="{{ route('face.scanner', ['kelas' => $selectedKelas]) }}" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px;">
                 <i class="fa-solid fa-expand me-1.5"></i> Buka Scanner Kamera
             </a>
-            <a href="{{ route('face.enroll', ['kelas' => $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs fw-semibold" style="font-size: 12px;">
+            <a href="{{ route('face.enroll', ['kelas' => $selectedKelas === 'Semua' ? 'VII A' : $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs fw-semibold" style="font-size: 12px;">
                 <i class="fa-solid fa-user-plus me-1.5 text-primary"></i> Rekam Wajah Siswa
             </a>
             <a href="{{ route('face.unattended', ['kelas' => $selectedKelas]) }}" class="btn btn-warning btn-sm text-dark rounded-pill px-3 py-1.5 shadow-xs fw-semibold" style="font-size: 12px; background: #fef08a; border: 1px solid #fde047;">
@@ -35,14 +35,14 @@
         </div>
     </div>
 
-    <!-- Alert Informasi Uji Coba -->
-    <div class="alert alert-info border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 p-3 mb-0" style="background: #f0fdf4; border: 1px solid #bbf7d0 !important;">
+    <!-- Alert Informasi Status Aktif -->
+    <div class="alert border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 p-3 mb-0" style="background: #f8fafc; border: 1px solid #e2e8f0 !important;">
         <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
-             style="width: 36px; height: 36px; background: #dcfce7; color: #16a34a;">
-            <i class="fa-solid fa-circle-info fs-6"></i>
+             style="width: 36px; height: 36px; background: #e0f2fe; color: #0284c7;">
+            <i class="fa-solid fa-circle-check fs-6"></i>
         </div>
         <div class="small text-slate-700">
-            <strong>Fokus Pengujian (Kelas IX E):</strong> Modul ini saat ini difokuskan untuk rombel <strong>Kelas IX E</strong> ({{ $totalSiswa }} siswa). Silakan lakukan perekaman sampel wajah pada 1 atau beberapa siswa terlebih dahulu, lalu uji coba pemindaian pada menu <strong>Scanner Kamera</strong>.
+            <strong>Presensi Terbuka untuk Seluruh Rombel:</strong> Seluruh siswa dari kelas mana pun yang telah terdaftar wajahnya dapat langsung melakukan absensi otomatis di <strong>Scanner Kamera</strong>. Gunakan filter rombel di bawah untuk memantau status kehadiran per kelas.
         </div>
     </div>
 
@@ -52,11 +52,12 @@
             <form action="{{ route('face.index') }}" method="GET" id="filterFaceForm" class="row g-2 align-items-center">
                 <div class="col-sm-5 col-md-4">
                     <label for="selectKelas" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
-                        <i class="fa-solid fa-chalkboard text-primary me-1"></i> Rombel Kelas Pengujian:
+                        <i class="fa-solid fa-chalkboard text-primary me-1"></i> Pilih Rombel / Kelas:
                     </label>
                     <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterFaceForm').submit()">
+                        <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
                         @foreach($daftarKelas as $k)
-                            <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }} {{ $k === 'IX E' ? '(Rekomendasi Uji Coba)' : '' }}</option>
+                            <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                         @endforeach
                     </select>
                 </div>

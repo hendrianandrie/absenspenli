@@ -15,7 +15,7 @@
                 </span>
             </div>
             <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
-                Kelola Siswa Belum Presensi — Kelas {{ $selectedKelas }}
+                Kelola Siswa Belum Presensi — {{ $selectedKelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $selectedKelas }}
             </h2>
             <p class="text-slate-500 mb-0" style="font-size: 13px;">
                 Tentukan status siswa yang tidak hadir (Sakit, Izin, atau Alpa) secara cepat hanya dengan 1 kali klik.
@@ -48,6 +48,7 @@
                         <i class="fa-solid fa-chalkboard text-primary me-1"></i> Rombel Kelas:
                     </label>
                     <select name="kelas" id="selectKelasUnattended" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterUnattendedForm').submit()">
+                        <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
                         @foreach($daftarKelas as $k)
                             <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                         @endforeach

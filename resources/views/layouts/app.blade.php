@@ -440,6 +440,12 @@
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index') }}">
+                            <i class="fa-solid fa-camera-retro" style="color: #38bdf8;"></i>
+                            <span>Presensi Wajah</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('absensi.harian') ? 'active' : '' }}" href="{{ route('absensi.harian') }}">
                             <i class="fa-solid fa-calendar-check"></i>
                             <span>Absensi Cepat</span>
@@ -541,9 +547,9 @@
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
-                        <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index', ['kelas' => 'IX E']) }}">
+                        <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index') }}">
                             <i class="fa-solid fa-camera-retro" style="color: #38bdf8;"></i>
-                            <span>Presensi Wajah (Beta)</span>
+                            <span>Presensi Wajah</span>
                         </a>
                     </div>
 

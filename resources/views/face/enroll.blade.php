@@ -25,7 +25,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        transform: scaleX(-1); /* Match mirrored video */
+        transform: none; /* Jangan mirror canvas agar teks tidak terbalik */
         pointer-events: none;
     }
     .oval-guide {
@@ -304,12 +304,22 @@
 
             if (detection) {
                 ovalGuide.classList.add('detected');
-                statusPill.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> Wajah Terdeteksi — Siap Rekam!';
+                const scorePercent = Math.round(detection.detection.score * 100);
+                statusPill.innerHTML = `<i class="fa-solid fa-check text-success me-1"></i> Wajah Terdeteksi (${scorePercent}%) — Siap Rekam!`;
                 captureBtn.disabled = !currentSiswaId;
 
-                // Gambar bounding box halus
+                // Hitung koordinat horizontal mirrored agar teks tegak normal & box presisi
                 const resizedDetections = faceapi.resizeResults(detection, displaySize);
-                faceapi.draw.drawDetections(canvas, resizedDetections);
+                const box = resizedDetections.detection.box;
+                const mirroredX = displaySize.width - box.x - box.width;
+                const mirroredBox = new faceapi.Rect(mirroredX, box.y, box.width, box.height);
+
+                const drawBox = new faceapi.draw.DrawBox(mirroredBox, {
+                    label: `Akurasi ${scorePercent}%`,
+                    boxColor: '#10b981',
+                    lineWidth: 2
+                });
+                drawBox.draw(canvas);
             } else {
                 ovalGuide.classList.remove('detected');
                 statusPill.innerHTML = '<i class="fa-solid fa-arrows-to-circle text-warning me-1"></i> Posisikan Wajah di Tengah Bingkai';

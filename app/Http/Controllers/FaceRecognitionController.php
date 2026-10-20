@@ -16,7 +16,7 @@ class FaceRecognitionController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
+        $selectedKelas = $request->get('kelas', 'Semua');
         $today = Carbon::today()->toDateString();
 
         // Daftar kelas berurutan logis
@@ -75,7 +75,6 @@ class FaceRecognitionController extends Controller
      */
     public function enrollView(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
         $preselectedSiswaId = $request->get('siswa_id');
 
         $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
@@ -86,6 +85,9 @@ class FaceRecognitionController extends Controller
             if ($tA !== $tB) return $tA <=> $tB;
             return strnatcasecmp($a, $b);
         })->values();
+
+        $defaultFirstKelas = $daftarKelas->first() ?? 'VII A';
+        $selectedKelas = $request->get('kelas', $defaultFirstKelas);
 
         $querySiswa = Siswa::query();
         if ($selectedKelas !== 'Semua') {
@@ -201,7 +203,7 @@ class FaceRecognitionController extends Controller
      */
     public function scannerView(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
+        $selectedKelas = $request->get('kelas', 'Semua');
         $today = Carbon::today()->toDateString();
 
         $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
@@ -212,6 +214,22 @@ class FaceRecognitionController extends Controller
             if ($tA !== $tB) return $tA <=> $tB;
             return strnatcasecmp($a, $b);
         })->values();
+
+        // Statistik untuk Kiosk HUD
+        $querySiswa = Siswa::query();
+        if ($selectedKelas !== 'Semua') {
+            $querySiswa->where('kelas', $selectedKelas);
+        }
+        $totalSiswa = $querySiswa->count();
+        $enrolledCount = (clone $querySiswa)->whereNotNull('face_descriptor')->count();
+
+        $absensiQuery = Absensi::whereDate('tanggal', $today)->where('status', 'Hadir');
+        if ($selectedKelas !== 'Semua') {
+            $siswaIds = (clone $querySiswa)->pluck('id');
+            $absensiQuery->whereIn('siswa_id', $siswaIds);
+        }
+        $hadirTodayCount = $absensiQuery->count();
+        $belumHadirCount = max(0, $totalSiswa - $hadirTodayCount);
 
         // Ambil riwayat scan wajah hari ini
         $recentScans = Absensi::with('siswa')
@@ -225,7 +243,11 @@ class FaceRecognitionController extends Controller
             'selectedKelas',
             'daftarKelas',
             'recentScans',
-            'today'
+            'today',
+            'totalSiswa',
+            'enrolledCount',
+            'hadirTodayCount',
+            'belumHadirCount'
         ));
     }
 
@@ -234,7 +256,7 @@ class FaceRecognitionController extends Controller
      */
     public function getEnrolledStudents(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
+        $selectedKelas = $request->get('kelas', 'Semua');
 
         $query = Siswa::whereNotNull('face_descriptor');
         if ($selectedKelas !== 'Semua') {
@@ -334,7 +356,7 @@ class FaceRecognitionController extends Controller
      */
     public function unattendedView(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
+        $selectedKelas = $request->get('kelas', 'Semua');
         $today = Carbon::today()->toDateString();
 
         $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
@@ -416,7 +438,7 @@ class FaceRecognitionController extends Controller
      */
     public function markBulkAlpa(Request $request)
     {
-        $selectedKelas = $request->get('kelas', 'IX E');
+        $selectedKelas = $request->get('kelas', 'Semua');
         $today = Carbon::today()->toDateString();
 
         $querySiswa = Siswa::query();

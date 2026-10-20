@@ -2,293 +2,554 @@
 
 @push('styles')
 <style>
+    /* ========================================================
+       KIOSK & SCANNER MASTER STYLING (SMPN 5 CIAMIS)
+       ======================================================== */
+    :root {
+        --kiosk-bg: #070b13;
+        --kiosk-card: rgba(15, 23, 42, 0.75);
+        --kiosk-border: rgba(255, 255, 255, 0.12);
+        --kiosk-accent: #38bdf8;
+        --kiosk-success: #10b981;
+        --kiosk-warning: #f59e0b;
+    }
+
+    .kiosk-container {
+        position: relative;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    /* Standard Viewport */
     .scanner-viewport {
         position: relative;
         width: 100%;
-        background: #090d16;
+        background: #060911;
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.45);
         aspect-ratio: 4 / 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
+
     #scannerVideo {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transform: scaleX(-1);
     }
+
     #scannerCanvas {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        transform: scaleX(-1);
+        transform: none; /* Jangan mirror canvas agar teks dan persentase tidak terbalik */
         pointer-events: none;
+        z-index: 4;
     }
+
+    /* Laser Scan Beam */
     .scan-line {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 3px;
-        background: linear-gradient(90deg, transparent, #38bdf8, #6366f1, transparent);
-        box-shadow: 0 0 15px #38bdf8;
-        animation: scanMove 2.5s infinite linear;
+        background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, transparent);
+        box-shadow: 0 0 18px #38bdf8;
+        animation: scanMove 2.4s infinite linear;
         pointer-events: none;
         z-index: 5;
     }
+
     @keyframes scanMove {
         0% { top: 0%; opacity: 0; }
         15% { opacity: 1; }
         85% { opacity: 1; }
         100% { top: 100%; opacity: 0; }
     }
+
+    /* Face Silhouette Guide Frame */
+    .face-guide-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 260px;
+        height: 330px;
+        border: 2px dashed rgba(255, 255, 255, 0.35);
+        border-radius: 50% 50% 48% 48% / 60% 60% 40% 40%;
+        pointer-events: none;
+        z-index: 6;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.22);
+    }
+
+    .face-guide-frame.matched {
+        border: 3.5px solid var(--kiosk-success);
+        box-shadow: 0 0 25px var(--kiosk-success), 0 0 0 9999px rgba(0, 0, 0, 0.28);
+    }
+
+    .face-guide-corner {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border-color: #38bdf8;
+        border-style: solid;
+        pointer-events: none;
+    }
+    .guide-tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 8px; }
+    .guide-tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-top-right-radius: 8px; }
+    .guide-bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-bottom-left-radius: 8px; }
+    .guide-br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 8px; }
+
+    .face-guide-label {
+        position: absolute;
+        bottom: -34px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 11.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        background: rgba(15, 23, 42, 0.75);
+        padding: 3px 12px;
+        border-radius: 999px;
+        backdrop-filter: blur(6px);
+        letter-spacing: 0.3px;
+    }
+
+    /* Live Status Pill */
     .scan-status-overlay {
         position: absolute;
-        bottom: 16px;
+        bottom: 18px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(15, 23, 42, 0.88);
         color: #fff;
-        backdrop-filter: blur(8px);
-        padding: 8px 20px;
+        backdrop-filter: blur(10px);
+        padding: 8px 22px;
         border-radius: 999px;
         font-size: 12.5px;
         font-weight: 500;
         white-space: nowrap;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.16);
         z-index: 10;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .success-popup {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        right: 20px;
-        background: rgba(16, 185, 129, 0.95);
-        color: #fff;
-        backdrop-filter: blur(8px);
-        border-radius: 14px;
-        padding: 14px 18px;
-        z-index: 20;
-        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-        display: none;
-        animation: slideDown 0.3s ease;
-    }
-    @keyframes slideDown {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
     }
 
-    /* Fullscreen Mode Styling */
-    .scanner-viewport:fullscreen,
-    .scanner-viewport:-webkit-full-screen {
+    /* Floating Hero Verification Popup */
+    .kiosk-hero-popup {
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        width: 92%;
+        max-width: 580px;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1.5px solid rgba(16, 185, 129, 0.6);
+        color: #fff;
+        backdrop-filter: blur(14px);
+        border-radius: 20px;
+        padding: 16px 22px;
+        z-index: 25;
+        box-shadow: 0 20px 45px rgba(16, 185, 129, 0.35);
+        display: none;
+        opacity: 0;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .kiosk-hero-popup.show {
+        display: block;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .kiosk-hero-popup.warning-state {
+        border-color: rgba(245, 158, 11, 0.7);
+        box-shadow: 0 20px 45px rgba(245, 158, 11, 0.3);
+    }
+
+    .student-avatar-wrap {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        flex-shrink: 0;
+    }
+
+    .warning-state .student-avatar-wrap {
+        border-color: #f59e0b;
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .student-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* ========================================================
+       FULLSCREEN / KIOSK MODE DEDICATED THEME
+       ======================================================== */
+    .kiosk-container:fullscreen,
+    .kiosk-container:-webkit-full-screen {
         width: 100vw !important;
         height: 100vh !important;
-        border-radius: 0 !important;
         max-width: 100vw !important;
-        background: #000 !important;
+        max-height: 100vh !important;
+        background: var(--kiosk-bg) !important;
+        color: #f8fafc !important;
+        padding: 18px 24px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Kiosk Top Bar */
+    .kiosk-top-bar {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 18px;
+        background: var(--kiosk-card);
+        border: 1px solid var(--kiosk-border);
+        border-radius: 16px;
+        backdrop-filter: blur(12px);
+        margin-bottom: 14px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
-    .scanner-viewport:fullscreen #scannerVideo,
-    .scanner-viewport:-webkit-full-screen #scannerVideo {
-        width: 100vw !important;
-        height: 100vh !important;
-        object-fit: cover !important;
+
+    /* Fullscreen Main Grid */
+    .kiosk-container:fullscreen .kiosk-grid,
+    .kiosk-container:-webkit-full-screen .kiosk-grid {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 16px;
+        min-height: 0;
+        overflow: hidden;
     }
-    .scanner-viewport:fullscreen #scannerCanvas,
-    .scanner-viewport:-webkit-full-screen #scannerCanvas {
-        width: 100vw !important;
-        height: 100vh !important;
+
+    .kiosk-container:fullscreen .scanner-viewport,
+    .kiosk-container:-webkit-full-screen .scanner-viewport {
+        border-radius: 20px;
+        height: 100% !important;
+        aspect-ratio: auto !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        border: 1px solid var(--kiosk-border);
     }
-    .scanner-viewport:fullscreen .success-popup,
-    .scanner-viewport:-webkit-full-screen .success-popup {
-        top: 40px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
+
+    .kiosk-container:fullscreen .face-guide-frame,
+    .kiosk-container:-webkit-full-screen .face-guide-frame {
+        width: 320px;
+        height: 420px;
+    }
+
+    .kiosk-container:fullscreen .kiosk-side-panel,
+    .kiosk-container:-webkit-full-screen .kiosk-side-panel {
+        background: var(--kiosk-card);
+        border: 1px solid var(--kiosk-border);
+        border-radius: 20px;
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding: 16px;
+        overflow: hidden;
+    }
+
+    .kiosk-container:fullscreen .kiosk-hero-popup,
+    .kiosk-container:-webkit-full-screen .kiosk-hero-popup {
+        top: 36px;
         max-width: 680px;
-        font-size: 1.15rem;
-        padding: 20px 24px;
-        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.5);
+        padding: 20px 28px;
     }
-    .scanner-viewport:fullscreen .scan-status-overlay,
-    .scanner-viewport:-webkit-full-screen .scan-status-overlay {
-        bottom: 40px;
-        font-size: 14.5px;
-        padding: 10px 28px;
+
+    .kiosk-container:fullscreen .student-avatar-wrap,
+    .kiosk-container:-webkit-full-screen .student-avatar-wrap {
+        width: 76px;
+        height: 76px;
+    }
+
+    /* Pulse animation for active camera dot */
+    .pulse-dot {
+        width: 9px;
+        height: 9px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulseDot 1.8s infinite;
+    }
+
+    @keyframes pulseDot {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Custom Scrollbar for Recent Scans */
+    .recent-scans-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+    .recent-scans-scroll::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .recent-scans-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
     }
 </style>
 @endpush
 
 @section('content')
-<div class="d-flex flex-column gap-3">
-    <!-- Header Section -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <a href="{{ route('face.index', ['kelas' => $selectedKelas]) }}" class="text-decoration-none small text-slate-500">
-                    <i class="fa-solid fa-arrow-left me-1"></i> Dashboard Biometrik
-                </a>
-                <span class="text-slate-300">•</span>
-                <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
-                    <i class="fa-solid fa-expand me-1"></i> Scanner Kamera (Kiosk Mode)
-                </span>
+<!-- WRAPPER MASTER KIOSK CONTAINER -->
+<div id="kioskContainer" class="kiosk-container">
+
+    <!-- TOP BAR KIOSK (Brand, Clock, Live Stats & Controls) -->
+    <div class="kiosk-top-bar">
+        <!-- Brand & Title -->
+        <div class="d-flex align-items-center gap-2.5">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm flex-shrink-0"
+                 style="width: 38px; height: 38px; background: linear-gradient(135deg, #0284c7, #4f46e5);">
+                <i class="fa-solid fa-school fs-6"></i>
             </div>
-            <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
-                Mesin Pemindai Presensi Wajah — Kelas {{ $selectedKelas }}
-            </h2>
-            <p class="text-slate-500 mb-0" style="font-size: 13px;">
-                Arahkan kamera ke siswa yang datang. Sistem akan mengenali wajah secara instan dan mencatat kehadiran otomatis.
-            </p>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 0.5px;">SMPN 5 CIAMIS</span>
+                    <span class="badge rounded-pill bg-primary bg-opacity-20 text-info border border-info border-opacity-30 px-2 py-0.5" style="font-size: 10px;">
+                        <span class="pulse-dot me-1"></span> POS PIKET & GERBANG
+                    </span>
+                </div>
+                <div class="small text-muted" style="font-size: 11.5px;" id="kioskFullDateTime">
+                    Memuat waktu...
+                </div>
+            </div>
         </div>
 
+        <!-- Real-Time Attendance Counters -->
+        <div class="d-none d-md-flex align-items-center gap-2">
+            <div class="px-3 py-1.5 rounded-3 d-flex align-items-center gap-2 border" 
+                 style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25) !important;">
+                <i class="fa-solid fa-user-check text-success fs-6"></i>
+                <div class="lh-1">
+                    <div class="small text-muted" style="font-size: 10px;">HADIR HARI INI</div>
+                    <div class="fw-bold text-success" style="font-size: 14px;" id="hudHadirCount">{{ $hadirTodayCount }}</div>
+                </div>
+            </div>
+
+            <div class="px-3 py-1.5 rounded-3 d-flex align-items-center gap-2 border" 
+                 style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25) !important;">
+                <i class="fa-solid fa-user-clock text-warning fs-6"></i>
+                <div class="lh-1">
+                    <div class="small text-muted" style="font-size: 10px;">BELUM HADIR</div>
+                    <div class="fw-bold text-warning" style="font-size: 14px;" id="hudBelumCount">{{ $belumHadirCount }}</div>
+                </div>
+            </div>
+
+            <div class="px-3 py-1.5 rounded-3 d-flex align-items-center gap-2 border" 
+                 style="background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25) !important;">
+                <i class="fa-solid fa-users text-primary fs-6"></i>
+                <div class="lh-1">
+                    <div class="small text-muted" style="font-size: 10px;">TERDAFTAR WAJAH</div>
+                    <div class="fw-bold text-primary" style="font-size: 14px;" id="hudEnrolledCount">{{ $enrolledCount }} / {{ $totalSiswa }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls: Kelas, Kamera, Suara & Fullscreen -->
         <div class="d-flex align-items-center gap-2">
-            <button type="button" id="fullscreenToggleBtn" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px;">
-                <i class="fa-solid fa-expand me-1.5"></i> Layar Penuh (Full Screen)
+            <!-- Pilihan Kelas -->
+            <select id="kioskSelectKelas" class="form-select form-select-sm rounded-pill border-slate-300 py-1" 
+                    style="font-size: 12px; max-width: 145px;" onchange="changeScannerKelas(this.value)">
+                <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
+                @foreach($daftarKelas as $k)
+                    <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                @endforeach
+            </select>
+
+            <!-- Pilihan Kamera (Jika ada kamera eksternal USB) -->
+            <select id="kioskSelectCamera" class="form-select form-select-sm rounded-pill border-slate-300 py-1 d-none d-lg-inline-block" 
+                    style="font-size: 12px; max-width: 140px;" onchange="changeCameraDevice(this.value)">
+                <option value="">Kamera Default</option>
+            </select>
+
+            <!-- Audio Voice TTS Toggle Button -->
+            <button type="button" id="toggleTtsBtn" class="btn btn-sm btn-light border rounded-circle shadow-xs" 
+                    style="width: 32px; height: 32px; padding: 0;" title="Toggle Suara Panggilan Nama">
+                <i class="fa-solid fa-volume-high text-primary" id="ttsIcon"></i>
             </button>
-            <a href="{{ route('face.enroll', ['kelas' => $selectedKelas]) }}" class="btn btn-light btn-sm text-slate-700 border rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
-                <i class="fa-solid fa-user-plus me-1.5 text-primary"></i> Rekam Siswa Baru
-            </a>
-            <a href="{{ route('face.unattended', ['kelas' => $selectedKelas]) }}" class="btn btn-outline-warning btn-sm text-dark rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
-                <i class="fa-solid fa-clipboard-question me-1.5"></i> Cek Belum Absen
-            </a>
+
+            <!-- Tombol Fullscreen Master -->
+            <button type="button" id="kioskFullscreenBtn" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px;">
+                <i class="fa-solid fa-expand me-1.5" id="fsIcon"></i> <span id="fsLabelText">Layar Penuh (Kiosk)</span>
+            </button>
         </div>
     </div>
 
-    <!-- Layout Dua Kolom -->
-    <div class="row g-3">
-        <!-- Kolom Kiri: Layar Scanner Kamera -->
-        <div class="col-lg-7 col-xl-7">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-3.5">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2.5 py-1" style="font-size: 11px;">
-                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 8px; height: 8px;" role="status"></span> Scanner Aktif
-                        </span>
-                        <span class="small text-slate-500" id="loadedCountText">Memuat data wajah...</span>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2">
-                        <select id="selectScannerKelas" class="form-select form-select-sm rounded-3 border-slate-300 py-1" style="font-size: 12px;" onchange="changeScannerKelas(this.value)">
-                            @foreach($daftarKelas as $k)
-                                <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
-                            @endforeach
-                            <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Viewport Kamera Scanner -->
-                <div class="scanner-viewport">
-                    <!-- Overlay Top Bar (Live Clock & Viewport Fullscreen Toggle) -->
-                    <div class="d-flex align-items-center justify-content-between p-3 position-absolute top-0 start-0 end-0" style="z-index: 15; pointer-events: none;">
-                        <div class="badge bg-dark bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-3 py-1.5 shadow-sm" style="pointer-events: auto; backdrop-filter: blur(4px);">
-                            <i class="fa-solid fa-school me-1.5 text-info"></i> SMPN 5 Ciamis &bull; <span id="kioskLiveClock">--:--:--</span>
-                        </div>
-                        <button type="button" id="viewportFullscreenToggleBtn" class="btn btn-sm btn-dark bg-opacity-75 text-white border border-white border-opacity-25 rounded-pill px-3 py-1.5 shadow-sm" style="pointer-events: auto; font-size: 11.5px; backdrop-filter: blur(4px);">
-                            <i class="fa-solid fa-expand me-1"></i> <span id="vpFsLabel">Layar Penuh</span>
-                        </button>
-                    </div>
-
+    <!-- MAIN GRID KIOSK -->
+    <div class="row g-3 kiosk-grid">
+        <!-- Kolom Kiri / Utama: Viewport Kamera Biometrik -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-2.5 p-md-3 h-100 d-flex flex-column" style="background: rgba(255,255,255,0.95);">
+                <!-- Viewport Scanner -->
+                <div class="scanner-viewport flex-grow-1">
+                    <!-- Scanner Video Stream -->
                     <video id="scannerVideo" autoplay playsinline muted></video>
+                    
+                    <!-- Bounding Box Canvas -->
                     <canvas id="scannerCanvas"></canvas>
+
+                    <!-- Laser Animated Scan Beam -->
                     <div class="scan-line"></div>
-                    <div class="scan-status-overlay" id="scannerStatus">
-                        <i class="fa-solid fa-spinner fa-spin me-1.5"></i> Memuat Model AI & Database Wajah...
+
+                    <!-- Face Guide Silhouette (Oval frame for alignment) -->
+                    <div class="face-guide-frame" id="faceGuideFrame">
+                        <div class="face-guide-corner guide-tl"></div>
+                        <div class="face-guide-corner guide-tr"></div>
+                        <div class="face-guide-corner guide-bl"></div>
+                        <div class="face-guide-corner guide-br"></div>
+                        <div class="face-guide-label" id="guideLabel">
+                            <i class="fa-solid fa-arrows-to-dot me-1 text-info"></i> Posisikan Wajah di Dalam Bingkai
+                        </div>
                     </div>
 
-                    <!-- Pop-up Notifikasi Sukses -->
-                    <div class="success-popup" id="successPopup">
+                    <!-- Bottom Status Overlay Pill -->
+                    <div class="scan-status-overlay" id="scannerStatus">
+                        <i class="fa-solid fa-spinner fa-spin me-1.5"></i> Memuat Model AI Biometrik...
+                    </div>
+
+                    <!-- HERO POPUP: SUCCESS / DUPLICATE NOTIFICATION -->
+                    <div class="kiosk-hero-popup" id="kioskHeroPopup">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-white text-success" 
-                                 style="width: 44px; height: 44px;">
-                                <i class="fa-solid fa-check fs-5"></i>
+                            <!-- Student Avatar -->
+                            <div class="student-avatar-wrap">
+                                <img src="" alt="Foto" id="heroStudentPhoto" class="student-avatar-img" 
+                                     onerror="this.style.display='none'; document.getElementById('heroStudentInitial').style.display='flex';">
+                                <div id="heroStudentInitial" class="w-100 h-100 text-white fw-bold align-items-center justify-content-center"
+                                     style="display: none; font-size: 26px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    S
+                                </div>
                             </div>
-                            <div class="flex-grow-1 text-white">
-                                <div class="fw-bold fs-6 lh-sm" id="popupNamaSiswa">Nama Siswa</div>
-                                <small class="text-white-50" id="popupDetailSiswa">NIS: 12345 &bull; Kelas IX E &bull; Pukul 06:45:10</small>
+
+                            <!-- Student Info -->
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge rounded-pill px-2.5 py-1 fw-bold" id="heroStatusBadge" 
+                                          style="background: #10b981; color: #fff; font-size: 11px;">
+                                        <i class="fa-solid fa-check me-1"></i> VERIFIKASI BERHASIL
+                                    </span>
+                                    <small class="text-white-50 font-monospace" id="heroScanTime">06:45:10 WIB</small>
+                                </div>
+                                <h4 class="fw-bold text-white mb-0 text-truncate" id="heroStudentName" style="font-size: 1.25rem;">
+                                    Nama Siswa
+                                </h4>
+                                <div class="text-white-50 small mt-0.5" id="heroStudentDetails" style="font-size: 12px;">
+                                    NIS: 12345 • Kelas IX E
+                                </div>
                             </div>
-                            <span class="badge bg-white text-success rounded-pill px-2.5 py-1 fw-bold shadow-xs">
-                                HADIR
-                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between mt-3 text-slate-500" style="font-size: 11.5px;">
-                    <span><i class="fa-solid fa-volume-high text-primary me-1"></i> Suara audio notifikasi aktif</span>
-                    <span><i class="fa-solid fa-shield-halved text-success me-1"></i> Anti-spam: jeda 10 detik per siswa</span>
+                <!-- Footer Tips Bar -->
+                <div class="d-flex align-items-center justify-content-between mt-2.5 px-1 text-slate-500" style="font-size: 11.5px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="activeCameraLabel"><i class="fa-solid fa-camera text-primary me-1"></i> Sensor Kamera Aktif</span>
+                        <span>•</span>
+                        <span id="screenWakeLockStatus"><i class="fa-solid fa-sun text-warning me-1"></i> Layar Terjaga (Anti-Sleep)</span>
+                    </div>
+                    <div>
+                        <span><i class="fa-solid fa-shield-halved text-success me-1"></i> Jeda deteksi 8 detik per siswa</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Kolom Kanan: Riwayat Presensi Wajah Hari Ini -->
-        <div class="col-lg-5 col-xl-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-3.5 h-100 d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+        <!-- Kolom Kanan: Panel Riwayat Presensi Realtime -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-3.5 h-100 d-flex flex-column kiosk-side-panel">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-slate-200">
                     <div class="d-flex align-items-center gap-2">
                         <div class="rounded-circle d-flex align-items-center justify-content-center text-primary" 
                              style="width: 32px; height: 32px; background: #e0e7ff;">
                             <i class="fa-solid fa-clock-rotate-left" style="font-size: 13px;"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-slate-800 mb-0" style="font-size: 13.5px;">Riwayat Scan Hari Ini</h6>
-                            <small class="text-slate-400" style="font-size: 11px;">Update real-time saat siswa scan</small>
+                            <h6 class="fw-bold mb-0" style="font-size: 13.5px;">Presensi Wajah Terkini</h6>
+                            <small class="text-muted" style="font-size: 11px;">Otomatis update saat siswa lewat</small>
                         </div>
                     </div>
-                    <span class="badge bg-primary rounded-pill px-2 py-0.5" id="historyCounter" style="font-size: 11px;">
+                    <span class="badge bg-primary rounded-pill px-2.5 py-1" id="historyCounterBadge" style="font-size: 11px;">
                         {{ $recentScans->count() }} Tercatat
                     </span>
                 </div>
 
                 <!-- List Riwayat Scan -->
-                <div class="flex-grow-1 overflow-auto pe-1" id="scansHistoryContainer" style="max-height: 440px;">
+                <div class="flex-grow-1 overflow-auto pe-1 recent-scans-scroll" id="scansHistoryContainer" style="max-height: 480px;">
                     @forelse($recentScans as $sc)
                         <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 mb-2 bg-slate-50 border border-slate-200 scan-item">
-                            <div class="d-flex align-items-center gap-2.5">
+                            <div class="d-flex align-items-center gap-2.5 min-w-0">
                                 @if(optional($sc->siswa)->foto_wajah)
                                     <img src="{{ asset('storage/' . $sc->siswa->foto_wajah) }}" alt="Foto" 
-                                         class="rounded-circle object-fit-cover border" width="34" height="34"
+                                         class="rounded-circle object-fit-cover border flex-shrink-0" width="34" height="34"
                                          onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                                    <div class="rounded-circle text-white fw-bold align-items-center justify-content-center"
+                                    <div class="rounded-circle text-white fw-bold align-items-center justify-content-center flex-shrink-0"
                                          style="display: none; width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
                                         {{ strtoupper(substr(optional($sc->siswa)->nama ?? 'S', 0, 1)) }}
                                     </div>
                                 @else
-                                    <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
+                                    <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
                                          style="width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
                                         {{ strtoupper(substr(optional($sc->siswa)->nama ?? 'S', 0, 1)) }}
                                     </div>
                                 @endif
-                                <div>
-                                    <div class="fw-semibold text-slate-800 lh-sm" style="font-size: 12.5px;">
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-truncate lh-sm" style="font-size: 12.5px;">
                                         {{ optional($sc->siswa)->nama ?? 'Siswa' }}
                                     </div>
-                                    <small class="text-slate-400 font-monospace" style="font-size: 10.5px;">
+                                    <small class="text-muted font-monospace" style="font-size: 10.5px;">
                                         {{ optional($sc->siswa)->nis }} &bull; Kelas {{ optional($sc->siswa)->kelas }}
                                     </small>
                                 </div>
                             </div>
-                            <div class="text-end">
+                            <div class="text-end flex-shrink-0 ms-2">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 mb-1" style="font-size: 10px;">
-                                    Hadir (Wajah)
+                                    Hadir
                                 </span>
-                                <div class="text-slate-400" style="font-size: 10px;">
+                                <div class="text-muted font-monospace" style="font-size: 10px;">
                                     {{ \Carbon\Carbon::parse($sc->updated_at)->format('H:i:s') }} WIB
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-5 text-slate-400" id="emptyHistoryNotice">
+                        <div class="text-center py-5 text-muted" id="emptyHistoryNotice">
                             <i class="fa-regular fa-id-card fs-1 mb-2 text-slate-300"></i>
-                            <h6 class="fw-semibold text-slate-600 mb-1" style="font-size: 13px;">Belum Ada Scan Hari Ini</h6>
-                            <p class="small text-slate-400 mb-0" style="font-size: 11px;">Arahkan wajah siswa ke kamera untuk memulai pencatatan otomatis.</p>
+                            <h6 class="fw-semibold mb-1" style="font-size: 13px;">Belum Ada Scan Hari Ini</h6>
+                            <p class="small text-muted mb-0" style="font-size: 11px;">Siswa yang lewat di depan kamera akan otomatis tercatat di sini.</p>
                         </div>
                     @endforelse
+                </div>
+
+                <!-- Footer Shortcut Actions -->
+                <div class="pt-3 border-top border-slate-200 mt-2 d-flex align-items-center justify-content-between">
+                    <a href="{{ route('face.index', ['kelas' => $selectedKelas]) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1" style="font-size: 11.5px;">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                    </a>
+                    <a href="{{ route('face.unattended', ['kelas' => $selectedKelas]) }}" class="btn btn-outline-warning btn-sm rounded-pill px-3 py-1" style="font-size: 11.5px;">
+                        <i class="fa-solid fa-clipboard-question me-1"></i> Belum Hadir
+                    </a>
                 </div>
             </div>
         </div>
@@ -298,6 +559,9 @@
 @push('scripts')
 <script src="{{ asset('js/face-api.min.js') }}"></script>
 <script>
+    // ========================================================
+    // KONFIGURASI & VARIABEL STATE
+    // ========================================================
     const MODEL_URL = '{{ asset("models/face") }}';
     const CSRF_TOKEN = '{{ csrf_token() }}';
     const STUDENTS_API_URL = '{{ route("face.enrolledStudents") }}';
@@ -306,11 +570,24 @@
     const video = document.getElementById('scannerVideo');
     const canvas = document.getElementById('scannerCanvas');
     const scannerStatus = document.getElementById('scannerStatus');
-    const loadedCountText = document.getElementById('loadedCountText');
-    const successPopup = document.getElementById('successPopup');
-    const popupNama = document.getElementById('popupNamaSiswa');
-    const popupDetail = document.getElementById('popupDetailSiswa');
+    const faceGuideFrame = document.getElementById('faceGuideFrame');
+    const guideLabel = document.getElementById('guideLabel');
+
+    // Hero Popup Elements
+    const heroPopup = document.getElementById('kioskHeroPopup');
+    const heroPhoto = document.getElementById('heroStudentPhoto');
+    const heroInitial = document.getElementById('heroStudentInitial');
+    const heroName = document.getElementById('heroStudentName');
+    const heroDetails = document.getElementById('heroStudentDetails');
+    const heroBadge = document.getElementById('heroStatusBadge');
+    const heroTime = document.getElementById('heroScanTime');
+
+    // Real-Time Counters
+    const hudHadirCount = document.getElementById('hudHadirCount');
+    const hudBelumCount = document.getElementById('hudBelumCount');
+    const hudEnrolledCount = document.getElementById('hudEnrolledCount');
     const scansContainer = document.getElementById('scansHistoryContainer');
+    const historyCounterBadge = document.getElementById('historyCounterBadge');
 
     let currentKelas = '{{ $selectedKelas }}';
     let faceMatcher = null;
@@ -318,32 +595,39 @@
     let isModelsReady = false;
     let isProcessing = false;
     let lastScannedStudents = {}; // Cooldown map: siswaId => timestamp
+    let isTtsEnabled = true; // Voice speech synthesis aktif secara default
+    let wakeLock = null;
+    let popupTimer = null;
+    let currentStream = null;
+    let currentDeviceId = null;
 
-    // Synthesize audio chime (Ding-dong!) using Web Audio API
+    // ========================================================
+    // WEBAUDIO CHIMES (SUCCESS & WARNING)
+    // ========================================================
     function playSuccessChime() {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
             const ctx = new AudioContext();
 
-            // Tone 1: 659.25 Hz (E5)
+            // Tone 1: E5 (659.25 Hz)
             const osc1 = ctx.createOscillator();
             const gain1 = ctx.createGain();
             osc1.type = 'sine';
             osc1.frequency.setValueAtTime(659.25, ctx.currentTime);
-            gain1.gain.setValueAtTime(0.2, ctx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            gain1.gain.setValueAtTime(0.25, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
             osc1.connect(gain1);
             gain1.connect(ctx.destination);
             osc1.start();
-            osc1.stop(ctx.currentTime + 0.3);
+            osc1.stop(ctx.currentTime + 0.28);
 
-            // Tone 2: 880 Hz (A5)
+            // Tone 2: A5 (880 Hz)
             const osc2 = ctx.createOscillator();
             const gain2 = ctx.createGain();
             osc2.type = 'sine';
             osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-            gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.12);
+            gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.12);
             gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
             osc2.connect(gain2);
             gain2.connect(ctx.destination);
@@ -354,27 +638,94 @@
         }
     }
 
-    // Load Models & Database
+    function playDuplicateChime() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.25);
+        } catch (e) {}
+    }
+
+    // ========================================================
+    // TEXT-TO-SPEECH (TTS) VOICE GREETING
+    // ========================================================
+    function speakGreeting(nama, isDuplicate) {
+        if (!isTtsEnabled || !('speechSynthesis' in window)) return;
+
+        window.speechSynthesis.cancel(); // Hentikan ucapan sebelumnya jika ada
+
+        const hour = new Date().getHours();
+        let sapaan = 'Selamat pagi';
+        if (hour >= 11 && hour < 15) sapaan = 'Selamat siang';
+        else if (hour >= 15) sapaan = 'Selamat sore';
+
+        let text = `${sapaan} ${nama}, presensi berhasil.`;
+        if (isDuplicate) {
+            text = `${nama}, kamu sudah presensi sebelumnya.`;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 1.05; // Sedikit lebih cepat agar tangkas
+        utterance.pitch = 1.0;
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Toggle Voice TTS Button
+    const toggleTtsBtn = document.getElementById('toggleTtsBtn');
+    const ttsIcon = document.getElementById('ttsIcon');
+    if (toggleTtsBtn) {
+        toggleTtsBtn.addEventListener('click', () => {
+            isTtsEnabled = !isTtsEnabled;
+            if (isTtsEnabled) {
+                ttsIcon.className = 'fa-solid fa-volume-high text-primary';
+                toggleTtsBtn.classList.remove('btn-light');
+                toggleTtsBtn.classList.add('btn-primary-subtle');
+            } else {
+                ttsIcon.className = 'fa-solid fa-volume-xmark text-muted';
+                toggleTtsBtn.classList.remove('btn-primary-subtle');
+                toggleTtsBtn.classList.add('btn-light');
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        });
+    }
+
+    // ========================================================
+    // INISIALISASI MODEL AI & DATABASE
+    // ========================================================
     async function initScanner() {
         try {
-            scannerStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1.5"></i> Memuat Model AI Biometrik...';
+            scannerStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1.5 text-info"></i> Memuat Model AI Biometrik...';
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             isModelsReady = true;
 
             await loadEnrolledStudents();
-            startScannerVideo();
+            await populateCameraDevices();
+            await startScannerVideo();
+            requestScreenWakeLock();
         } catch (err) {
             console.error('Inisialisasi gagal:', err);
             scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Gagal Memuat Model AI';
         }
     }
 
-    // Ambil data vektor wajah dari server
     async function loadEnrolledStudents() {
         try {
-            scannerStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1.5"></i> Memuat Database Wajah Siswa...';
+            scannerStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1.5 text-info"></i> Memuat Data Wajah Siswa...';
             const res = await fetch(`${STUDENTS_API_URL}?kelas=${encodeURIComponent(currentKelas)}`);
             const data = await res.json();
 
@@ -391,91 +742,145 @@
                 });
 
                 if (labeledDescriptors.length > 0) {
-                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55); // Jarak threshold max 0.55 (akurasi tinggi)
-                    loadedCountText.textContent = `${labeledDescriptors.length} siswa siap dicocokkan`;
-                    scannerStatus.innerHTML = '<i class="fa-solid fa-face-smile text-success me-1.5"></i> Scanner Siap! Arahkan wajah ke kamera.';
+                    // Threshold akurasi tinggi: 0.54
+                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.54);
+                    scannerStatus.innerHTML = `<i class="fa-solid fa-face-smile text-success me-1.5"></i> Scanner Siap (${labeledDescriptors.length} siswa siap dicocokkan)`;
                 } else {
                     faceMatcher = null;
-                    loadedCountText.textContent = '0 siswa terdaftar';
                     scannerStatus.innerHTML = '<i class="fa-solid fa-info-circle text-warning me-1.5"></i> Belum ada siswa yang direkam wajahnya di kelas ini.';
                 }
             } else {
                 faceMatcher = null;
-                loadedCountText.textContent = '0 siswa terdaftar';
-                scannerStatus.innerHTML = '<i class="fa-solid fa-info-circle text-warning me-1.5"></i> Belum ada siswa yang direkam wajahnya di kelas ini.';
+                scannerStatus.innerHTML = '<i class="fa-solid fa-info-circle text-warning me-1.5"></i> Belum ada data wajah siswa untuk kelas ini.';
             }
         } catch (e) {
             console.error('Gagal memuat siswa:', e);
-            loadedCountText.textContent = 'Gagal memuat data siswa';
+            scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Gagal Memuat Data Siswa';
         }
     }
 
-    function startScannerVideo() {
-        navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
-            audio: false
-        })
-        .then(stream => {
-            video.srcObject = stream;
-        })
-        .catch(err => {
-            console.error('Gagal buka kamera:', err);
-            scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Akses Kamera Gagal';
-        });
+    // ========================================================
+    // KAMERA: MULTI-DEVICE SUPPORT & STREAM
+    // ========================================================
+    async function populateCameraDevices() {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            const selectElem = document.getElementById('kioskSelectCamera');
+
+            if (videoDevices.length > 1 && selectElem) {
+                selectElem.innerHTML = '';
+                videoDevices.forEach((device, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || `Kamera ${index + 1}`;
+                    selectElem.appendChild(opt);
+                });
+                selectElem.classList.remove('d-none');
+            }
+        } catch (e) {
+            console.log('Device enumerate error:', e);
+        }
     }
 
-    // Loop pendeteksian wajah real-time
+    async function changeCameraDevice(deviceId) {
+        currentDeviceId = deviceId;
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+        await startScannerVideo();
+    }
+
+    async function startScannerVideo() {
+        const constraints = {
+            video: currentDeviceId 
+                ? { deviceId: { exact: currentDeviceId } }
+                : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+            audio: false
+        };
+
+        try {
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = currentStream;
+        } catch (err) {
+            console.error('Gagal buka kamera:', err);
+            scannerStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-danger me-1.5"></i> Akses Kamera Ditolak / Tidak Tersedia';
+        }
+    }
+
+    // ========================================================
+    // LOOP DETEKSI WAJAH REAL-TIME
+    // ========================================================
     video.addEventListener('play', () => {
-        const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
+        const displaySize = { 
+            width: video.videoWidth || video.clientWidth || 640, 
+            height: video.videoHeight || video.clientHeight || 480 
+        };
         faceapi.matchDimensions(canvas, displaySize);
 
         setInterval(async () => {
             if (!isModelsReady || isProcessing) return;
 
+            // Gunakan TinyFaceDetector untuk performa tinggi & respons instan
             const detections = await faceapi.detectAllFaces(
                 video, 
-                new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+                new faceapi.TinyFaceDetectorOptions({ inputSize: 256, scoreThreshold: 0.5 })
             ).withFaceLandmarks().withFaceDescriptors();
 
             const context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
 
             if (!detections || detections.length === 0) {
+                faceGuideFrame.classList.remove('matched');
+                guideLabel.innerHTML = '<i class="fa-solid fa-arrows-to-dot me-1 text-info"></i> Posisikan Wajah di Dalam Bingkai';
                 return;
             }
 
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-            // Jika ada faceMatcher, cocokkan
             if (faceMatcher) {
                 for (const detection of resizedDetections) {
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                     const box = detection.detection.box;
+
+                    // Hitung koordinat horizontal mirrored agar teks tegak normal & box presisi
+                    const mirroredX = displaySize.width - box.x - box.width;
+                    const mirroredBox = new faceapi.Rect(mirroredX, box.y, box.width, box.height);
 
                     if (bestMatch.label !== 'unknown') {
                         const siswaId = parseInt(bestMatch.label);
                         const siswa = enrolledStudentsMap[siswaId];
                         const confidence = Math.round((1 - bestMatch.distance) * 100);
 
-                        // Gambar box hijau
-                        const drawBox = new faceapi.draw.DrawBox(box, {
+                        // Highlight Guide Frame
+                        faceGuideFrame.classList.add('matched');
+                        guideLabel.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> Terverifikasi: <strong>${siswa ? siswa.nama : 'Siswa'}</strong> (${confidence}%)`;
+
+                        // Box hijau pada canvas dengan teks tegak normal (tidak terbalik)
+                        const drawBox = new faceapi.draw.DrawBox(mirroredBox, {
                             label: `${siswa ? siswa.nama : 'Siswa'} (${confidence}%)`,
-                            boxColor: '#10b981'
+                            boxColor: '#10b981',
+                            lineWidth: 2.5
                         });
                         drawBox.draw(canvas);
 
-                        // Cek cooldown (agar tidak spam jika masih di depan kamera dalam 10 detik)
+                        // Cooldown 8 detik per siswa
                         const now = Date.now();
                         const lastTime = lastScannedStudents[siswaId] || 0;
-                        if (now - lastTime > 10000) {
+                        if (now - lastTime > 8000) {
                             lastScannedStudents[siswaId] = now;
                             triggerAttendance(siswa, bestMatch.distance);
                         }
                     } else {
                         // Wajah tidak dikenal
-                        const drawBox = new faceapi.draw.DrawBox(box, {
+                        faceGuideFrame.classList.remove('matched');
+                        guideLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Wajah Belum Terdaftar';
+
+                        const drawBox = new faceapi.draw.DrawBox(mirroredBox, {
                             label: 'Wajah Tidak Dikenali',
-                            boxColor: '#f59e0b'
+                            boxColor: '#f59e0b',
+                            lineWidth: 2
                         });
                         drawBox.draw(canvas);
                     }
@@ -483,17 +888,32 @@
             } else {
                 faceapi.draw.drawDetections(canvas, resizedDetections);
             }
-        }, 250);
+        }, 220); // Deteksi setiap 220ms (sangat mulus)
     });
 
-    // Kirim presensi ke server
+    // ========================================================
+    // PENCATATAN PRESENSI & SNAPSHOT KAMERA
+    // ========================================================
     async function triggerAttendance(siswa, distance) {
         if (!siswa) return;
 
         isProcessing = true;
-        playSuccessChime();
 
-        showSuccessPopup(siswa);
+        // Ambil snapshot foto kilat dari video stream
+        let snapshotData = null;
+        try {
+            const snapCanvas = document.createElement('canvas');
+            snapCanvas.width = video.videoWidth || 640;
+            snapCanvas.height = video.videoHeight || 480;
+            const snapCtx = snapCanvas.getContext('2d');
+            // Cerminkan kembali foto jika video di-flip
+            snapCtx.translate(snapCanvas.width, 0);
+            snapCtx.scale(-1, 1);
+            snapCtx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+            snapshotData = snapCanvas.toDataURL('image/jpeg', 0.82);
+        } catch (e) {
+            console.log('Snapshot error:', e);
+        }
 
         try {
             const response = await fetch(RECORD_ATTENDANCE_URL, {
@@ -506,12 +926,24 @@
                 body: JSON.stringify({
                     siswa_id: siswa.id,
                     distance: distance,
+                    image: snapshotData
                 })
             });
 
             const res = await response.json();
+
             if (res.success) {
-                addHistoryItem(res.siswa);
+                if (res.is_duplicate) {
+                    playDuplicateChime();
+                    showHeroPopup(res.siswa, true);
+                    speakGreeting(res.siswa.nama, true);
+                } else {
+                    playSuccessChime();
+                    showHeroPopup(res.siswa, false);
+                    speakGreeting(res.siswa.nama, false);
+                    addHistoryItem(res.siswa);
+                    updateCountersOnSuccess();
+                }
             }
         } catch (e) {
             console.error('Gagal mencatat presensi:', e);
@@ -520,15 +952,55 @@
         }
     }
 
-    function showSuccessPopup(siswa) {
-        popupNama.textContent = siswa.nama;
-        const nowTime = new Date().toLocaleTimeString('id-ID');
-        popupDetail.textContent = `NIS: ${siswa.nis} • Kelas ${siswa.kelas} • Pukul ${nowTime} WIB`;
+    // ========================================================
+    // TAMPILKAN HERO POPUP
+    // ========================================================
+    function showHeroPopup(siswa, isDuplicate) {
+        if (popupTimer) clearTimeout(popupTimer);
 
-        successPopup.style.display = 'block';
-        setTimeout(() => {
-            successPopup.style.display = 'none';
-        }, 4000);
+        heroName.textContent = siswa.nama;
+        heroDetails.textContent = `NIS: ${siswa.nis} • Kelas ${siswa.kelas}`;
+        heroTime.textContent = (siswa.waktu || new Date().toLocaleTimeString('id-ID')) + ' WIB';
+
+        if (siswa.foto_url) {
+            heroPhoto.src = siswa.foto_url;
+            heroPhoto.style.display = 'block';
+            heroInitial.style.display = 'none';
+        } else {
+            heroPhoto.style.display = 'none';
+            heroInitial.style.display = 'flex';
+            heroInitial.textContent = siswa.nama.charAt(0).toUpperCase();
+        }
+
+        if (isDuplicate) {
+            heroPopup.classList.add('warning-state');
+            heroBadge.style.background = '#f59e0b';
+            heroBadge.innerHTML = '<i class="fa-solid fa-clock-rotate-left me-1"></i> SUDAH HADIR SEBELUMNYA';
+        } else {
+            heroPopup.classList.remove('warning-state');
+            heroBadge.style.background = '#10b981';
+            heroBadge.innerHTML = '<i class="fa-solid fa-check me-1"></i> VERIFIKASI BERHASIL • HADIR';
+        }
+
+        heroPopup.classList.add('show');
+
+        popupTimer = setTimeout(() => {
+            heroPopup.classList.remove('show');
+        }, 3600);
+    }
+
+    // ========================================================
+    // UPDATE COUNTER & RIWAYAT SCAN SECARA REALTIME
+    // ========================================================
+    function updateCountersOnSuccess() {
+        if (hudHadirCount) {
+            const curHadir = parseInt(hudHadirCount.textContent) || 0;
+            hudHadirCount.textContent = curHadir + 1;
+        }
+        if (hudBelumCount) {
+            const curBelum = parseInt(hudBelumCount.textContent) || 0;
+            hudBelumCount.textContent = Math.max(0, curBelum - 1);
+        }
     }
 
     function addHistoryItem(siswa) {
@@ -537,66 +1009,79 @@
 
         const itemHtml = `
             <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 mb-2 bg-slate-50 border border-slate-200 scan-item" style="animation: slideDown 0.3s ease;">
-                <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center gap-2.5 min-w-0">
                     ${siswa.foto_url 
-                        ? `<img src="${siswa.foto_url}" alt="Foto" class="rounded-circle object-fit-cover border" width="34" height="34" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><div class="rounded-circle text-white fw-bold align-items-center justify-content-center" style="display: none; width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
-                        : `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
+                        ? `<img src="${siswa.foto_url}" alt="Foto" class="rounded-circle object-fit-cover border flex-shrink-0" width="34" height="34" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"><div class="rounded-circle text-white fw-bold align-items-center justify-content-center flex-shrink-0" style="display: none; width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
+                        : `<div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">${siswa.nama.charAt(0).toUpperCase()}</div>`
                     }
-                    <div>
-                        <div class="fw-semibold text-slate-800 lh-sm" style="font-size: 12.5px;">${siswa.nama}</div>
-                        <small class="text-slate-400 font-monospace" style="font-size: 10.5px;">${siswa.nis} &bull; Kelas ${siswa.kelas}</small>
+                    <div class="min-w-0">
+                        <div class="fw-semibold text-truncate lh-sm" style="font-size: 12.5px;">${siswa.nama}</div>
+                        <small class="text-muted font-monospace" style="font-size: 10.5px;">${siswa.nis} &bull; Kelas ${siswa.kelas}</small>
                     </div>
                 </div>
-                <div class="text-end">
+                <div class="text-end flex-shrink-0 ms-2">
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 mb-1" style="font-size: 10px;">
-                        Hadir (Wajah)
+                        Hadir
                     </span>
-                    <div class="text-slate-400" style="font-size: 10px;">${siswa.waktu} WIB</div>
+                    <div class="text-muted font-monospace" style="font-size: 10px;">${siswa.waktu || 'Sekarang'} WIB</div>
                 </div>
             </div>
         `;
 
         scansContainer.insertAdjacentHTML('afterbegin', itemHtml);
+
+        if (historyCounterBadge) {
+            const currentTotal = parseInt(historyCounterBadge.textContent) || 0;
+            historyCounterBadge.textContent = `${currentTotal + 1} Tercatat`;
+        }
     }
 
     function changeScannerKelas(kelas) {
         window.location.href = `{{ route('face.scanner') }}?kelas=${encodeURIComponent(kelas)}`;
     }
 
-    // Fullscreen Mode Controls
-    const fsToggleBtn = document.getElementById('fullscreenToggleBtn');
-    const vpFsToggleBtn = document.getElementById('viewportFullscreenToggleBtn');
-    const vpFsLabel = document.getElementById('vpFsLabel');
-    const scannerViewport = document.querySelector('.scanner-viewport');
+    // ========================================================
+    // FULLSCREEN KIOSK MODE CONTROLLER & WAKE LOCK
+    // ========================================================
+    const kioskContainer = document.getElementById('kioskContainer');
+    const kioskFsBtn = document.getElementById('kioskFullscreenBtn');
+    const fsIcon = document.getElementById('fsIcon');
+    const fsLabelText = document.getElementById('fsLabelText');
 
-    function toggleFullScreen() {
+    function toggleKioskFullscreen() {
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            if (scannerViewport.requestFullscreen) {
-                scannerViewport.requestFullscreen();
-            } else if (scannerViewport.webkitRequestFullscreen) {
-                scannerViewport.webkitRequestFullscreen();
+            if (kioskContainer.requestFullscreen) {
+                kioskContainer.requestFullscreen();
+            } else if (kioskContainer.webkitRequestFullscreen) {
+                kioskContainer.webkitRequestFullscreen();
             }
+            requestScreenWakeLock();
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
                 document.webkitExitFullscreen();
             }
+            releaseScreenWakeLock();
         }
     }
 
-    if (fsToggleBtn) fsToggleBtn.addEventListener('click', toggleFullScreen);
-    if (vpFsToggleBtn) vpFsToggleBtn.addEventListener('click', toggleFullScreen);
+    if (kioskFsBtn) kioskFsBtn.addEventListener('click', toggleKioskFullscreen);
 
     function handleFullscreenChange() {
         const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-        if (fsToggleBtn) {
-            fsToggleBtn.innerHTML = isFs 
-                ? '<i class="fa-solid fa-compress me-1.5"></i> Keluar Full Screen' 
-                : '<i class="fa-solid fa-expand me-1.5"></i> Layar Penuh (Full Screen)';
-        }
-        if (vpFsLabel) {
-            vpFsLabel.textContent = isFs ? 'Keluar Full Screen' : 'Layar Penuh';
+        if (fsIcon && fsLabelText) {
+            if (isFs) {
+                fsIcon.className = 'fa-solid fa-compress me-1.5';
+                fsLabelText.textContent = 'Keluar Kiosk (ESC)';
+                kioskFsBtn.classList.remove('btn-primary');
+                kioskFsBtn.classList.add('btn-light');
+            } else {
+                fsIcon.className = 'fa-solid fa-expand me-1.5';
+                fsLabelText.textContent = 'Layar Penuh (Kiosk)';
+                kioskFsBtn.classList.remove('btn-light');
+                kioskFsBtn.classList.add('btn-primary');
+            }
         }
 
         setTimeout(() => {
@@ -611,21 +1096,54 @@
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
-    // Live Digital Clock
+    // Prevent Sleep / Screen Lock
+    async function requestScreenWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                const wlStatus = document.getElementById('screenWakeLockStatus');
+                if (wlStatus) wlStatus.innerHTML = '<i class="fa-solid fa-sun text-warning me-1"></i> Layar Terjaga (Anti-Sleep: Aktif)';
+            } catch (err) {
+                console.log('WakeLock error:', err);
+            }
+        }
+    }
+
+    function releaseScreenWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().then(() => { wakeLock = null; });
+        }
+    }
+
+    // ========================================================
+    // JAM DIGITAL REALTIME KIOSK (WIB)
+    // ========================================================
     function startKioskClock() {
-        const clockElem = document.getElementById('kioskLiveClock');
-        if (!clockElem) return;
-        const update = () => {
+        const dateTimeElem = document.getElementById('kioskFullDateTime');
+        if (!dateTimeElem) return;
+
+        const hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const bulanList = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        const updateClock = () => {
             const now = new Date();
+            const hari = hariList[now.getDay()];
+            const tanggal = now.getDate();
+            const bulan = bulanList[now.getMonth()];
+            const tahun = now.getFullYear();
+
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
-            clockElem.textContent = `${h}:${m}:${s} WIB`;
+
+            dateTimeElem.textContent = `${hari}, ${tanggal} ${bulan} ${tahun} • ${h}:${m}:${s} WIB`;
         };
-        update();
-        setInterval(update, 1000);
+
+        updateClock();
+        setInterval(updateClock, 1000);
     }
 
+    // Jalankan saat halaman siap
     window.addEventListener('load', () => {
         startKioskClock();
         initScanner();
