@@ -377,6 +377,12 @@
                 @foreach($daftarKelas as $k)
                     <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                 @endforeach
+            <!-- Pilihan Sensitivitas Akurasi AI -->
+            <select id="kioskSelectAccuracy" class="form-select form-select-sm rounded-pill border-slate-300 py-1 d-none d-md-inline-block" 
+                    style="font-size: 11.5px; max-width: 165px;" onchange="changeAccuracyThreshold(this.value)" title="Tingkat Akurasi AI">
+                <option value="0.42">🛡️ Ketat (Akurasi Tinggi)</option>
+                <option value="0.44" selected>⚖️ Standar (Rekomendasi)</option>
+                <option value="0.48">⚡ Fleksibel (Cahaya Redup)</option>
             </select>
 
             <!-- Pilihan Kamera (Jika ada kamera eksternal USB) -->
@@ -598,6 +604,8 @@
     let currentKelas = '{{ $selectedKelas }}';
     let faceMatcher = null;
     let enrolledStudentsMap = {};
+    let labeledDescriptorsCache = [];
+    let currentThreshold = 0.44; // Default ketat & akurat: 0.44 (sebelumnya 0.54 rawan tertukar)
     let isModelsReady = false;
     let isProcessing = false;
     let lastScannedStudents = {}; // Cooldown map: siswaId => timestamp
@@ -748,10 +756,12 @@
                 });
 
                 if (labeledDescriptors.length > 0) {
-                    // Threshold akurasi tinggi: 0.54
-                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.54);
+                    labeledDescriptorsCache = labeledDescriptors;
+                    // Ambang batas ketat: 0.44 (hanya wajah dengan akurasi tinggi yang cocok)
+                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, currentThreshold);
                     scannerStatus.innerHTML = `<i class="fa-solid fa-face-smile text-success me-1.5"></i> Scanner Siap (${labeledDescriptors.length} siswa siap dicocokkan)`;
                 } else {
+                    labeledDescriptorsCache = [];
                     faceMatcher = null;
                     scannerStatus.innerHTML = '<i class="fa-solid fa-info-circle text-warning me-1.5"></i> Belum ada siswa yang direkam wajahnya di kelas ini.';
                 }
@@ -787,6 +797,14 @@
             }
         } catch (e) {
             console.log('Device enumerate error:', e);
+        }
+    }
+
+    function changeAccuracyThreshold(val) {
+        currentThreshold = parseFloat(val);
+        if (labeledDescriptorsCache.length > 0) {
+            faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsCache, currentThreshold);
+            console.log('Ambang batas jarak biometrik disetel ke:', currentThreshold);
         }
     }
 
@@ -932,10 +950,10 @@
         setInterval(async () => {
             if (!isModelsReady || isProcessing) return;
 
-            // Gunakan TinyFaceDetector untuk performa tinggi & respons instan
+            // Gunakan TinyFaceDetector inputSize 320 untuk resolusi landmark wajah lebih tajam & presisi
             const detections = await faceapi.detectAllFaces(
                 video, 
-                new faceapi.TinyFaceDetectorOptions({ inputSize: 256, scoreThreshold: 0.5 })
+                new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.55 })
             ).withFaceLandmarks().withFaceDescriptors();
 
             const context = canvas.getContext('2d');
@@ -958,10 +976,13 @@
                     const mirroredX = displaySize.width - box.x - box.width;
                     const mirroredBox = new faceapi.Rect(mirroredX, box.y, box.width, box.height);
 
-                    if (bestMatch.label !== 'unknown') {
+                    // Validasi ketat: hanya cocok jika label terdaftar DAN jarak <= currentThreshold
+                    if (bestMatch.label !== 'unknown' && bestMatch.distance <= currentThreshold) {
                         const siswaId = parseInt(bestMatch.label);
                         const siswa = enrolledStudentsMap[siswaId];
-                        const confidence = Math.round((1 - bestMatch.distance) * 100);
+                        
+                        // Hitung skor kemiripan proporsional (0.0 distance = 100%, 0.44 = 80%)
+                        const confidence = Math.round(Math.max(0, Math.min(100, (1 - (bestMatch.distance / 0.55)) * 100)));
 
                         // Highlight Guide Frame
                         faceGuideFrame.classList.add('matched');
@@ -983,9 +1004,9 @@
                             triggerAttendance(siswa, bestMatch.distance);
                         }
                     } else {
-                        // Wajah tidak dikenal
+                        // Wajah tidak dikenal atau di bawah ambang batas akurasi (mencegah salah kenal)
                         faceGuideFrame.classList.remove('matched');
-                        guideLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Wajah Belum Terdaftar';
+                        guideLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Wajah Tidak Cocok / Belum Terdaftar';
 
                         const drawBox = new faceapi.draw.DrawBox(mirroredBox, {
                             label: 'Wajah Tidak Dikenali',

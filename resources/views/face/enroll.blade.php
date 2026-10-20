@@ -390,9 +390,10 @@
         detectionInterval = setInterval(async () => {
             if (!isModelLoaded) return;
 
+            // Resolusi input 320 & threshold 0.6 untuk landmark biometrik yang jauh lebih akurat
             const detection = await faceapi.detectSingleFace(
                 video, 
-                new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+                new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.6 })
             ).withFaceLandmarks().withFaceDescriptor();
 
             latestDetection = detection;
@@ -401,20 +402,35 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
 
             if (detection) {
-                ovalGuide.classList.add('detected');
                 const scorePercent = Math.round(detection.detection.score * 100);
-                statusPill.innerHTML = `<i class="fa-solid fa-check text-success me-1"></i> Wajah Terdeteksi (${scorePercent}%) — Siap Rekam!`;
-                captureBtn.disabled = !currentSiswaId;
-
-                // Hitung koordinat horizontal mirrored agar teks tegak normal & box presisi
                 const resizedDetections = faceapi.resizeResults(detection, displaySize);
                 const box = resizedDetections.detection.box;
+
+                // Validasi kualitas biometrik: wajah tidak boleh terlalu kecil/jauh
+                const isTooFar = box.width < 110;
+                const isGoodQuality = scorePercent >= 65 && !isTooFar;
+
+                if (isGoodQuality) {
+                    ovalGuide.classList.add('detected');
+                    statusPill.innerHTML = `<i class="fa-solid fa-check text-success me-1"></i> Wajah Jelas (${scorePercent}%) — Siap Rekam!`;
+                    captureBtn.disabled = !currentSiswaId;
+                } else if (isTooFar) {
+                    ovalGuide.classList.remove('detected');
+                    statusPill.innerHTML = `<i class="fa-solid fa-expand text-warning me-1"></i> Dekatkan Wajah ke Kamera (Terlalu Jauh)`;
+                    captureBtn.disabled = true;
+                } else {
+                    ovalGuide.classList.remove('detected');
+                    statusPill.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Pencahayaan Kurang / Wajah Miring (${scorePercent}%)`;
+                    captureBtn.disabled = true;
+                }
+
+                // Hitung koordinat horizontal mirrored agar teks tegak normal & box presisi
                 const mirroredX = displaySize.width - box.x - box.width;
                 const mirroredBox = new faceapi.Rect(mirroredX, box.y, box.width, box.height);
 
                 const drawBox = new faceapi.draw.DrawBox(mirroredBox, {
-                    label: `Akurasi ${scorePercent}%`,
-                    boxColor: '#10b981',
+                    label: isGoodQuality ? `Kualitas Biometrik ${scorePercent}%` : `Dekatkan Wajah (${scorePercent}%)`,
+                    boxColor: isGoodQuality ? '#10b981' : '#f59e0b',
                     lineWidth: 2
                 });
                 drawBox.draw(canvas);
