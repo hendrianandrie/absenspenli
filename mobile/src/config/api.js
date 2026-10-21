@@ -46,7 +46,12 @@ apiClient.interceptors.request.use(
 
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
+        config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
+        if (typeof config.headers.set === 'function') {
+          config.headers.set('Authorization', `Bearer ${token}`);
+        }
       }
     } catch (e) {
       console.warn('Gagal membaca token:', e);

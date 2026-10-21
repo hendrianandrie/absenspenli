@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../../config/api';
 
 export default function SiswaNilaiScreen() {
@@ -22,19 +23,35 @@ export default function SiswaNilaiScreen() {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await apiClient.get('/siswa/rekap-nilai');
-      if (response.data && response.data.status === 'success') {
+
+      let response;
+      let targetUrl = '/siswa/rekap-nilai';
+      try {
+        response = await apiClient.get(targetUrl);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          // Fallback coba rute alternatif /siswa/nilai
+          targetUrl = '/siswa/nilai';
+          response = await apiClient.get(targetUrl);
+        } else {
+          throw err;
+        }
+      }
+
+      if (response && response.data && response.data.status === 'success') {
         setDataNilai(response.data.data);
       } else {
-        setErrorMessage(response.data?.message || 'Gagal memuat rekap nilai.');
+        setErrorMessage(response?.data?.message || 'Gagal memuat rekap nilai.');
       }
     } catch (e) {
       console.warn('Gagal memuat rekap nilai:', e);
       const attemptedUrl = (e.config?.baseURL || '') + (e.config?.url || '');
+      const serverDetails = e.response?.data ? (typeof e.response.data === 'string' ? e.response.data.substring(0, 150) : JSON.stringify(e.response.data)) : '';
+
       if (e.response?.status === 401) {
         setErrorMessage('Sesi login telah kedaluwarsa. Silakan Logout dari tab Profil lalu Login kembali.');
       } else if (e.response?.status === 404) {
-        setErrorMessage(`Endpoint tidak ditemukan (404) pada:\n${attemptedUrl}`);
+        setErrorMessage(`Endpoint tidak ditemukan (404) pada:\n${attemptedUrl}\n${serverDetails ? 'Respon: ' + serverDetails : ''}`);
       } else {
         setErrorMessage(e.response?.data?.message || e.message || 'Gagal memuat rekap nilai.');
       }
@@ -43,6 +60,12 @@ export default function SiswaNilaiScreen() {
       setRefreshing(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNilai();
+    }, [])
+  );
 
   useEffect(() => {
     fetchNilai();
