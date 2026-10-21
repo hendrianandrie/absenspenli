@@ -149,7 +149,21 @@ Route::middleware('auth')->group(function () {
                     $messages[] = "✓ Berhasil mencatat status migrasi di tabel `migrations`";
                 }
 
-                // 4. Pastikan symlink public/storage aktif di hosting
+                // 4. Pastikan tabel personal_access_tokens (Sanctum) ada untuk API Mobile
+                if (!\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens')) {
+                    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                    $messages[] = "✓ Berhasil menjalankan migrasi Sanctum (personal_access_tokens)";
+                } else {
+                    $messages[] = "✓ Tabel `personal_access_tokens` sudah ada";
+                }
+
+                // 5. Bersihkan cache route, config & view
+                \Illuminate\Support\Facades\Artisan::call('route:clear');
+                \Illuminate\Support\Facades\Artisan::call('config:clear');
+                \Illuminate\Support\Facades\Artisan::call('cache:clear');
+                $messages[] = "✓ Berhasil membersihkan cache route, config, dan aplikasi";
+
+                // 6. Pastikan symlink public/storage aktif di hosting
                 try {
                     if (!file_exists(public_path('storage'))) {
                         \Illuminate\Support\Facades\Artisan::call('storage:link');
@@ -178,6 +192,49 @@ Route::middleware('auth')->group(function () {
         })->name('run.migrate');
     });
     });
+});
+
+// Setup API Runner publik yang aman (dengan kode rahasia) untuk Hosting tanpa Terminal / SSH
+Route::get('/run-api-setup/{secret}', function ($secret) {
+    if ($secret !== 'spenli2026') {
+        abort(403, 'Akses ditolak. Kunci rahasia salah.');
+    }
+
+    @set_time_limit(180);
+    try {
+        $messages = [];
+
+        // 1. Jalankan migrasi database
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migOutput = trim(\Illuminate\Support\Facades\Artisan::output());
+        $messages[] = "✓ Migrasi Database: " . ($migOutput ?: 'Tidak ada migrasi baru / tabel sudah up-to-date.');
+
+        // 2. Clear route cache
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        $messages[] = "✓ Route cache dibersihkan (rute /api/v1/* sekarang aktif).";
+
+        // 3. Clear config cache
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        $messages[] = "✓ Config cache dibersihkan.";
+
+        // 4. Clear application cache
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        $messages[] = "✓ Application cache dibersihkan.";
+
+        $output = implode("\n", $messages);
+
+        return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:28px; border-radius:16px; background:#0f172a; color:#f8fafc; box-shadow:0 15px 35px rgba(0,0,0,0.3); border: 1px solid #1e293b;'>
+            <h2 style='color:#10b981; margin-top:0; font-size:22px;'>🚀 API Mobile & Database Berhasil Disetup!</h2>
+            <p style='color:#94a3b8; font-size:14px; margin-bottom:16px;'>Server online Hostinger Anda sekarang siap melayani aplikasi Mobile SI-KASEP.</p>
+            <pre style='background:#1e293b; padding:16px; border-radius:10px; overflow-x:auto; font-size:13px; color:#38bdf8; border:1px solid #334155; line-height:1.6;'>" . e($output) . "</pre>
+            <p style='color:#cbd5e1; font-size:13px; margin-top:18px;'>Endpoint API aktif Anda: <br><code style='background:#334155; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:13px;'>" . url('/api/v1') . "</code></p>
+        </div>";
+    } catch (\Throwable $e) {
+        return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:28px; border-radius:16px; background:#0f172a; color:#f8fafc; border: 1px solid #dc2626;'>
+            <h2 style='color:#ef4444; margin-top:0;'>❌ Terjadi Kesalahan Setup</h2>
+            <pre style='background:#1e293b; padding:16px; border-radius:10px; overflow-x:auto; font-size:13px; color:#fca5a5; border:1px solid #dc2626;'>" . e($e->getMessage()) . "</pre>
+        </div>";
+    }
 });
 
 // Fallback Route untuk penyajian file Storage Publik (Foto Wajah dll) di Hosting cPanel/Nginx/Apache
