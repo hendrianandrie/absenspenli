@@ -14,8 +14,10 @@ class RekapKehadiranKelasExport implements FromView, ShouldAutoSize
     protected $tahun;
     protected $namaBulan;
     protected $data;
+    protected $tanggalMulai;
+    protected $tanggalSelesai;
 
-    public function __construct($kelas, $waliKelas, int $bulan, int $tahun, string $namaBulan, array $data)
+    public function __construct($kelas, $waliKelas, int $bulan, int $tahun, string $namaBulan, array $data, ?string $tanggalMulai = null, ?string $tanggalSelesai = null)
     {
         $this->kelas = $kelas;
         $this->waliKelas = $waliKelas;
@@ -23,6 +25,8 @@ class RekapKehadiranKelasExport implements FromView, ShouldAutoSize
         $this->tahun = $tahun;
         $this->namaBulan = $namaBulan;
         $this->data = $data;
+        $this->tanggalMulai = $tanggalMulai;
+        $this->tanggalSelesai = $tanggalSelesai;
     }
 
     public function view(): View
@@ -33,6 +37,8 @@ class RekapKehadiranKelasExport implements FromView, ShouldAutoSize
             'bulan' => $this->bulan,
             'tahun' => $this->tahun,
             'namaBulan' => $this->namaBulan,
+            'tanggalMulai' => $this->tanggalMulai,
+            'tanggalSelesai' => $this->tanggalSelesai,
         ], $this->data));
     }
 }

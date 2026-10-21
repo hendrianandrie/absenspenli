@@ -12,6 +12,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Models\WaliKelas;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 
 class WaliKelasController extends Controller
@@ -186,10 +187,36 @@ class WaliKelasController extends Controller
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
         }
 
-        $bulan = (int) $request->get('bulan', date('n'));
-        $tahun = (int) $request->get('tahun', date('Y'));
+        $tanggalMulai = $request->get('tanggal_mulai');
+        $tanggalSelesai = $request->get('tanggal_selesai');
 
-        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun);
+        if ($tanggalMulai && $tanggalSelesai) {
+            try {
+                $startCarbon = Carbon::parse($tanggalMulai)->startOfDay();
+                $endCarbon = Carbon::parse($tanggalSelesai)->endOfDay();
+                if ($startCarbon->gt($endCarbon)) {
+                    $temp = $startCarbon;
+                    $startCarbon = $endCarbon;
+                    $endCarbon = $temp;
+                }
+                $tanggalMulai = $startCarbon->format('Y-m-d');
+                $tanggalSelesai = $endCarbon->format('Y-m-d');
+                $bulan = (int) $startCarbon->format('n');
+                $tahun = (int) $startCarbon->format('Y');
+            } catch (\Exception $e) {
+                $bulan = (int) $request->get('bulan', date('n'));
+                $tahun = (int) $request->get('tahun', date('Y'));
+                $tanggalMulai = Carbon::createFromDate($tahun, $bulan, 1)->startOfMonth()->format('Y-m-d');
+                $tanggalSelesai = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth()->format('Y-m-d');
+            }
+        } else {
+            $bulan = (int) $request->get('bulan', date('n'));
+            $tahun = (int) $request->get('tahun', date('Y'));
+            $tanggalMulai = Carbon::createFromDate($tahun, $bulan, 1)->startOfMonth()->format('Y-m-d');
+            $tanggalSelesai = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth()->format('Y-m-d');
+        }
+
+        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun, $tanggalMulai, $tanggalSelesai);
 
         // Daftar nama bulan
         $daftarBulan = [
@@ -214,6 +241,8 @@ class WaliKelasController extends Controller
             'waliKelas' => $waliKelas,
             'bulan' => $bulan,
             'tahun' => $tahun,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalSelesai' => $tanggalSelesai,
             'daftarBulan' => $daftarBulan,
             'daftarTahun' => $daftarTahun,
             'daftarKelas' => $daftarKelas,
@@ -247,8 +276,34 @@ class WaliKelasController extends Controller
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
         }
 
-        $bulan = (int) $request->get('bulan', date('n'));
-        $tahun = (int) $request->get('tahun', date('Y'));
+        $tanggalMulai = $request->get('tanggal_mulai');
+        $tanggalSelesai = $request->get('tanggal_selesai');
+
+        if ($tanggalMulai && $tanggalSelesai) {
+            try {
+                $startCarbon = Carbon::parse($tanggalMulai)->startOfDay();
+                $endCarbon = Carbon::parse($tanggalSelesai)->endOfDay();
+                if ($startCarbon->gt($endCarbon)) {
+                    $temp = $startCarbon;
+                    $startCarbon = $endCarbon;
+                    $endCarbon = $temp;
+                }
+                $tanggalMulai = $startCarbon->format('Y-m-d');
+                $tanggalSelesai = $endCarbon->format('Y-m-d');
+                $bulan = (int) $startCarbon->format('n');
+                $tahun = (int) $startCarbon->format('Y');
+            } catch (\Exception $e) {
+                $bulan = (int) $request->get('bulan', date('n'));
+                $tahun = (int) $request->get('tahun', date('Y'));
+                $tanggalMulai = Carbon::createFromDate($tahun, $bulan, 1)->startOfMonth()->format('Y-m-d');
+                $tanggalSelesai = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth()->format('Y-m-d');
+            }
+        } else {
+            $bulan = (int) $request->get('bulan', date('n'));
+            $tahun = (int) $request->get('tahun', date('Y'));
+            $tanggalMulai = Carbon::createFromDate($tahun, $bulan, 1)->startOfMonth()->format('Y-m-d');
+            $tanggalSelesai = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth()->format('Y-m-d');
+        }
 
         $daftarBulan = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -256,21 +311,21 @@ class WaliKelasController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
 
-        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun);
+        $data = $this->getRekapKehadiranData($selectedKelas, $bulan, $tahun, $tanggalMulai, $tanggalSelesai);
         $namaBulan = $daftarBulan[$bulan] ?? 'Bulan_' . $bulan;
         $fileKelasSlug = $selectedKelas === 'Semua' ? 'Semua_Kelas' : 'Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas);
-        $fileName = 'Rekap_Kehadiran_' . $fileKelasSlug . '_' . $namaBulan . '_' . $tahun . '.xlsx';
+        $fileName = 'Rekap_Kehadiran_' . $fileKelasSlug . '_' . $tanggalMulai . '_sd_' . $tanggalSelesai . '.xlsx';
 
         return Excel::download(
-            new RekapKehadiranKelasExport($selectedKelas, $waliKelas, $bulan, $tahun, $namaBulan, $data),
+            new RekapKehadiranKelasExport($selectedKelas, $waliKelas, $bulan, $tahun, $namaBulan, $data, $tanggalMulai, $tanggalSelesai),
             $fileName
         );
     }
 
     /**
-     * Helper: Menghitung rekapitulasi kehadiran per siswa di kelas tertentu berdasarkan bulan & tahun
+     * Helper: Menghitung rekapitulasi kehadiran per siswa di kelas tertentu berdasarkan rentang tanggal atau bulan & tahun
      */
-    protected function getRekapKehadiranData(string $selectedKelas, int $bulan, int $tahun): array
+    protected function getRekapKehadiranData(string $selectedKelas, int $bulan, int $tahun, ?string $tanggalMulai = null, ?string $tanggalSelesai = null): array
     {
         $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
         if ($selectedKelas === 'Semua') {
@@ -289,12 +344,16 @@ class WaliKelasController extends Controller
 
         $siswaIds = $siswas->pluck('id');
 
-        $absensis = Absensi::whereIn('siswa_id', $siswaIds)
-            ->whereYear('tanggal', $tahun)
-            ->whereMonth('tanggal', $bulan)
-            ->get();
+        $query = Absensi::whereIn('siswa_id', $siswaIds);
+        if ($tanggalMulai && $tanggalSelesai) {
+            $query->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai]);
+        } else {
+            $query->whereYear('tanggal', $tahun)
+                  ->whereMonth('tanggal', $bulan);
+        }
+        $absensis = $query->get();
 
-        // Hitung tanggal unik presensi diambil di kelas ini pada bulan tersebut
+        // Hitung tanggal unik presensi diambil di kelas ini pada rentang tersebut
         $distinctDates = $absensis->pluck('tanggal')->unique();
         $totalHariEfektif = $distinctDates->count();
 

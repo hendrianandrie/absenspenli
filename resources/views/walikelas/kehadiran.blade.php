@@ -5,7 +5,7 @@
     <!-- Header Section -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 @if($selectedKelas === 'Semua')
                     <span class="badge rounded-pill px-2.5 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 11px;">
                         <i class="fa-solid fa-users me-1"></i> Rekap Seluruh Kelas
@@ -23,12 +23,16 @@
                         Wali Kelas: <strong>{{ $waliKelas?->user?->name ?? 'Belum Ditentukan' }}</strong>
                     </span>
                 @endif
+                <span class="text-slate-400" style="font-size: 12px;">•</span>
+                <span class="badge rounded-pill px-2.5 py-1" style="background: #ecfdf5; color: #047857; font-size: 11px; border: 1px solid #a7f3d0;">
+                    <i class="fa-regular fa-calendar-check me-1"></i> Periode: <strong>{{ \Carbon\Carbon::parse($tanggalMulai)->locale('id')->translatedFormat('d M Y') }}</strong> s/d <strong>{{ \Carbon\Carbon::parse($tanggalSelesai)->locale('id')->translatedFormat('d M Y') }}</strong>
+                </span>
             </div>
             <h2 class="fw-bold mb-1 text-slate-800" style="font-size: 1.4rem; letter-spacing: -0.02em;">
                 <i class="fa-solid fa-calendar-check text-primary me-2"></i> Rekap Kehadiran Siswa — {{ $selectedKelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $selectedKelas }}
             </h2>
             <p class="text-slate-500 mb-0" style="font-size: 13px;">
-                Pantau rekapitulasi absensi bulanan siswa (Hadir, Sakit, Izin, Alpa) dan unduh berkas rekap resmi dalam format Excel.
+                Pantau rekapitulasi absensi kehadiran siswa (Hadir, Sakit, Izin, Alpa) berdasarkan rentang tanggal dan unduh berkas rekap resmi dalam format Excel.
             </p>
         </div>
 
@@ -38,72 +42,81 @@
                     <i class="fa-solid fa-graduation-cap me-1.5 text-warning"></i> Nilai Kelas
                 </a>
             @endif
-            <a href="{{ route('walikelas.kehadiran.exportExcel', ['kelas' => $selectedKelas, 'bulan' => $bulan, 'tahun' => $tahun]) }}" 
+            <a href="{{ route('walikelas.kehadiran.exportExcel', ['kelas' => $selectedKelas, 'tanggal_mulai' => $tanggalMulai, 'tanggal_selesai' => $tanggalSelesai, 'bulan' => $bulan, 'tahun' => $tahun]) }}" 
                class="btn btn-success btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-semibold" style="font-size: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
                 <i class="fa-solid fa-file-excel me-1.5"></i> Download Rekap Excel
             </a>
         </div>
     </div>
 
-    <!-- Filter Bar (Bulan, Tahun, Rombel jika Admin) -->
+    <!-- Filter Bar (Rentang Tanggal, Pilihan Cepat & Kelas jika Admin) -->
     <div class="card border-0 shadow-sm rounded-4 bg-white">
         <div class="card-body p-3 p-md-3.5">
-            <form action="{{ route('walikelas.kehadiran') }}" method="GET" id="filterKehadiranForm" class="row g-2 align-items-end">
-                @if(Auth::check() && Auth::user()->role === 'admin')
-                    <div class="col-sm-4 col-md-3">
-                        <label for="selectKelas" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
-                            <i class="fa-solid fa-chalkboard text-primary me-1"></i> Pilih Rombel Kelas:
+            <form action="{{ route('walikelas.kehadiran') }}" method="GET" id="filterKehadiranForm">
+                <div class="row g-2 align-items-end">
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                        <div class="col-12 col-md-3">
+                            <label for="selectKelas" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
+                                <i class="fa-solid fa-chalkboard text-primary me-1"></i> Rombel Kelas:
+                            </label>
+                            <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300">
+                                <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
+                                @foreach($daftarKelas as $k)
+                                    <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @else
+                        <input type="hidden" name="kelas" value="{{ $selectedKelas }}">
+                    @endif
+
+                    <div class="col-6 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }}">
+                        <label for="inputTanggalMulai" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
+                            <i class="fa-regular fa-calendar-days text-primary me-1"></i> Mulai Tanggal:
                         </label>
-                        <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterKehadiranForm').submit()">
-                            <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
-                            @foreach($daftarKelas as $k)
-                                <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                        <input type="date" name="tanggal_mulai" id="inputTanggalMulai" class="form-control form-control-sm rounded-3 border-slate-300" value="{{ $tanggalMulai }}" required>
+                    </div>
+
+                    <div class="col-6 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }}">
+                        <label for="inputTanggalSelesai" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
+                            <i class="fa-regular fa-calendar-check text-primary me-1"></i> Sampai Tanggal:
+                        </label>
+                        <input type="date" name="tanggal_selesai" id="inputTanggalSelesai" class="form-control form-control-sm rounded-3 border-slate-300" value="{{ $tanggalSelesai }}" required>
+                    </div>
+
+                    <div class="col-12 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }} d-flex align-items-center gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3.5 py-1.5 shadow-xs fw-semibold w-100" style="font-size: 12px;">
+                            <i class="fa-solid fa-filter me-1"></i> Tampilkan Rekap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Baris Pilihan Cepat (Presets & Dropdown Bulan) -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2.5 border-top">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <span class="text-slate-400 small me-1" style="font-size: 11px;">
+                            <i class="fa-solid fa-bolt text-warning me-1"></i> Pilihan Cepat:
+                        </span>
+                        <button type="button" class="btn btn-sm btn-light border text-slate-600 rounded-pill px-2.5 py-0.5" style="font-size: 11px;" onclick="setPresetDate('hari_ini')">Hari Ini</button>
+                        <button type="button" class="btn btn-sm btn-light border text-slate-600 rounded-pill px-2.5 py-0.5" style="font-size: 11px;" onclick="setPresetDate('7_hari')">7 Hari Terakhir</button>
+                        <button type="button" class="btn btn-sm btn-light border text-slate-600 rounded-pill px-2.5 py-0.5" style="font-size: 11px;" onclick="setPresetDate('bulan_ini')">Bulan Ini</button>
+                        <button type="button" class="btn btn-sm btn-light border text-slate-600 rounded-pill px-2.5 py-0.5" style="font-size: 11px;" onclick="setPresetDate('bulan_lalu')">Bulan Lalu</button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-1.5 ms-auto flex-wrap">
+                        <span class="text-slate-400 small" style="font-size: 11px;">Pilih Per Bulan:</span>
+                        <select id="quickBulanSelect" class="form-select form-select-sm py-0 px-2 rounded-pill border-slate-300" style="font-size: 11px; height: 26px; width: auto;" onchange="setMonthPreset()">
+                            <option value="">-- Bulan --</option>
+                            @foreach($daftarBulan as $num => $namaBulan)
+                                <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                            @endforeach
+                        </select>
+                        <select id="quickTahunSelect" class="form-select form-select-sm py-0 px-2 rounded-pill border-slate-300" style="font-size: 11px; height: 26px; width: auto;" onchange="setMonthPreset()">
+                            @foreach($daftarTahun as $t)
+                                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}</option>
                             @endforeach
                         </select>
                     </div>
-                @else
-                    <input type="hidden" name="kelas" value="{{ $selectedKelas }}">
-                @endif
-
-                <div class="col-sm-4 col-md-3">
-                    <label for="selectBulan" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
-                        <i class="fa-regular fa-calendar text-primary me-1"></i> Bulan:
-                    </label>
-                    <select name="bulan" id="selectBulan" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterKehadiranForm').submit()">
-                        @foreach($daftarBulan as $num => $namaBulan)
-                            <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>
-                                {{ $namaBulan }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-sm-4 col-md-2">
-                    <label for="selectTahun" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
-                        <i class="fa-regular fa-calendar-days text-primary me-1"></i> Tahun:
-                    </label>
-                    <select name="tahun" id="selectTahun" class="form-select form-select-sm rounded-3 border-slate-300" onchange="document.getElementById('filterKehadiranForm').submit()">
-                        @foreach($daftarTahun as $t)
-                            <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>
-                                {{ $t }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-12 col-md-4 d-flex align-items-center gap-2 pt-1 pt-md-0 ms-auto justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 py-1.5 shadow-xs fw-semibold" style="font-size: 12px;">
-                        <i class="fa-solid fa-filter me-1"></i> Terapkan
-                    </button>
-                    @php
-                        $now = \Carbon\Carbon::now();
-                    @endphp
-                    @if($bulan != $now->month || $tahun != $now->year)
-                        <a href="{{ route('walikelas.kehadiran', ['kelas' => $selectedKelas, 'bulan' => $now->month, 'tahun' => $now->year]) }}" 
-                           class="btn btn-light btn-sm text-slate-600 border rounded-pill px-3 py-1.5" style="font-size: 12px;">
-                            Bulan Ini
-                        </a>
-                    @endif
                 </div>
             </form>
         </div>
@@ -212,7 +225,7 @@
                 </div>
                 <div>
                     <h6 class="fw-bold text-slate-800 mb-0" style="font-size: 13.5px;">
-                        Tabel Rekapitulasi Presensi — Bulan {{ $daftarBulan[$bulan] ?? '' }} {{ $tahun }}
+                        Tabel Rekapitulasi Presensi — Periode {{ \Carbon\Carbon::parse($tanggalMulai)->locale('id')->translatedFormat('d M Y') }} s/d {{ \Carbon\Carbon::parse($tanggalSelesai)->locale('id')->translatedFormat('d M Y') }}
                     </h6>
                     <small class="text-slate-400" style="font-size: 11.5px;">
                         Total {{ $analytics['total_siswa'] }} siswa &bull; {{ $analytics['total_hari_efektif'] }} hari efektif presensi tercatat
@@ -368,6 +381,55 @@
 
 @push('scripts')
 <script>
+    function padZero(num) {
+        return String(num).padStart(2, '0');
+    }
+
+    function formatLocalDate(d) {
+        return `${d.getFullYear()}-${padZero(d.getMonth() + 1)}-${padZero(d.getDate())}`;
+    }
+
+    function setPresetDate(type) {
+        const today = new Date();
+        let start = new Date();
+        let end = new Date();
+
+        if (type === 'hari_ini') {
+            start = today;
+            end = today;
+        } else if (type === '7_hari') {
+            start = new Date();
+            start.setDate(today.getDate() - 6);
+            end = today;
+        } else if (type === 'bulan_ini') {
+            start = new Date(today.getFullYear(), today.getMonth(), 1);
+            end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else if (type === 'bulan_lalu') {
+            start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            end = new Date(today.getFullYear(), today.getMonth(), 0);
+        }
+
+        document.getElementById('inputTanggalMulai').value = formatLocalDate(start);
+        document.getElementById('inputTanggalSelesai').value = formatLocalDate(end);
+        document.getElementById('filterKehadiranForm').submit();
+    }
+
+    function setMonthPreset() {
+        const bulanSelect = document.getElementById('quickBulanSelect');
+        const tahunSelect = document.getElementById('quickTahunSelect');
+        const monthNum = parseInt(bulanSelect.value);
+        const yearNum = parseInt(tahunSelect.value) || new Date().getFullYear();
+
+        if (!monthNum) return;
+
+        const start = new Date(yearNum, monthNum - 1, 1);
+        const end = new Date(yearNum, monthNum, 0);
+
+        document.getElementById('inputTanggalMulai').value = formatLocalDate(start);
+        document.getElementById('inputTanggalSelesai').value = formatLocalDate(end);
+        document.getElementById('filterKehadiranForm').submit();
+    }
+
     function filterStudentTable() {
         const query = document.getElementById('tableSearchInput').value.toLowerCase();
         const rows = document.querySelectorAll('.student-row');

@@ -17,7 +17,7 @@
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Kelas: {{ $isSemua ? 'Semua Kelas (Seluruh Siswa)' : $kelas }} | Bulan: {{ $namaBulan }} {{ $tahun }} | Tahun Ajaran: {{ $waliKelas?->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
+                Kelas: {{ $isSemua ? 'Semua Kelas (Seluruh Siswa)' : $kelas }} | Periode: {{ !empty($tanggalMulai) && !empty($tanggalSelesai) ? \Carbon\Carbon::parse($tanggalMulai)->locale('id')->translatedFormat('d F Y') . ' s/d ' . \Carbon\Carbon::parse($tanggalSelesai)->locale('id')->translatedFormat('d F Y') : ($namaBulan . ' ' . $tahun) }} | Tahun Ajaran: {{ $waliKelas?->tahun_ajaran ?? date('Y') . '/' . (date('Y') + 1) }}
             </th>
         </tr>
         @if(!$isSemua)

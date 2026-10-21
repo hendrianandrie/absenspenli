@@ -505,8 +505,8 @@
                         </div>
                         <div class="mosaic-nav-item">
                             <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran') }}">
-                                <i class="fa-solid fa-clipboard-user" style="color: #38bdf8;"></i>
-                                <span>Rekap Kehadiran</span>
+                                <i class="fa-solid fa-calendar-days" style="color: #38bdf8;"></i>
+                                <span>Rekap Bulanan</span>
                             </a>
                         </div>
                     @endif
