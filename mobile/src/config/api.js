@@ -1,16 +1,16 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Default base URL: Menggunakan IP LAN komputer untuk uji coba di HP fisik
-// Bisa juga diarahkan ke domain hosting jika server online sudah aktif
-export const DEFAULT_BASE_URL = 'http://192.168.100.149:8000/api/v1';
+// Default base URL: Menggunakan Tunnel HTTPS publik agar tembus dari HP fisik tanpa batasan Wi-Fi/Cleartext HTTP
+export const DEFAULT_BASE_URL = 'https://thin-onions-sink.loca.lt/api/v1';
 
 const apiClient = axios.create({
   baseURL: DEFAULT_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true',
   },
 });
 
