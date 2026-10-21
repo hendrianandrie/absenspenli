@@ -127,8 +127,7 @@
             font-size: 15px;
             width: 20px;
             text-align: center;
-            color: #64748b;
-            transition: color 0.18s ease;
+            transition: transform 0.18s ease, filter 0.18s ease;
         }
 
         .mosaic-nav-link:hover {
@@ -137,7 +136,8 @@
         }
 
         .mosaic-nav-link:hover i {
-            color: #818cf8;
+            transform: scale(1.15);
+            filter: brightness(1.2);
         }
 
         .mosaic-nav-link.active {
@@ -148,7 +148,8 @@
         }
 
         .mosaic-nav-link.active i {
-            color: #ffffff;
+            color: #ffffff !important;
+            transform: scale(1.1);
         }
 
         .mosaic-sidebar-footer {
@@ -403,7 +404,7 @@
                     <div class="mosaic-nav-section">Portal Siswa</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.dashboard') ? 'active' : '' }}" href="{{ route('siswa.dashboard') }}">
-                            <i class="fa-solid fa-gauge-high"></i>
+                            <i class="fa-solid fa-gauge-high" style="color: #38bdf8;"></i>
                             <span>Dashboard Siswa</span>
                         </a>
                     </div>
@@ -411,13 +412,13 @@
                     <div class="mosaic-nav-section">Akademik & Presensi</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.nilai') ? 'active' : '' }}" href="{{ route('siswa.nilai') }}">
-                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star" style="color: #f43f5e;"></i>
                             <span>Rekap Nilai</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.absen') ? 'active' : '' }}" href="{{ route('siswa.absen') }}">
-                            <i class="fa-solid fa-calendar-check"></i>
+                            <i class="fa-solid fa-calendar-check" style="color: #34d399;"></i>
                             <span>Rekap Absen</span>
                         </a>
                     </div>
@@ -427,7 +428,7 @@
                     <div class="mosaic-nav-section">Menu Utama</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                            <i class="fa-solid fa-gauge-high"></i>
+                            <i class="fa-solid fa-gauge-high" style="color: #38bdf8;"></i>
                             <span>Dashboard</span>
                         </a>
                     </div>
@@ -435,25 +436,25 @@
                     <div class="mosaic-nav-section">Presensi Siswa</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.*') ? 'active' : '' }}" href="{{ route('siswa.index') }}">
-                            <i class="fa-solid fa-users"></i>
+                            <i class="fa-solid fa-users" style="color: #818cf8;"></i>
                             <span>Data Siswa</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index') }}">
-                            <i class="fa-solid fa-camera-retro" style="color: #38bdf8;"></i>
+                            <i class="fa-solid fa-camera-retro" style="color: #06b6d4;"></i>
                             <span>Presensi Wajah</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('absensi.harian') ? 'active' : '' }}" href="{{ route('absensi.harian') }}">
-                            <i class="fa-solid fa-calendar-check"></i>
+                            <i class="fa-solid fa-calendar-check" style="color: #34d399;"></i>
                             <span>Absensi Cepat</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
-                            <i class="fa-solid fa-calendar-days" style="color: #38bdf8;"></i>
+                            <i class="fa-solid fa-calendar-days" style="color: #60a5fa;"></i>
                             <span>Rekap Bulanan</span>
                         </a>
                     </div>
@@ -463,7 +464,7 @@
                     <div class="mosaic-nav-section">Menu Utama</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                            <i class="fa-solid fa-chalkboard-user"></i>
+                            <i class="fa-solid fa-chalkboard-user" style="color: #38bdf8;"></i>
                             <span>Dashboard Guru</span>
                         </a>
                     </div>
@@ -471,19 +472,19 @@
                     <div class="mosaic-nav-section">Akademik & Nilai</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.index') ? 'active' : '' }}" href="{{ route('nilai.index') }}">
-                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star" style="color: #f43f5e;"></i>
                             <span>Manajemen Nilai</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.kegiatan.*') ? 'active' : '' }}" href="{{ route('nilai.kegiatan.create') }}">
-                            <i class="fa-solid fa-circle-plus"></i>
+                            <i class="fa-solid fa-circle-plus" style="color: #22c55e;"></i>
                             <span>Input Nilai Baru</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('mapel.*') ? 'active' : '' }}" href="{{ route('mapel.index') }}">
-                            <i class="fa-solid fa-book-open"></i>
+                            <i class="fa-solid fa-book-open" style="color: #ec4899;"></i>
                             <span>Pengaturan KKM & Bobot</span>
                         </a>
                     </div>
@@ -505,7 +506,7 @@
                         </div>
                         <div class="mosaic-nav-item">
                             <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran') }}">
-                                <i class="fa-solid fa-calendar-days" style="color: #38bdf8;"></i>
+                                <i class="fa-solid fa-calendar-days" style="color: #60a5fa;"></i>
                                 <span>Rekap Bulanan</span>
                             </a>
                         </div>
@@ -516,7 +517,7 @@
                     <div class="mosaic-nav-section">Menu Utama</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                            <i class="fa-solid fa-gauge-high"></i>
+                            <i class="fa-solid fa-gauge-high" style="color: #38bdf8;"></i>
                             <span>Dashboard</span>
                         </a>
                     </div>
@@ -524,31 +525,31 @@
                     <div class="mosaic-nav-section">Presensi & Siswa</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.*') ? 'active' : '' }}" href="{{ route('siswa.index') }}">
-                            <i class="fa-solid fa-users"></i>
+                            <i class="fa-solid fa-users" style="color: #818cf8;"></i>
                             <span>Data Siswa</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('absensi.harian') ? 'active' : '' }}" href="{{ route('absensi.harian') }}">
-                            <i class="fa-solid fa-calendar-check"></i>
+                            <i class="fa-solid fa-calendar-check" style="color: #34d399;"></i>
                             <span>Absensi Cepat</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('absensi.rekap') ? 'active' : '' }}" href="{{ route('absensi.rekap') }}">
-                            <i class="fa-solid fa-file-invoice"></i>
+                            <i class="fa-solid fa-file-invoice" style="color: #fbbf24;"></i>
                             <span>Rekap Absensi</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
-                            <i class="fa-solid fa-calendar-days"></i>
+                            <i class="fa-solid fa-calendar-days" style="color: #60a5fa;"></i>
                             <span>Rekap Bulanan</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('face.*') ? 'active' : '' }}" href="{{ route('face.index') }}">
-                            <i class="fa-solid fa-camera-retro" style="color: #38bdf8;"></i>
+                            <i class="fa-solid fa-camera-retro" style="color: #06b6d4;"></i>
                             <span>Presensi Wajah</span>
                         </a>
                     </div>
@@ -556,19 +557,19 @@
                     <div class="mosaic-nav-section">Akademik & Kurikulum</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.*') ? 'active' : '' }}" href="{{ route('nilai.index') }}">
-                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star" style="color: #f43f5e;"></i>
                             <span>Penilaian Siswa</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') && !request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.index') }}">
-                            <i class="fa-solid fa-user-tie"></i>
+                            <i class="fa-solid fa-user-tie" style="color: #f59e0b;"></i>
                             <span>Wali Kelas</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('mapel.*') ? 'active' : '' }}" href="{{ route('mapel.index') }}">
-                            <i class="fa-solid fa-book-open"></i>
+                            <i class="fa-solid fa-book-open" style="color: #ec4899;"></i>
                             <span>Mata Pelajaran</span>
                         </a>
                     </div>
@@ -576,7 +577,7 @@
                     <div class="mosaic-nav-section">Pengaturan Sistem</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                            <i class="fa-solid fa-users-gear"></i>
+                            <i class="fa-solid fa-users-gear" style="color: #a855f7;"></i>
                             <span>Kelola Pengguna</span>
                         </a>
                     </div>
