@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthContext } from '../context/AuthContext';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import SiswaTabNavigator from './SiswaTabNavigator';
 import StaffDashboardScreen from '../screens/common/StaffDashboardScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   const { user, isLoading } = useContext(AuthContext);
