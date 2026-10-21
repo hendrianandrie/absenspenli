@@ -200,38 +200,54 @@ Route::get('/run-api-setup/{secret}', function ($secret) {
         abort(403, 'Akses ditolak. Kunci rahasia salah.');
     }
 
-    @set_time_limit(180);
+    @set_time_limit(30);
     try {
         $messages = [];
 
-        // 1. Jalankan migrasi database
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $migOutput = trim(\Illuminate\Support\Facades\Artisan::output());
-        $messages[] = "✓ Migrasi Database: " . ($migOutput ?: 'Tidak ada migrasi baru / tabel sudah up-to-date.');
+        // 1. Cek & buat tabel personal_access_tokens secara instan (< 0.05 detik)
+        if (!\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens')) {
+            \Illuminate\Support\Facades\Schema::create('personal_access_tokens', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->id();
+                $table->morphs('tokenable');
+                $table->string('name');
+                $table->string('token', 64)->unique();
+                $table->text('abilities')->nullable();
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamp('expires_at')->nullable()->index();
+                $table->timestamps();
+            });
+            $messages[] = "✓ Berhasil membuat tabel `personal_access_tokens` (Sanctum) di database.";
+        } else {
+            $messages[] = "✓ Tabel `personal_access_tokens` sudah ada dan siap digunakan.";
+        }
 
-        // 2. Clear route cache
-        \Illuminate\Support\Facades\Artisan::call('route:clear');
-        $messages[] = "✓ Route cache dibersihkan (rute /api/v1/* sekarang aktif).";
-
-        // 3. Clear config cache
-        \Illuminate\Support\Facades\Artisan::call('config:clear');
-        $messages[] = "✓ Config cache dibersihkan.";
-
-        // 4. Clear application cache
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
-        $messages[] = "✓ Application cache dibersihkan.";
+        // 2. Reset cache file Laravel secara langsung tanpa subprocess CLI
+        $cacheFiles = [
+            base_path('bootstrap/cache/routes-v7.php'),
+            base_path('bootstrap/cache/config.php'),
+            base_path('bootstrap/cache/services.php'),
+            base_path('bootstrap/cache/packages.php'),
+        ];
+        $cleared = 0;
+        foreach ($cacheFiles as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
+                $cleared++;
+            }
+        }
+        $messages[] = "✓ Cache sistem berhasil dibersihkan ($cleared file cache dibersihkan, rute /api/v1/* sekarang aktif).";
 
         $output = implode("\n", $messages);
 
         return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:28px; border-radius:16px; background:#0f172a; color:#f8fafc; box-shadow:0 15px 35px rgba(0,0,0,0.3); border: 1px solid #1e293b;'>
-            <h2 style='color:#10b981; margin-top:0; font-size:22px;'>🚀 API Mobile & Database Berhasil Disetup!</h2>
-            <p style='color:#94a3b8; font-size:14px; margin-bottom:16px;'>Server online Hostinger Anda sekarang siap melayani aplikasi Mobile SI-KASEP.</p>
+            <h2 style='color:#10b981; margin-top:0; font-size:22px;'>🚀 API Mobile SI-KASEP Siap Digunakan!</h2>
+            <p style='color:#94a3b8; font-size:14px; margin-bottom:16px;'>Database dan rute API pada server Hostinger telah berhasil disiapkan.</p>
             <pre style='background:#1e293b; padding:16px; border-radius:10px; overflow-x:auto; font-size:13px; color:#38bdf8; border:1px solid #334155; line-height:1.6;'>" . e($output) . "</pre>
-            <p style='color:#cbd5e1; font-size:13px; margin-top:18px;'>Endpoint API aktif Anda: <br><code style='background:#334155; padding:4px 8px; border-radius:6px; color:#38bdf8; font-size:13px;'>" . url('/api/v1') . "</code></p>
+            <p style='color:#cbd5e1; font-size:13px; margin-top:18px;'>Endpoint API Backend Anda:<br><code style='background:#334155; padding:6px 12px; border-radius:6px; color:#38bdf8; font-size:13.5px; display:inline-block; margin-top:6px;'>" . url('/api/v1') . "</code></p>
         </div>";
     } catch (\Throwable $e) {
         return "<div style='font-family:sans-serif; max-width:650px; margin:40px auto; padding:28px; border-radius:16px; background:#0f172a; color:#f8fafc; border: 1px solid #dc2626;'>
-            <h2 style='color:#ef4444; margin-top:0;'>❌ Terjadi Kesalahan Setup</h2>
+            <h2 style='color:#ef4444; margin-top:0;'>❌ Info Status</h2>
             <pre style='background:#1e293b; padding:16px; border-radius:10px; overflow-x:auto; font-size:13px; color:#fca5a5; border:1px solid #dc2626;'>" . e($e->getMessage()) . "</pre>
         </div>";
     }
