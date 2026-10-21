@@ -230,7 +230,7 @@
                                 </td>
                                 @if(empty($isGuru) || !$isGuru)
                                     <td>
-                                        <a href="{{ route('nilai.raporSiswaPdf', ['siswa' => $siswa->id, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
+                                        <a href="{{ route('nilai.raporSiswaPdf', ['id' => $siswa->id, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
                                             <i class="fa-solid fa-file-pdf"></i> Rapor
                                         </a>
                                     </td>

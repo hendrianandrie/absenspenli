@@ -230,7 +230,7 @@
 
                             <!-- Download Rapor PDF -->
                             <td>
-                                <a href="{{ route('nilai.raporSiswaPdf', ['siswa' => $s->id, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran]) }}"
+                                <a href="{{ route('nilai.raporSiswaPdf', ['id' => $s->id, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran]) }}"
                                    class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-0.5 shadow-sm"
                                    style="font-size: 11px;"
                                    title="Unduh Rapor PDF {{ $s->nama }}">
