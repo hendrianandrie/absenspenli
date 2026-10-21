@@ -8,10 +8,10 @@
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end">
         @if($selectedKelas && $selectedMapelId)
-            <a href="{{ route('nilai.rekapExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-outline-success shadow-sm">
+            <a href="{{ route('nilai.rekapExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-outline-success shadow-sm">
                 <i class="fa-solid fa-file-excel me-1"></i> Rekap Excel
             </a>
-            <a href="{{ route('nilai.rekapPdf', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-outline-danger shadow-sm">
+            <a href="{{ route('nilai.rekapPdf', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-outline-danger shadow-sm">
                 <i class="fa-solid fa-file-pdf me-1"></i> Rekap PDF
             </a>
             <a href="{{ route('nilai.lembarKosongPdf', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-outline-secondary shadow-sm">
@@ -24,8 +24,8 @@
 <!-- Filter Bar -->
 <div class="card card-custom p-4 bg-white mb-4 shadow-sm">
     <form method="GET" action="{{ route('nilai.index') }}" class="row g-3 align-items-end" id="filterFormNilai">
-        <div class="col-md-5">
-            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-book-open text-primary me-1"></i> Pilih Mata Pelajaran</label>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold fs-7"><i class="fa-solid fa-book-open text-primary me-1"></i> Mata Pelajaran</label>
             <select name="mata_pelajaran_id" id="selectMapelFilter" class="form-select" onchange="handleMapelFilterChange(this)">
                 @foreach ($mapels as $m)
                     <option value="{{ $m->id }}" data-tingkat="{{ $m->tingkat ?? 'Semua' }}" {{ $selectedMapelId == $m->id ? 'selected' : '' }}>
@@ -34,9 +34,9 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="form-label fw-semibold fs-7 mb-0"><i class="fa-solid fa-chalkboard-user text-primary me-1"></i> Pilih Kelas</label>
+                <label class="form-label fw-semibold fs-7 mb-0"><i class="fa-solid fa-chalkboard-user text-primary me-1"></i> Kelas</label>
                 @if($selectedMapel && ($selectedMapel->tingkat ?? 'Semua') !== 'Semua')
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-8">Tingkat {{ $selectedMapel->tingkat }}</span>
                 @endif
@@ -46,9 +46,20 @@
                     @php $t = \App\Models\MataPelajaran::getTingkatFromKelas($k); @endphp
                     <option value="{{ $k }}" data-tingkat="{{ $t }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                 @empty
-                    <option value="">(Tidak ada kelas diampu untuk tingkat ini)</option>
+                    <option value="">(Tidak ada kelas diampu)</option>
                 @endforelse
             </select>
+        </div>
+        <div class="col-md-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold fs-7 mb-0"><i class="fa-solid fa-calendar-days text-primary me-1"></i> Semester</label>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-8">TA {{ $selectedTahunAjaran }}</span>
+            </div>
+            <select name="semester" class="form-select" onchange="this.form.submit()">
+                <option value="1" {{ $selectedSemester == 1 ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                <option value="2" {{ $selectedSemester == 2 ? 'selected' : '' }}>Semester 2 (Genap)</option>
+            </select>
+            <input type="hidden" name="tahun_ajaran" value="{{ $selectedTahunAjaran }}">
         </div>
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary-custom w-100 py-2">
@@ -130,7 +141,7 @@
                 Bobot Mapel: Tugas ({{ $selectedMapel->bobot_tugas ?? 20 }}%), UH ({{ $selectedMapel->bobot_uh ?? 30 }}%), UTS ({{ $selectedMapel->bobot_uts ?? 25 }}%), UAS ({{ $selectedMapel->bobot_uas ?? 25 }}%).
             </small>
         </div>
-        <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-success rounded-3 shadow-sm">
+        <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-success rounded-3 shadow-sm">
             <i class="fa-solid fa-plus-circle me-1"></i> Tambah Kegiatan Penilaian Baru
         </a>
     </div>
@@ -219,7 +230,7 @@
                                 </td>
                                 @if(empty($isGuru) || !$isGuru)
                                     <td>
-                                        <a href="{{ route('nilai.raporSiswaPdf', $siswa->id) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
+                                        <a href="{{ route('nilai.raporSiswaPdf', ['siswa' => $siswa->id, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-sm btn-outline-danger" title="Cetak Rapor Siswa PDF">
                                             <i class="fa-solid fa-file-pdf"></i> Rapor
                                         </a>
                                     </td>

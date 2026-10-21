@@ -27,6 +27,17 @@
                 <input type="text" class="form-control" value="Kelas {{ $kegiatan->kelas }}" readonly>
             </div>
             <div class="col-md-3">
+                <label class="form-label fw-semibold fs-7">Semester</label>
+                <select name="semester" class="form-select" required>
+                    <option value="1" {{ ($kegiatan->semester ?? 1) == 1 ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                    <option value="2" {{ ($kegiatan->semester ?? 1) == 2 ? 'selected' : '' }}>Semester 2 (Genap)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold fs-7">Tahun Ajaran</label>
+                <input type="text" name="tahun_ajaran" class="form-control" value="{{ $kegiatan->tahun_ajaran ?? '2026/2027' }}" required>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label fw-semibold fs-7">Jenis Penilaian</label>
                 <select name="jenis" class="form-select" required>
                     <option value="Tugas" {{ $kegiatan->jenis == 'Tugas' ? 'selected' : '' }}>Tugas</option>
@@ -39,7 +50,7 @@
                 <label class="form-label fw-semibold fs-7">Tanggal Pelaksanaan</label>
                 <input type="date" name="tanggal" class="form-control" value="{{ $kegiatan->tanggal }}" required>
             </div>
-            <div class="col-12">
+            <div class="col-md-6">
                 <label class="form-label fw-semibold fs-7">Nama / Judul Kegiatan</label>
                 <input type="text" name="nama_kegiatan" class="form-control" value="{{ $kegiatan->nama_kegiatan }}" required>
             </div>

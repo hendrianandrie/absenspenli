@@ -31,9 +31,9 @@
         <div class="card-body p-3 p-md-4">
             <form action="{{ route('siswa.nilai') }}" method="GET" id="mapelFilterForm">
                 <div class="row align-items-center g-3">
-                    <div class="col-md-5 col-lg-4">
+                    <div class="col-md-4 col-lg-4">
                         <label for="mapelSelect" class="form-label small fw-semibold text-slate-700 mb-1">
-                            <i class="fa-solid fa-book-open text-primary me-1"></i> Pilih Mata Pelajaran:
+                            <i class="fa-solid fa-book-open text-primary me-1"></i> Mata Pelajaran:
                         </label>
                         <select name="mapel_id" id="mapelSelect" class="form-select form-select-md rounded-3 border-slate-300" onchange="document.getElementById('mapelFilterForm').submit()">
                             @foreach($mapels as $mapel)
@@ -44,12 +44,23 @@
                         </select>
                     </div>
 
-                    <div class="col-md-7 col-lg-8">
+                    <div class="col-md-3 col-lg-3">
+                        <label for="semesterSelect" class="form-label small fw-semibold text-slate-700 mb-1">
+                            <i class="fa-solid fa-calendar-days text-primary me-1"></i> Semester (TA {{ $tahunAjaran ?? '2026/2027' }}):
+                        </label>
+                        <select name="semester" id="semesterSelect" class="form-select form-select-md rounded-3 border-slate-300" onchange="document.getElementById('mapelFilterForm').submit()">
+                            <option value="1" {{ ($semester ?? 1) == 1 ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                            <option value="2" {{ ($semester ?? 1) == 2 ? 'selected' : '' }}>Semester 2 (Genap)</option>
+                        </select>
+                        <input type="hidden" name="tahun_ajaran" value="{{ $tahunAjaran ?? '2026/2027' }}">
+                    </div>
+
+                    <div class="col-md-5 col-lg-5">
                         <!-- Horizontal Quick Pills for Desktop -->
                         <div class="d-none d-md-flex align-items-center gap-2 overflow-auto py-1" style="white-space: nowrap;">
                             <span class="text-slate-400 small me-1">Pintasan:</span>
-                            @foreach($mapels->take(6) as $m)
-                                <a href="{{ route('siswa.nilai', ['mapel_id' => $m->id]) }}" 
+                            @foreach($mapels->take(4) as $m)
+                                <a href="{{ route('siswa.nilai', ['mapel_id' => $m->id, 'semester' => $semester ?? 1]) }}" 
                                    class="btn btn-sm rounded-pill px-3 {{ optional($selectedMapel)->id == $m->id ? 'btn-primary' : 'btn-light border text-slate-600' }}"
                                    style="font-size: 12px;">
                                     {{ $m->nama_mapel }}

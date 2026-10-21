@@ -148,8 +148,8 @@
         <tr>
             <td style="font-weight: bold;">Sekolah</td>
             <td>: SMP Negeri 5 Ciamis</td>
-            <td style="font-weight: bold;">Tahun Ajaran</td>
-            <td>: {{ date('Y') }}/{{ date('Y') + 1 }}</td>
+            <td style="font-weight: bold;">Semester / TA</td>
+            <td>: Semester {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }}) / {{ $tahunAjaran ?? '2026/2027' }}</td>
         </tr>
     </table>
 

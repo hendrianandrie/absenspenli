@@ -16,10 +16,16 @@ class NilaiExport implements FromView, ShouldAutoSize
 
     protected $mapelId;
 
-    public function __construct($kelas, $mapelId)
+    protected $semester;
+
+    protected $tahunAjaran;
+
+    public function __construct($kelas, $mapelId, $semester = null, $tahunAjaran = null)
     {
         $this->kelas = $kelas;
         $this->mapelId = $mapelId;
+        $this->semester = $semester ? (int) $semester : Kegiatan::currentSemester();
+        $this->tahunAjaran = $tahunAjaran ?: Kegiatan::currentTahunAjaran();
     }
 
     public function view(): View
@@ -28,6 +34,8 @@ class NilaiExport implements FromView, ShouldAutoSize
         $siswas = Siswa::where('kelas', $this->kelas)->orderBy('nama')->get();
         $kegiatans = Kegiatan::where('mata_pelajaran_id', $this->mapelId)
             ->where('kelas', $this->kelas)
+            ->where('semester', $this->semester)
+            ->where('tahun_ajaran', $this->tahunAjaran)
             ->orderBy('tanggal')
             ->get();
 
@@ -68,6 +76,8 @@ class NilaiExport implements FromView, ShouldAutoSize
             'siswas' => $siswas,
             'kegiatans' => $kegiatans,
             'rekap' => $rekap,
+            'semester' => $this->semester,
+            'tahunAjaran' => $this->tahunAjaran,
         ]);
     }
 }

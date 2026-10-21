@@ -141,6 +141,9 @@ class SiswaPortalController extends Controller
         $selectedMapelId = $request->get('mapel_id') ?: optional($mapels->first())->id;
         $selectedMapel = $mapels->firstWhere('id', $selectedMapelId) ?: $mapels->first();
 
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
         $kegiatanList = [];
         $statsMapel = [
             'total' => 0,
@@ -153,6 +156,8 @@ class SiswaPortalController extends Controller
         if ($selectedMapel) {
             $kegiatans = Kegiatan::where('mata_pelajaran_id', $selectedMapel->id)
                 ->where('kelas', $siswa->kelas)
+                ->where('semester', $semester)
+                ->where('tahun_ajaran', $tahunAjaran)
                 ->orderBy('tanggal', 'asc')
                 ->get();
 
@@ -200,7 +205,9 @@ class SiswaPortalController extends Controller
             'selectedMapel',
             'kegiatanList',
             'statsMapel',
-            'tingkat'
+            'tingkat',
+            'semester',
+            'tahunAjaran'
         ));
     }
 

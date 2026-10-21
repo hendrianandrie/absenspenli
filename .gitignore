@@ -25,3 +25,4 @@ Thumbs.db
 mgmp/
 *.zip
 *.code-workspace
+/storage/app/public/faces/

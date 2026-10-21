@@ -21,6 +21,19 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            <form method="GET" action="{{ route('walikelas.myClass') }}" class="d-inline-flex align-items-center gap-2">
+                @if(Auth::check() && Auth::user()->role === 'admin' && request()->filled('kelas'))
+                    <input type="hidden" name="kelas" value="{{ $selectedKelas }}">
+                @endif
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white text-muted border-end-0 rounded-start-pill py-1"><i class="fa-solid fa-calendar-days text-primary"></i></span>
+                    <select name="semester" class="form-select form-select-sm border-start-0 rounded-end-pill py-1 fw-semibold shadow-xs" style="font-size: 12px; min-width: 175px;" onchange="this.form.submit()">
+                        <option value="1" {{ ($semester ?? 1) == 1 ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                        <option value="2" {{ ($semester ?? 1) == 2 ? 'selected' : '' }}>Semester 2 (Genap)</option>
+                    </select>
+                </div>
+                <input type="hidden" name="tahun_ajaran" value="{{ $tahunAjaran ?? '2026/2027' }}">
+            </form>
             <a href="{{ route('walikelas.kehadiran', ['kelas' => $selectedKelas]) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 shadow-xs" style="font-size: 12px;">
                 <i class="fa-solid fa-clipboard-user me-1.5"></i> Rekap Kehadiran
             </a>
@@ -127,7 +140,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 12px; min-width: 250px;">
                         <li>
-                            <a class="dropdown-item py-2 fw-semibold text-success" href="{{ route('walikelas.exportExcel', ['kelas' => $selectedKelas]) }}">
+                            <a class="dropdown-item py-2 fw-semibold text-success" href="{{ route('walikelas.exportExcel', ['kelas' => $selectedKelas, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran]) }}">
                                 <i class="fa-solid fa-table-cells me-2"></i> Rekap Semua Mapel (Leger Nilai)
                             </a>
                         </li>
@@ -135,7 +148,7 @@
                         <li class="dropdown-header text-uppercase text-slate-400 fw-bold" style="font-size: 10px;">Unduh Per Mata Pelajaran:</li>
                         @foreach($mapels as $m)
                             <li>
-                                <a class="dropdown-item py-1.5" href="{{ route('nilai.rekapExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $m->id]) }}">
+                                <a class="dropdown-item py-1.5" href="{{ route('nilai.rekapExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $m->id, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran]) }}">
                                     <i class="fa-regular fa-file-excel text-muted me-2"></i> {{ $m->nama_mapel }}
                                 </a>
                             </li>
@@ -217,7 +230,7 @@
 
                             <!-- Download Rapor PDF -->
                             <td>
-                                <a href="{{ route('nilai.raporSiswaPdf', $s->id) }}"
+                                <a href="{{ route('nilai.raporSiswaPdf', ['siswa' => $s->id, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran]) }}"
                                    class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-0.5 shadow-sm"
                                    style="font-size: 11px;"
                                    title="Unduh Rapor PDF {{ $s->nama }}">

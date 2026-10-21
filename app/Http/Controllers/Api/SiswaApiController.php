@@ -120,7 +120,11 @@ class SiswaApiController extends Controller
         $hadirPct = $totalTercatat > 0 ? round(($hadir / $totalTercatat) * 100, 1) : 100;
 
         // 3. Kegiatan & Penilaian Terbaru
+        $semester = Kegiatan::currentSemester();
+        $tahunAjaran = Kegiatan::currentTahunAjaran();
         $kegiatanKelas = Kegiatan::where('kelas', $siswa->kelas)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
             ->with('mataPelajaran')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -290,6 +294,8 @@ class SiswaApiController extends Controller
 
         // Parameter filter mapel opsional
         $selectedMapelId = $request->get('mapel_id');
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
 
         $rekapPerMapel = [];
 
@@ -300,6 +306,8 @@ class SiswaApiController extends Controller
 
             $kegiatans = Kegiatan::where('kelas', $siswa->kelas)
                 ->where('mata_pelajaran_id', $mapel->id)
+                ->where('semester', $semester)
+                ->where('tahun_ajaran', $tahunAjaran)
                 ->orderBy('tanggal', 'desc')
                 ->get();
 
@@ -367,6 +375,8 @@ class SiswaApiController extends Controller
             'data' => [
                 'kelas' => $siswa->kelas,
                 'tingkat' => $tingkat,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
                 'mapel_list' => $mapels->map(fn($m) => ['id' => $m->id, 'nama' => $m->nama_mapel, 'kkm' => $m->kkm]),
                 'rekap_nilai' => $rekapPerMapel,
             ]

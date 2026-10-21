@@ -118,11 +118,16 @@ class WaliKelasController extends Controller
             return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
         }
 
-        $data = $this->getRekapDataForClass($selectedKelas);
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
+        $data = $this->getRekapDataForClass($selectedKelas, $semester, $tahunAjaran);
 
         return view('walikelas.show', array_merge([
             'selectedKelas' => $selectedKelas,
             'waliKelas' => $waliKelas,
+            'semester' => $semester,
+            'tahunAjaran' => $tahunAjaran,
         ], $data));
     }
 
@@ -151,11 +156,14 @@ class WaliKelasController extends Controller
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
         }
 
-        $data = $this->getRekapDataForClass($selectedKelas);
-        $fileName = 'Rekapitulasi_Nilai_Siswa_Per_Mapel_Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas) . '.xlsx';
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
+        $data = $this->getRekapDataForClass($selectedKelas, $semester, $tahunAjaran);
+        $fileName = 'Rekapitulasi_Nilai_Siswa_Per_Mapel_Kelas_' . str_replace([' ', '/', '\\'], '_', $selectedKelas) . '_Sem_' . $semester . '.xlsx';
 
         return Excel::download(
-            new LegerNilaiExport($selectedKelas, $waliKelas, $data),
+            new LegerNilaiExport($selectedKelas, $waliKelas, array_merge($data, ['semester' => $semester, 'tahunAjaran' => $tahunAjaran])),
             $fileName
         );
     }
@@ -408,8 +416,11 @@ class WaliKelasController extends Controller
     /**
      * Helper: Menghitung rekapitulasi nilai berbobot dan absensi per siswa di kelas tertentu
      */
-    protected function getRekapDataForClass(string $selectedKelas): array
+    protected function getRekapDataForClass(string $selectedKelas, ?int $semester = null, ?string $tahunAjaran = null): array
     {
+        $semester = $semester ?: Kegiatan::currentSemester();
+        $tahunAjaran = $tahunAjaran ?: Kegiatan::currentTahunAjaran();
+
         $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
         $tingkat = MataPelajaran::getTingkatFromKelas($selectedKelas);
 
@@ -424,9 +435,19 @@ class WaliKelasController extends Controller
         }
         $mapels = $mapelQuery->orderBy('nama_mapel')->get();
 
-        // Ambil rekap absensi seluruh siswa kelas ini
-        $siswaIds = $siswas->pluck('id');
-        $absensiRaw = Absensi::whereIn('siswa_id', $siswaIds)
+        // Hitung rentang tanggal absensi berdasarkan semester dan tahun ajaran
+        $parts = explode('/', $tahunAjaran);
+        $y1 = $parts[0] ?? date('Y');
+        $y2 = $parts[1] ?? ($y1 + 1);
+
+        $absensiQuery = Absensi::whereIn('siswa_id', $siswas->pluck('id'));
+        if ($semester == 1) {
+            $absensiQuery->whereBetween('tanggal', [$y1 . '-07-01', $y1 . '-12-31']);
+        } else {
+            $absensiQuery->whereBetween('tanggal', [$y2 . '-01-01', $y2 . '-06-30']);
+        }
+
+        $absensiRaw = $absensiQuery
             ->selectRaw('siswa_id, status, count(*) as count')
             ->groupBy('siswa_id', 'status')
             ->get();
@@ -436,14 +457,17 @@ class WaliKelasController extends Controller
             $absensiMap[$ab->siswa_id][$ab->status] = $ab->count;
         }
 
-        // Ambil semua kegiatan penilaian untuk kelas ini
-        $kegiatans = Kegiatan::where('kelas', $selectedKelas)->get();
+        // Ambil semua kegiatan penilaian untuk kelas, semester, dan tahun ajaran ini
+        $kegiatans = Kegiatan::where('kelas', $selectedKelas)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->get();
         $kegiatanIds = $kegiatans->pluck('id');
         $kegiatanMapelMap = $kegiatans->groupBy('mata_pelajaran_id');
 
         // Ambil semua nilai
         $nilais = Nilai::whereIn('kegiatan_id', $kegiatanIds)
-            ->whereIn('siswa_id', $siswaIds)
+            ->whereIn('siswa_id', $siswas->pluck('id'))
             ->get()
             ->groupBy('siswa_id');
 
@@ -540,7 +564,9 @@ class WaliKelasController extends Controller
             'mapels',
             'rekapSiswa',
             'analytics',
-            'tingkat'
+            'tingkat',
+            'semester',
+            'tahunAjaran'
         );
     }
 }

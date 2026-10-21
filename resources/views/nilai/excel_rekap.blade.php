@@ -7,7 +7,7 @@
         </tr>
         <tr>
             <th colspan="{{ 5 + count($kegiatans) }}" style="text-align: center;">
-                Kode Mapel: {{ $mapel->kode_mapel }} | KKM: {{ $mapel->kkm }} | Metode Perhitungan: Rata-Rata Murni
+                Kode Mapel: {{ $mapel->kode_mapel }} | KKM: {{ $mapel->kkm }} | Semester: {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }}) | TA: {{ $tahunAjaran ?? '2026/2027' }}
             </th>
         </tr>
         <tr></tr>

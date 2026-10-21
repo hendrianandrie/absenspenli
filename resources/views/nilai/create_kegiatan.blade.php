@@ -38,6 +38,17 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label class="form-label fw-semibold fs-7">Semester</label>
+                <select name="semester" class="form-select" required>
+                    <option value="1" {{ ($selectedSemester ?? \App\Models\Kegiatan::currentSemester()) == 1 ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                    <option value="2" {{ ($selectedSemester ?? \App\Models\Kegiatan::currentSemester()) == 2 ? 'selected' : '' }}>Semester 2 (Genap)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold fs-7">Tahun Ajaran</label>
+                <input type="text" name="tahun_ajaran" class="form-control" value="{{ $selectedTahunAjaran ?? \App\Models\Kegiatan::currentTahunAjaran() }}" placeholder="2026/2027" required>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label fw-semibold fs-7">Jenis Penilaian</label>
                 <select name="jenis" class="form-select" required>
                     <option value="Tugas">Tugas</option>
@@ -50,7 +61,7 @@
                 <label class="form-label fw-semibold fs-7">Tanggal Pelaksanaan</label>
                 <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
             </div>
-            <div class="col-12">
+            <div class="col-md-6">
                 <label class="form-label fw-semibold fs-7">Nama / Judul Kegiatan</label>
                 <input type="text" name="nama_kegiatan" class="form-control" placeholder="Contoh: UH 1 Bab 1 Aljabar" required>
             </div>

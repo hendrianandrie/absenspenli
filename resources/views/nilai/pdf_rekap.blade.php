@@ -32,6 +32,12 @@
             <td width="35%">: {{ $kelas }}</td>
         </tr>
         <tr>
+            <td><strong>Semester</strong></td>
+            <td>: {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }})</td>
+            <td><strong>Tahun Ajaran</strong></td>
+            <td>: {{ $tahunAjaran ?? '2026/2027' }}</td>
+        </tr>
+        <tr>
             <td><strong>KKM</strong></td>
             <td>: {{ $mapel->kkm }}</td>
             <td><strong>Metode Nilai</strong></td>

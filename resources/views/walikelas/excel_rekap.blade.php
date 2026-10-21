@@ -17,7 +17,7 @@
         </tr>
         <tr>
             <th colspan="{{ $totalCols }}" style="text-align: center; height: 20px;">
-                Kelas: {{ $kelas }} | Tingkat: {{ $tingkat }} | Semester / Tahun Ajaran: {{ $waliKelas?->tahun_ajaran ?? '2025/2026' }}
+                Kelas: {{ $kelas }} | Tingkat: {{ $tingkat }} | Semester: {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }}) | Tahun Ajaran: {{ $tahunAjaran ?? ($waliKelas?->tahun_ajaran ?? '2026/2027') }}
             </th>
         </tr>
         <tr>

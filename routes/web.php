@@ -157,6 +157,15 @@ Route::middleware('auth')->group(function () {
                     $messages[] = "✓ Tabel `personal_access_tokens` sudah ada";
                 }
 
+                // 5. Tambah kolom semester dan tahun_ajaran pada tabel kegiatans jika belum ada
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('kegiatans', 'semester')) {
+                    \Illuminate\Support\Facades\DB::statement("ALTER TABLE `kegiatans` ADD `semester` TINYINT NOT NULL DEFAULT 1 AFTER `jenis`, ADD `tahun_ajaran` VARCHAR(20) NOT NULL DEFAULT '2026/2027' AFTER `semester`");
+                    \Illuminate\Support\Facades\DB::statement("UPDATE kegiatans SET semester = CASE WHEN MONTH(tanggal) >= 7 AND MONTH(tanggal) <= 12 THEN 1 ELSE 2 END");
+                    $messages[] = "✓ Berhasil menambahkan kolom `semester` dan `tahun_ajaran` pada tabel `kegiatans`";
+                } else {
+                    $messages[] = "✓ Kolom `semester` dan `tahun_ajaran` tabel `kegiatans` sudah ada";
+                }
+
                 // 5. Bersihkan cache route, config & view
                 \Illuminate\Support\Facades\Artisan::call('route:clear');
                 \Illuminate\Support\Facades\Artisan::call('config:clear');

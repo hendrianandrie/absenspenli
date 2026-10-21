@@ -87,8 +87,13 @@ class GuruApiController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Mata pelajaran tidak ditemukan.'], 404);
         }
 
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
         $kegiatans = Kegiatan::where('mata_pelajaran_id', $mapel->id)
             ->where('kelas', $request->kelas)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -100,6 +105,8 @@ class GuruApiController extends Controller
                 'id' => $keg->id,
                 'nama_kegiatan' => $keg->nama_kegiatan,
                 'jenis' => $keg->jenis,
+                'semester' => $keg->semester,
+                'tahun_ajaran' => $keg->tahun_ajaran,
                 'tanggal' => Carbon::parse($keg->tanggal)->format('Y-m-d'),
                 'tanggal_formatted' => Carbon::parse($keg->tanggal)->translatedFormat('d M Y'),
                 'kkm' => $mapel->kkm ?? 75,
@@ -118,6 +125,8 @@ class GuruApiController extends Controller
                     'kkm' => $mapel->kkm,
                 ],
                 'kelas' => $request->kelas,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
                 'kegiatan' => $list,
             ]
         ]);

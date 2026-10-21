@@ -71,10 +71,21 @@ class NilaiController extends Controller
             'avg_kelas' => 0,
         ];
 
+        $selectedSemester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $selectedTahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
+        $daftarSemester = [
+            1 => 'Semester 1 (Ganjil)',
+            2 => 'Semester 2 (Genap)',
+        ];
+        $daftarTahunAjaran = ['2026/2027'];
+
         if ($selectedKelas && $selectedMapelId && $selectedMapel) {
             $siswas = Siswa::where('kelas', $selectedKelas)->orderBy('nama')->get();
             $kegiatans = Kegiatan::where('mata_pelajaran_id', $selectedMapelId)
                 ->where('kelas', $selectedKelas)
+                ->where('semester', $selectedSemester)
+                ->where('tahun_ajaran', $selectedTahunAjaran)
                 ->orderBy('tanggal')
                 ->get();
 
@@ -176,6 +187,10 @@ class NilaiController extends Controller
             'selectedKelas',
             'selectedMapelId',
             'selectedMapel',
+            'selectedSemester',
+            'selectedTahunAjaran',
+            'daftarSemester',
+            'daftarTahunAjaran',
             'siswas',
             'kegiatans',
             'rekapNilai',
@@ -236,12 +251,24 @@ class NilaiController extends Controller
 
         $siswas = $siswasByKelas->get($selectedKelas, collect());
 
+        $selectedSemester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $selectedTahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+        $daftarSemester = [
+            1 => 'Semester 1 (Ganjil)',
+            2 => 'Semester 2 (Genap)',
+        ];
+        $daftarTahunAjaran = ['2026/2027'];
+
         return view('nilai.create_kegiatan', compact(
             'daftarKelas',
             'allDaftarKelas',
             'mapels',
             'selectedKelas',
             'selectedMapelId',
+            'selectedSemester',
+            'selectedTahunAjaran',
+            'daftarSemester',
+            'daftarTahunAjaran',
             'siswas',
             'siswasByKelas',
             'isGuru'
@@ -263,11 +290,16 @@ class NilaiController extends Controller
             'nilai.*.min' => 'Nilai siswa tidak boleh kurang dari 0.',
         ]);
 
+        $semester = $request->filled('semester') ? (int) $request->semester : Kegiatan::determineSemester($request->tanggal);
+        $tahunAjaran = $request->filled('tahun_ajaran') ? $request->tahun_ajaran : Kegiatan::determineTahunAjaran($request->tanggal);
+
         $kegiatan = Kegiatan::create([
             'mata_pelajaran_id' => $request->mata_pelajaran_id,
             'kelas' => $request->kelas,
             'nama_kegiatan' => $request->nama_kegiatan,
             'jenis' => $request->jenis,
+            'semester' => $semester,
+            'tahun_ajaran' => $tahunAjaran,
             'tanggal' => $request->tanggal,
         ]);
 
@@ -287,6 +319,8 @@ class NilaiController extends Controller
         return redirect()->route('nilai.index', [
             'kelas' => $request->kelas,
             'mata_pelajaran_id' => $request->mata_pelajaran_id,
+            'semester' => $semester,
+            'tahun_ajaran' => $tahunAjaran,
         ])->with('success', 'Kegiatan Penilaian & Nilai Siswa berhasil ditambahkan!');
     }
 
@@ -313,9 +347,14 @@ class NilaiController extends Controller
             'nilai.*.min' => 'Nilai siswa tidak boleh kurang dari 0.',
         ]);
 
+        $semester = $request->filled('semester') ? (int) $request->semester : Kegiatan::determineSemester($request->tanggal);
+        $tahunAjaran = $request->filled('tahun_ajaran') ? $request->tahun_ajaran : Kegiatan::determineTahunAjaran($request->tanggal);
+
         $kegiatan->update([
             'nama_kegiatan' => $request->nama_kegiatan,
             'jenis' => $request->jenis,
+            'semester' => $semester,
+            'tahun_ajaran' => $tahunAjaran,
             'tanggal' => $request->tanggal,
         ]);
 
@@ -336,6 +375,8 @@ class NilaiController extends Controller
         return redirect()->route('nilai.index', [
             'kelas' => $kegiatan->kelas,
             'mata_pelajaran_id' => $kegiatan->mata_pelajaran_id,
+            'semester' => $kegiatan->semester,
+            'tahun_ajaran' => $kegiatan->tahun_ajaran,
         ])->with('success', 'Nilai kegiatan berhasil diperbarui!');
     }
 
@@ -356,11 +397,15 @@ class NilaiController extends Controller
     {
         $kelas = $request->get('kelas');
         $mapelId = $request->get('mata_pelajaran_id');
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
 
         $mapel = MataPelajaran::findOrFail($mapelId);
         $siswas = Siswa::where('kelas', $kelas)->orderBy('nama')->get();
         $kegiatans = Kegiatan::where('mata_pelajaran_id', $mapelId)
             ->where('kelas', $kelas)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
             ->orderBy('tanggal')
             ->get();
 
@@ -379,40 +424,46 @@ class NilaiController extends Controller
             ];
         }
 
-        $pdf = Pdf::loadView('nilai.pdf_rekap', compact('kelas', 'mapel', 'siswas', 'kegiatans', 'rekap'))
+        $pdf = Pdf::loadView('nilai.pdf_rekap', compact('kelas', 'mapel', 'siswas', 'kegiatans', 'rekap', 'semester', 'tahunAjaran'))
             ->setPaper('a4', 'landscape');
 
-        return $pdf->download('Rekap_Nilai_'.$mapel->kode_mapel.'_'.$kelas.'.pdf');
+        return $pdf->download('Rekap_Nilai_'.$mapel->kode_mapel.'_'.$kelas.'_Sem_'.$semester.'.pdf');
     }
 
     public function rekapExcel(Request $request)
     {
         $kelas = $request->get('kelas');
         $mapelId = $request->get('mata_pelajaran_id');
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
 
         $mapel = MataPelajaran::findOrFail($mapelId);
-        $fileName = 'Rekap_Nilai_'.$mapel->kode_mapel.'_Kelas_'.$kelas.'.xlsx';
+        $fileName = 'Rekap_Nilai_'.$mapel->kode_mapel.'_Kelas_'.$kelas.'_Sem_'.$semester.'.xlsx';
 
-        return Excel::download(new NilaiExport($kelas, $mapelId), $fileName);
+        return Excel::download(new NilaiExport($kelas, $mapelId, $semester, $tahunAjaran), $fileName);
     }
 
     public function lembarKosongPdf(Request $request)
     {
         $kelas = $request->get('kelas');
         $mapelId = $request->get('mata_pelajaran_id');
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
 
         $mapel = MataPelajaran::find($mapelId);
         $siswas = Siswa::where('kelas', $kelas)->orderBy('nama')->get();
 
-        $pdf = Pdf::loadView('nilai.pdf_lembar_kosong', compact('kelas', 'mapel', 'siswas'))
+        $pdf = Pdf::loadView('nilai.pdf_lembar_kosong', compact('kelas', 'mapel', 'siswas', 'semester', 'tahunAjaran'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Lembar_Cetak_Kosong_'.$kelas.'.pdf');
+        return $pdf->download('Lembar_Cetak_Kosong_'.$kelas.'_Sem_'.$semester.'.pdf');
     }
 
     public function raporSiswaPdf($siswaId)
     {
         $siswa = Siswa::findOrFail($siswaId);
+        $semester = (int) request('semester', Kegiatan::currentSemester());
+        $tahunAjaran = request('tahun_ajaran', Kegiatan::currentTahunAjaran());
         $tingkat = MataPelajaran::getTingkatFromKelas($siswa->kelas);
 
         // Filter mata pelajaran sesuai tingkat siswa (7, 8, 9, atau Semua)
@@ -426,8 +477,14 @@ class NilaiController extends Controller
         }
         $mapels = $mapelQuery->orderBy('nama_mapel')->get();
 
-        // Rekap Absensi Siswa
-        $absensiCounts = \App\Models\Absensi::where('siswa_id', $siswa->id)
+        // Rekap Absensi Siswa Sesuai Semester
+        $absensiQuery = \App\Models\Absensi::where('siswa_id', $siswa->id);
+        if ($semester == 1) {
+            $absensiQuery->whereBetween('tanggal', ['2026-07-01', '2026-12-31']);
+        } else {
+            $absensiQuery->whereBetween('tanggal', ['2027-01-01', '2027-06-30']);
+        }
+        $absensiCounts = $absensiQuery
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
@@ -439,11 +496,13 @@ class NilaiController extends Controller
             'alpha' => $absensiCounts['Alpha'] ?? 0,
         ];
 
-        // Rekap Nilai Siswa Sesuai Mapel di Tingkat Tersebut
+        // Rekap Nilai Siswa Sesuai Mapel dan Semester
         $raporMapel = [];
         foreach ($mapels as $mapel) {
             $kegiatans = Kegiatan::where('mata_pelajaran_id', $mapel->id)
                 ->where('kelas', $siswa->kelas)
+                ->where('semester', $semester)
+                ->where('tahun_ajaran', $tahunAjaran)
                 ->get();
 
             if ($kegiatans->isEmpty()) {
@@ -533,12 +592,12 @@ class NilaiController extends Controller
         $waliKelas = \App\Models\WaliKelas::where('kelas', $siswa->kelas)->with('user')->first();
         $waliUser = $waliKelas ? $waliKelas->user : null;
 
-        $pdf = Pdf::loadView('nilai.pdf_rapor_siswa', compact('siswa', 'raporMapel', 'rekapAbsensi', 'waliUser'))
+        $pdf = Pdf::loadView('nilai.pdf_rapor_siswa', compact('siswa', 'raporMapel', 'rekapAbsensi', 'waliUser', 'semester', 'tahunAjaran'))
             ->setPaper('a4', 'portrait');
 
         $safeNis = $siswa->nis ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $siswa->nis) : $siswa->id;
         $safeNama = preg_replace('/[^A-Za-z0-9_\-]/', '_', $siswa->nama);
 
-        return $pdf->download('Rapor_Siswa_'.$safeNis.'_'.$safeNama.'.pdf');
+        return $pdf->download('Rapor_Siswa_'.$safeNis.'_'.$safeNama.'_Sem_'.$semester.'.pdf');
     }
 }

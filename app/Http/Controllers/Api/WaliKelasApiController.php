@@ -56,8 +56,14 @@ class WaliKelasApiController extends Controller
         }
         $mapels = $mapelQuery->orderBy('nama_mapel')->get();
 
+        $semester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $tahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+
         $siswaIds = $siswas->pluck('id');
-        $kegiatans = Kegiatan::where('kelas', $selectedKelas)->get();
+        $kegiatans = Kegiatan::where('kelas', $selectedKelas)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->get();
         $kegiatanMapelMap = $kegiatans->groupBy('mata_pelajaran_id');
 
         $nilais = Nilai::whereIn('kegiatan_id', $kegiatans->pluck('id'))
@@ -110,6 +116,8 @@ class WaliKelasApiController extends Controller
             'status' => 'success',
             'data' => [
                 'kelas' => $selectedKelas,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
                 'total_siswa' => count($siswas),
                 'rekap_siswa' => $rekapSiswa,
             ]
