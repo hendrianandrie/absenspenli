@@ -169,22 +169,11 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        if ($currentUser && $currentUser->role === 'admin') {
-            $selectedKelas = $request->get('kelas', 'Semua');
-            if ($selectedKelas !== 'Semua') {
-                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
-            }
-        } else {
-            $waliKelas = $currentUser->waliKelas()->with('user')->first();
-            $selectedKelas = $waliKelas ? $waliKelas->kelas : null;
-        }
-
-        if (!$selectedKelas) {
-            return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
-        }
-
-        if (!$waliKelas && $selectedKelas !== 'Semua') {
+        $selectedKelas = $request->get('kelas', 'Semua');
+        if ($selectedKelas !== 'Semua') {
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } elseif ($currentUser && $currentUser->role !== 'admin') {
+            $waliKelas = $currentUser->waliKelas()->with('user')->first();
         }
 
         $tanggalMulai = $request->get('tanggal_mulai');
@@ -258,22 +247,11 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        if ($currentUser && $currentUser->role === 'admin') {
-            $selectedKelas = $request->get('kelas', 'Semua');
-            if ($selectedKelas !== 'Semua') {
-                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
-            }
-        } else {
-            $waliKelas = $currentUser ? $currentUser->waliKelas()->with('user')->first() : null;
-            $selectedKelas = $waliKelas ? $waliKelas->kelas : $request->get('kelas');
-        }
-
-        if (!$selectedKelas) {
-            return redirect()->back()->with('error', 'Kelas belum ditentukan atau Anda bukan Wali Kelas.');
-        }
-
-        if (!$waliKelas && $selectedKelas !== 'Semua') {
+        $selectedKelas = $request->get('kelas', 'Semua');
+        if ($selectedKelas !== 'Semua') {
             $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+        } elseif ($currentUser && $currentUser->role !== 'admin') {
+            $waliKelas = $currentUser->waliKelas()->with('user')->first();
         }
 
         $tanggalMulai = $request->get('tanggal_mulai');

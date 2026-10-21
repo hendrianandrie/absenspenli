@@ -54,37 +54,33 @@
         <div class="card-body p-3 p-md-3.5">
             <form action="{{ route('walikelas.kehadiran') }}" method="GET" id="filterKehadiranForm">
                 <div class="row g-2 align-items-end">
-                    @if(Auth::check() && Auth::user()->role === 'admin')
-                        <div class="col-12 col-md-3">
-                            <label for="selectKelas" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
-                                <i class="fa-solid fa-chalkboard text-primary me-1"></i> Rombel Kelas:
-                            </label>
-                            <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300">
-                                <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
-                                @foreach($daftarKelas as $k)
-                                    <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @else
-                        <input type="hidden" name="kelas" value="{{ $selectedKelas }}">
-                    @endif
+                    <div class="col-12 col-md-3">
+                        <label for="selectKelas" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
+                            <i class="fa-solid fa-chalkboard text-primary me-1"></i> Rombel Kelas:
+                        </label>
+                        <select name="kelas" id="selectKelas" class="form-select form-select-sm rounded-3 border-slate-300">
+                            <option value="Semua" {{ $selectedKelas == 'Semua' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
+                            @foreach($daftarKelas as $k)
+                                <option value="{{ $k }}" {{ $selectedKelas == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <div class="col-6 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }}">
+                    <div class="col-6 col-md-3">
                         <label for="inputTanggalMulai" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
                             <i class="fa-regular fa-calendar-days text-primary me-1"></i> Mulai Tanggal:
                         </label>
                         <input type="date" name="tanggal_mulai" id="inputTanggalMulai" class="form-control form-control-sm rounded-3 border-slate-300" value="{{ $tanggalMulai }}" required>
                     </div>
 
-                    <div class="col-6 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }}">
+                    <div class="col-6 col-md-3">
                         <label for="inputTanggalSelesai" class="form-label small fw-semibold text-slate-700 mb-1" style="font-size: 11.5px;">
                             <i class="fa-regular fa-calendar-check text-primary me-1"></i> Sampai Tanggal:
                         </label>
                         <input type="date" name="tanggal_selesai" id="inputTanggalSelesai" class="form-control form-control-sm rounded-3 border-slate-300" value="{{ $tanggalSelesai }}" required>
                     </div>
 
-                    <div class="col-12 {{ (Auth::check() && Auth::user()->role === 'admin') ? 'col-md-3' : 'col-md-4' }} d-flex align-items-center gap-2">
+                    <div class="col-12 col-md-3 d-flex align-items-center gap-2">
                         <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3.5 py-1.5 shadow-xs fw-semibold w-100" style="font-size: 12px;">
                             <i class="fa-solid fa-filter me-1"></i> Tampilkan Rekap
                         </button>
