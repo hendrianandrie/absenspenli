@@ -451,6 +451,12 @@
                             <span>Absensi Cepat</span>
                         </a>
                     </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
+                            <i class="fa-solid fa-calendar-days" style="color: #38bdf8;"></i>
+                            <span>Rekap Bulanan</span>
+                        </a>
+                    </div>
 
                 @elseif(Auth::check() && in_array(Auth::user()->role, ['guru', 'walikelas']))
                     <!-- MENU GURU MAPEL & WALI KELAS -->
@@ -498,7 +504,7 @@
                             </a>
                         </div>
                         <div class="mosaic-nav-item">
-                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
+                            <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran') }}">
                                 <i class="fa-solid fa-calendar-days" style="color: #38bdf8;"></i>
                                 <span>Rekap Bulanan</span>
                             </a>

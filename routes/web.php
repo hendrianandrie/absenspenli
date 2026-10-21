@@ -64,6 +64,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/harian', [AbsensiController::class, 'simpanHarian'])->name('absensi.harian.simpan');
         Route::get('/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
         Route::get('/rekap/pdf', [AbsensiController::class, 'cetakPDF'])->name('absensi.cetakPDF');
+        Route::get('/wali-kelas/kehadiran', [WaliKelasController::class, 'kehadiranKelas'])->name('walikelas.kehadiran');
+        Route::get('/wali-kelas/kehadiran/export-excel', [WaliKelasController::class, 'exportKehadiranExcel'])->name('walikelas.kehadiran.exportExcel');
 
         // Presensi Berbasis Wajah (Face Recognition - Dapat diakses Guru, Admin, dan Piket)
         Route::prefix('face-recognition')->name('face.')->group(function () {
@@ -109,8 +111,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
         Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
         Route::get('/wali-kelas/export-excel', [WaliKelasController::class, 'exportExcel'])->name('walikelas.exportExcel');
-        Route::get('/wali-kelas/kehadiran', [WaliKelasController::class, 'kehadiranKelas'])->name('walikelas.kehadiran');
-        Route::get('/wali-kelas/kehadiran/export-excel', [WaliKelasController::class, 'exportKehadiranExcel'])->name('walikelas.kehadiran.exportExcel');
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {

@@ -169,11 +169,19 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        $selectedKelas = $request->get('kelas', 'Semua');
-        if ($selectedKelas !== 'Semua') {
-            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
-        } elseif ($currentUser && $currentUser->role !== 'admin') {
+        if ($currentUser && in_array($currentUser->role, ['admin', 'piket'])) {
+            $selectedKelas = $request->get('kelas', 'Semua');
+            if ($selectedKelas !== 'Semua') {
+                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+            }
+        } else {
+            // Akun Wali Kelas hanya untuk kelas binaannya saja
             $waliKelas = $currentUser->waliKelas()->with('user')->first();
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : null;
+
+            if (!$selectedKelas) {
+                return redirect()->route('dashboard')->with('error', 'Anda belum ditetapkan sebagai Wali Kelas untuk rombel manapun.');
+            }
         }
 
         $tanggalMulai = $request->get('tanggal_mulai');
@@ -247,11 +255,19 @@ class WaliKelasController extends Controller
         $selectedKelas = null;
         $waliKelas = null;
 
-        $selectedKelas = $request->get('kelas', 'Semua');
-        if ($selectedKelas !== 'Semua') {
-            $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
-        } elseif ($currentUser && $currentUser->role !== 'admin') {
-            $waliKelas = $currentUser->waliKelas()->with('user')->first();
+        if ($currentUser && in_array($currentUser->role, ['admin', 'piket'])) {
+            $selectedKelas = $request->get('kelas', 'Semua');
+            if ($selectedKelas !== 'Semua') {
+                $waliKelas = WaliKelas::where('kelas', $selectedKelas)->with('user')->first();
+            }
+        } else {
+            // Akun Wali Kelas hanya mengekspor kelas binaannya saja
+            $waliKelas = $currentUser ? $currentUser->waliKelas()->with('user')->first() : null;
+            $selectedKelas = $waliKelas ? $waliKelas->kelas : null;
+
+            if (!$selectedKelas) {
+                return redirect()->back()->with('error', 'Kelas belum ditentukan atau Anda bukan Wali Kelas.');
+            }
         }
 
         $tanggalMulai = $request->get('tanggal_mulai');
