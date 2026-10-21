@@ -1,8 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Default base URL: Menggunakan Cloudflare Tunnel HTTPS publik yang aktif & cepat
-export const DEFAULT_BASE_URL = 'https://armstrong-needed-definition-ministries.trycloudflare.com/api/v1';
+// Default base URL: Menggunakan Server Produksi Resmi SMPN 5 Ciamis
+export const DEFAULT_BASE_URL = 'https://smpn5ciamis.sch.id/api/v1';
 
 const apiClient = axios.create({
   baseURL: DEFAULT_BASE_URL,

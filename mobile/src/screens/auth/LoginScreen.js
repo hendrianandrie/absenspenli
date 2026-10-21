@@ -30,8 +30,8 @@ export default function LoginScreen() {
 
   React.useEffect(() => {
     AsyncStorage.getItem('custom_base_url').then((saved) => {
-      // Jika URL tersimpan adalah localtunnel lama yang sudah nonaktif, bersihkan otomatis
-      if (saved && saved.includes('loca.lt')) {
+      // Jika URL tersimpan adalah tunnel dev sementara, otomatis arahkan ke domain resmi
+      if (saved && (saved.includes('loca.lt') || saved.includes('trycloudflare.com'))) {
         AsyncStorage.removeItem('custom_base_url');
         setServerUrl(DEFAULT_BASE_URL);
       } else if (saved) {
