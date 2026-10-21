@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_BASE_URL } from '../../config/api';
+import { DEFAULT_BASE_URL, normalizeBaseUrl } from '../../config/api';
 
 export default function LoginScreen() {
   const { login } = useContext(AuthContext);
@@ -30,8 +30,8 @@ export default function LoginScreen() {
 
   React.useEffect(() => {
     AsyncStorage.getItem('custom_base_url').then((saved) => {
-      // Jika URL tersimpan adalah tunnel dev sementara, otomatis arahkan ke domain resmi
-      if (saved && (saved.includes('loca.lt') || saved.includes('trycloudflare.com'))) {
+      // Bersihkan jika ada setting tunnel lama atau URL yang belum lengkap /api/v1
+      if (saved && (saved.includes('loca.lt') || saved.includes('trycloudflare.com') || !saved.includes('/api/v1'))) {
         AsyncStorage.removeItem('custom_base_url');
         setServerUrl(DEFAULT_BASE_URL);
       } else if (saved) {
@@ -59,8 +59,10 @@ export default function LoginScreen() {
 
   const handleSaveServerUrl = async () => {
     try {
-      await AsyncStorage.setItem('custom_base_url', serverUrl.trim());
-      Alert.alert('Tersimpan', `Alamat server berhasil diubah ke: ${serverUrl}`);
+      const normalized = normalizeBaseUrl(serverUrl);
+      await AsyncStorage.setItem('custom_base_url', normalized);
+      setServerUrl(normalized);
+      Alert.alert('Tersimpan', `Alamat server berhasil disetel ke: ${normalized}`);
       setShowServerSetting(false);
     } catch (e) {
       Alert.alert('Error', 'Gagal menyimpan pengaturan server.');
