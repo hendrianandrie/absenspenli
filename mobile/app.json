@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "id.sch.smpn5ciamis.sikasep",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#0284c7",
         "foregroundImage": "./assets/android-icon-foreground.png",
