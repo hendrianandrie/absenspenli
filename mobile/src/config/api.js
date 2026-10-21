@@ -33,6 +33,9 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
 // Interceptor Response untuk menangani error sesi kedaluwarsa (401)
 apiClient.interceptors.response.use(
   (response) => response,
