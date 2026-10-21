@@ -103,19 +103,23 @@
                         <button type="button" class="btn btn-sm btn-light border text-slate-600 rounded-pill px-2.5 py-0.5" style="font-size: 11px;" onclick="setPresetDate('bulan_lalu')">Bulan Lalu</button>
                     </div>
 
-                    <div class="d-flex align-items-center gap-1.5 ms-auto flex-wrap">
-                        <span class="text-slate-400 small" style="font-size: 11px;">Pilih Per Bulan:</span>
-                        <select id="quickBulanSelect" class="form-select form-select-sm py-0 px-2 rounded-pill border-slate-300" style="font-size: 11px; height: 26px; width: auto;" onchange="setMonthPreset()">
-                            <option value="">-- Bulan --</option>
-                            @foreach($daftarBulan as $num => $namaBulan)
-                                <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>{{ $namaBulan }}</option>
-                            @endforeach
-                        </select>
-                        <select id="quickTahunSelect" class="form-select form-select-sm py-0 px-2 rounded-pill border-slate-300" style="font-size: 11px; height: 26px; width: auto;" onchange="setMonthPreset()">
-                            @foreach($daftarTahun as $t)
-                                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}</option>
-                            @endforeach
-                        </select>
+                    <div class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+                        <span class="text-slate-500 small fw-medium" style="font-size: 11.5px;">Pilih Per Bulan:</span>
+                        <div class="d-inline-flex align-items-center gap-1.5">
+                            <select id="quickBulanSelect" class="form-select form-select-sm rounded-pill border-slate-300 bg-white" 
+                                    style="font-size: 12px; height: 30px; padding-left: 12px; padding-right: 32px; min-width: 125px;" 
+                                    onchange="setMonthPreset()">
+                                <option value="">-- Bulan --</option>
+                                @foreach($daftarBulan as $num => $namaBulan)
+                                    <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                                @endforeach
+                            </select>
+                            <select id="quickTahunSelect" class="form-select form-select-sm rounded-pill border-slate-300 bg-white" 
+                                    style="font-size: 12px; height: 30px; padding-left: 12px; padding-right: 28px; min-width: 82px;" 
+                                    onchange="setMonthPreset()">
+                                <option value="2026" selected>2026</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </form>

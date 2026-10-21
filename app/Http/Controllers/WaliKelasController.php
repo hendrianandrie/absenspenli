@@ -224,7 +224,7 @@ class WaliKelasController extends Controller
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
-        $daftarTahun = range(date('Y') - 2, date('Y') + 1);
+        $daftarTahun = [2026];
 
         // Jika admin, sediakan daftar semua kelas untuk opsi ganti rombel (terurut logis VII, VIII, IX)
         $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
