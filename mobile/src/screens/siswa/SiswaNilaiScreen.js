@@ -30,10 +30,13 @@ export default function SiswaNilaiScreen() {
       }
     } catch (e) {
       console.warn('Gagal memuat rekap nilai:', e);
+      const attemptedUrl = (e.config?.baseURL || '') + (e.config?.url || '');
       if (e.response?.status === 401) {
         setErrorMessage('Sesi login telah kedaluwarsa. Silakan Logout dari tab Profil lalu Login kembali.');
+      } else if (e.response?.status === 404) {
+        setErrorMessage(`Endpoint tidak ditemukan (404) pada:\n${attemptedUrl}`);
       } else {
-        setErrorMessage(e.response?.data?.message || e.message || 'Gagal memuat rekap nilai. Periksa koneksi internet.');
+        setErrorMessage(e.response?.data?.message || e.message || 'Gagal memuat rekap nilai.');
       }
     } finally {
       setLoading(false);

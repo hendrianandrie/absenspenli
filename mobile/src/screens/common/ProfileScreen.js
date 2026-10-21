@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../../context/AuthContext';
 import { DEFAULT_BASE_URL } from '../../config/api';
 
@@ -17,6 +18,24 @@ export default function ProfileScreen() {
           text: 'Keluar',
           style: 'destructive',
           onPress: () => logout(),
+        },
+      ]
+    );
+  };
+
+  const handleResetAndLogout = () => {
+    Alert.alert(
+      'Reset Sesi & Server',
+      'Kembalikan alamat server ke default (smpn5ciamis.sch.id) dan keluar ke halaman login?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Reset & Keluar',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('custom_base_url');
+            await logout();
+          },
         },
       ]
     );
@@ -113,6 +132,12 @@ export default function ProfileScreen() {
         </Text>
         <Text style={styles.versionText}>Versi 1.0.0 (React Native Mobile)</Text>
       </View>
+
+      {/* Reset Server & Logout Button */}
+      <TouchableOpacity style={styles.resetBtn} onPress={handleResetAndLogout} activeOpacity={0.8}>
+        <Ionicons name="refresh-circle-outline" size={20} color="#0284c7" />
+        <Text style={styles.resetBtnText}>Reset Server ke Default & Keluar</Text>
+      </TouchableOpacity>
 
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
@@ -221,6 +246,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontWeight: '500',
   },
+  resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e0f2fe',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  resetBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -230,7 +273,7 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
     paddingVertical: 14,
     borderRadius: 12,
-    marginTop: 8,
+    marginTop: 4,
     gap: 8,
   },
   logoutBtnText: {
