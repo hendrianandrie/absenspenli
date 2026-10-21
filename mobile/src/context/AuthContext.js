@@ -55,9 +55,17 @@ export const AuthProvider = ({ children }) => {
         };
       }
     } catch (error) {
-      const msg =
-        error.response?.data?.message ||
-        'Gagal terhubung ke server. Pastikan HP dan Laptop terhubung ke Wi-Fi yang sama.';
+      console.warn('Login error details:', error.message, error.response?.status, error.response?.data);
+      let msg = error.response?.data?.message;
+      if (!msg) {
+        if (error.response) {
+          msg = `Server merespon error HTTP ${error.response.status}: ${typeof error.response.data === 'string' ? error.response.data.substring(0, 100) : JSON.stringify(error.response.data)}`;
+        } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+          msg = 'Koneksi timeout. Server terlalu lambat merespon.';
+        } else {
+          msg = `Gagal terhubung ke server (${error.message || 'Network Error'}). Silakan periksa Alamat Server di bawah.`;
+        }
+      }
       return { success: false, message: msg };
     }
   };

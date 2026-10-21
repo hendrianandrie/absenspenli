@@ -30,7 +30,11 @@ export default function LoginScreen() {
 
   React.useEffect(() => {
     AsyncStorage.getItem('custom_base_url').then((saved) => {
-      if (saved) {
+      // Jika URL tersimpan adalah localtunnel lama yang sudah nonaktif, bersihkan otomatis
+      if (saved && saved.includes('loca.lt')) {
+        AsyncStorage.removeItem('custom_base_url');
+        setServerUrl(DEFAULT_BASE_URL);
+      } else if (saved) {
         setServerUrl(saved);
       } else {
         setServerUrl(DEFAULT_BASE_URL);
@@ -159,6 +163,14 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
+          {/* Status Server Saat Ini */}
+          <View style={styles.serverInfoBadge}>
+            <View style={styles.serverDot} />
+            <Text style={styles.serverInfoText} numberOfLines={1}>
+              {serverUrl}
+            </Text>
+          </View>
+
           {/* Pengaturan Server Toggle */}
           <TouchableOpacity
             onPress={() => setShowServerSetting(!showServerSetting)}
@@ -166,7 +178,7 @@ export default function LoginScreen() {
           >
             <Ionicons name="settings-outline" size={14} color="#64748b" />
             <Text style={styles.serverToggleText}>
-              {showServerSetting ? 'Tutup Pengaturan Server' : 'Atur Alamat Server (IP/Domain)'}
+              {showServerSetting ? 'Tutup Pengaturan Server' : 'Ubah / Atur Alamat Server'}
             </Text>
           </TouchableOpacity>
 
@@ -328,11 +340,34 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  serverInfoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  serverDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+    marginRight: 6,
+  },
+  serverInfoText: {
+    fontSize: 11,
+    color: '#64748b',
+    flex: 1,
+  },
   serverToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 12,
     gap: 6,
   },
   serverToggleText: {
