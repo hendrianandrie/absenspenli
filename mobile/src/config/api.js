@@ -33,7 +33,15 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+// Interceptor Response untuk menangani error sesi kedaluwarsa (401)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn('Sesi login kedaluwarsa (401). Token lama tidak berlaku di server ini.');
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default apiClient;

@@ -14,18 +14,27 @@ import apiClient from '../../config/api';
 export default function SiswaNilaiScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [dataNilai, setDataNilai] = useState(null);
   const [selectedMapelId, setSelectedMapelId] = useState(null); // null = Semua Mapel
 
   const fetchNilai = async () => {
     try {
       setLoading(true);
+      setErrorMessage(null);
       const response = await apiClient.get('/siswa/rekap-nilai');
       if (response.data && response.data.status === 'success') {
         setDataNilai(response.data.data);
+      } else {
+        setErrorMessage(response.data?.message || 'Gagal memuat rekap nilai.');
       }
     } catch (e) {
       console.warn('Gagal memuat rekap nilai:', e);
+      if (e.response?.status === 401) {
+        setErrorMessage('Sesi login telah kedaluwarsa. Silakan Logout dari tab Profil lalu Login kembali.');
+      } else {
+        setErrorMessage(e.response?.data?.message || e.message || 'Gagal memuat rekap nilai. Periksa koneksi internet.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,6 +94,16 @@ export default function SiswaNilaiScreen() {
           <View style={styles.loadingBox}>
             <ActivityIndicator size="small" color="#0284c7" />
             <Text style={styles.loadingSubtext}>Memuat rekap nilai...</Text>
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+            <Text style={[styles.emptyTitle, { color: '#dc2626' }]}>Gagal Memuat Nilai</Text>
+            <Text style={styles.emptySubtitle}>{errorMessage}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={fetchNilai}>
+              <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.retryBtnText}>Muat Ulang</Text>
+            </TouchableOpacity>
           </View>
         ) : filteredRekap.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -369,6 +388,20 @@ const styles = StyleSheet.create({
   },
   pillStatusText: {
     fontSize: 9.5,
+    fontWeight: '700',
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0284c7',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 14,
+  },
+  retryBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

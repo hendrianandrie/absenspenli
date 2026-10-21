@@ -24,17 +24,26 @@ export default function SiswaAbsenScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [absenData, setAbsenData] = useState(null);
 
   const fetchAbsensi = async (bulan, tahun) => {
     try {
       setLoading(true);
+      setErrorMessage(null);
       const response = await apiClient.get(`/siswa/rekap-absen?bulan=${bulan}&tahun=${tahun}`);
       if (response.data && response.data.status === 'success') {
         setAbsenData(response.data.data);
+      } else {
+        setErrorMessage(response.data?.message || 'Gagal memuat rekap absensi.');
       }
     } catch (e) {
       console.warn('Gagal memuat rekap absensi:', e);
+      if (e.response?.status === 401) {
+        setErrorMessage('Sesi login telah kedaluwarsa. Silakan Logout dari tab Profil lalu Login kembali.');
+      } else {
+        setErrorMessage(e.response?.data?.message || e.message || 'Gagal memuat rekap absensi.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -142,6 +151,16 @@ export default function SiswaAbsenScreen() {
           <View style={styles.loadingBox}>
             <ActivityIndicator size="small" color="#0284c7" />
             <Text style={styles.loadingSubtext}>Memuat riwayat...</Text>
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+            <Text style={[styles.emptyTitle, { color: '#dc2626' }]}>Gagal Memuat Absensi</Text>
+            <Text style={styles.emptySubtitle}>{errorMessage}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => fetchAbsensi(selectedMonth, selectedYear)}>
+              <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.retryBtnText}>Muat Ulang</Text>
+            </TouchableOpacity>
           </View>
         ) : riwayat.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -338,6 +357,20 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     fontSize: 11,
+    fontWeight: '700',
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0284c7',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 14,
+  },
+  retryBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

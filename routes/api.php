@@ -33,7 +33,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::prefix('siswa')->group(function () {
         Route::get('/dashboard', [SiswaApiController::class, 'dashboard']);
         Route::get('/rekap-absen', [SiswaApiController::class, 'rekapAbsen']);
+        Route::get('/absen', [SiswaApiController::class, 'rekapAbsen']);
         Route::get('/rekap-nilai', [SiswaApiController::class, 'rekapNilai']);
+        Route::get('/nilai', [SiswaApiController::class, 'rekapNilai']);
     });
 
     // ------------------------------------------
