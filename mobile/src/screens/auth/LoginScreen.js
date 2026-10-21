@@ -28,6 +28,16 @@ export default function LoginScreen() {
   const [showServerSetting, setShowServerSetting] = useState(false);
   const [serverUrl, setServerUrl] = useState(DEFAULT_BASE_URL);
 
+  React.useEffect(() => {
+    AsyncStorage.getItem('custom_base_url').then((saved) => {
+      if (saved) {
+        setServerUrl(saved);
+      } else {
+        setServerUrl(DEFAULT_BASE_URL);
+      }
+    });
+  }, []);
+
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       Alert.alert('Perhatian', 'Silakan masukkan Username / NIS dan Password Anda.');
@@ -50,6 +60,17 @@ export default function LoginScreen() {
       setShowServerSetting(false);
     } catch (e) {
       Alert.alert('Error', 'Gagal menyimpan pengaturan server.');
+    }
+  };
+
+  const handleResetServerUrl = async () => {
+    try {
+      await AsyncStorage.removeItem('custom_base_url');
+      setServerUrl(DEFAULT_BASE_URL);
+      Alert.alert('Reset Berhasil', `Alamat server dikembalikan ke default: ${DEFAULT_BASE_URL}`);
+      setShowServerSetting(false);
+    } catch (e) {
+      Alert.alert('Error', 'Gagal mereset server.');
     }
   };
 
@@ -159,9 +180,14 @@ export default function LoginScreen() {
                 placeholder="http://192.168.x.x:8000/api/v1"
                 autoCapitalize="none"
               />
-              <TouchableOpacity style={styles.saveServerBtn} onPress={handleSaveServerUrl}>
-                <Text style={styles.saveServerBtnText}>Simpan Server</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1 }]} onPress={handleSaveServerUrl}>
+                  <Text style={styles.saveServerBtnText}>Simpan Server</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1, backgroundColor: '#64748b' }]} onPress={handleResetServerUrl}>
+                  <Text style={styles.saveServerBtnText}>Reset ke Default</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>

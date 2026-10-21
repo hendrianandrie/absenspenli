@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Default base URL: Menggunakan IP LAN komputer untuk uji coba di HP fisik
 // Bisa juga diarahkan ke domain hosting jika server online sudah aktif
-export const DEFAULT_BASE_URL = 'http://192.168.100.29:8000/api/v1';
+export const DEFAULT_BASE_URL = 'http://192.168.100.149:8000/api/v1';
 
 const apiClient = axios.create({
   baseURL: DEFAULT_BASE_URL,
