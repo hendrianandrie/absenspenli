@@ -227,11 +227,13 @@ const styles = StyleSheet.create({
     height: 58,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 16,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: 12,
     flex: 1,
   },
@@ -258,12 +260,14 @@ const styles = StyleSheet.create({
   titleTextCol: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   brandTitleText: {
     color: '#ffffff',
     fontWeight: '800',
     fontSize: 16.5,
     letterSpacing: 0.8,
+    textAlign: 'left',
     includeFontPadding: false,
   },
   brandSubtitleText: {
@@ -272,11 +276,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
     marginTop: 2,
+    textAlign: 'left',
     includeFontPadding: false,
   },
   pageTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: 12,
     flex: 1,
   },
@@ -295,6 +301,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
     letterSpacing: 0.2,
+    textAlign: 'left',
     includeFontPadding: false,
   },
   pageSubtitleText: {
@@ -303,6 +310,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
     marginTop: 2,
+    textAlign: 'left',
     includeFontPadding: false,
   },
 });
