@@ -98,6 +98,12 @@ export default function SiswaTabNavigator() {
         options={{
           title: 'Profil',
           headerTitle: 'Profil Pengguna',
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: '#0284c7',
+            elevation: 0,
+            shadowOpacity: 0,
+          },
         }}
       />
     </Tab.Navigator>
