@@ -54,16 +54,22 @@ class AuthController extends Controller
             }
         }
 
-        // 3. Fallback Auto-Provisioning & Pencarian Siswa via NIS / NISN
+        // 3. Fallback Auto-Provisioning & Pencarian Siswa via NIS
         $cleanInput = ltrim($loginInput, '0');
-        $siswa = Siswa::where('nis', $loginInput)
-            ->orWhere('nisn', $loginInput)
-            ->orWhere('nis', 'like', '%' . $cleanInput)
-            ->first();
+        $hasNisnCol = Schema::hasColumn('siswas', 'nisn');
+
+        $siswaQuery = Siswa::where('nis', $loginInput);
+        if ($hasNisnCol) {
+            $siswaQuery->orWhere('nisn', $loginInput);
+        }
+        if ($cleanInput !== '') {
+            $siswaQuery->orWhere('nis', 'like', '%' . $cleanInput);
+        }
+        $siswa = $siswaQuery->first();
 
         if ($siswa) {
             $isPassMatch = ($password === (string) $siswa->nis) ||
-                           (!empty($siswa->nisn) && $password === (string) $siswa->nisn) ||
+                           ($hasNisnCol && !empty($siswa->nisn) && $password === (string) $siswa->nisn) ||
                            ($cleanInput !== '' && $password === $cleanInput) ||
                            in_array($password, ['123456', 'password']);
 
