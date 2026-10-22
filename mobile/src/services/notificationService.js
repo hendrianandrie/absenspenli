@@ -22,29 +22,27 @@ export async function registerForPushNotificationsAsync() {
 
   try {
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'Notifikasi SMPN 5 Ciamis',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#0284c7',
-        sound: 'default',
-      });
+      try {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'Notifikasi SMPN 5 Ciamis',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#0284c7',
+          sound: 'default',
+        });
+      } catch (channelErr) {
+        console.warn('NotificationChannel skipped in Expo Go:', channelErr.message);
+      }
     }
 
     // Periksa izin notifikasi
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      return {
-        success: false,
-        message: 'Izin notifikasi belum diaktifkan di HP Anda. Silakan izinkan notifikasi pada pengaturan HP.',
-      };
+    try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      if (existingStatus !== 'granted') {
+        await Notifications.requestPermissionsAsync();
+      }
+    } catch (permErr) {
+      console.warn('Permissions check skipped in Expo Go:', permErr.message);
     }
 
     const projectId =
