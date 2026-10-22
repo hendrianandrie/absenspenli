@@ -43,8 +43,20 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Default mirror selfie */
+            transform: scaleX(-1);
             z-index: 1;
+            opacity: 1;
+        }
+
+        #cameraCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            z-index: 2;
         }
 
         #scannerCanvas {
@@ -54,7 +66,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 2;
+            z-index: 3;
         }
 
         /* Laser Scan Beam */
@@ -68,7 +80,7 @@
             box-shadow: 0 0 16px #38bdf8;
             animation: laserScan 2.2s infinite linear;
             pointer-events: none;
-            z-index: 3;
+            z-index: 4;
         }
 
         @keyframes laserScan {
@@ -89,7 +101,7 @@
             border: 2.5px dashed rgba(255, 255, 255, 0.45);
             border-radius: 50% 50% 48% 48% / 60% 60% 40% 40%;
             pointer-events: none;
-            z-index: 4;
+            z-index: 5;
             transition: all 0.25s ease;
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.38);
         }
@@ -148,92 +160,66 @@
             background: rgba(255, 255, 255, 0.25);
         }
 
-        /* Non-blocking Floating AI Status Badge */
-        .ai-status-badge {
+        /* Live Diagnostics Bar */
+        .diagnostics-bar {
             position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9);
+            top: 56px;
+            left: 14px;
+            right: 14px;
+            background: rgba(15, 23, 42, 0.92);
             border: 1px solid rgba(56, 189, 248, 0.35);
-            border-radius: 18px;
-            padding: 6px 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 11;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 7px 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-size: 11px;
+            color: #bae6fd;
+            z-index: 12;
+            line-height: 1.35;
             backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
         }
 
-        .ai-status-badge.hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -15px);
+        .diag-title {
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .badge-spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(56, 189, 248, 0.25);
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .badge-text {
-            font-size: 11.5px;
-            font-weight: 600;
-            color: #e0f2fe;
+        .diag-desc {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 2px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Camera Error Overlay Card */
-        .camera-error-card {
+        /* Center Tap-to-Start Button (User gesture fallback) */
+        .tap-start-btn {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.96);
-            border: 1.5px solid #ef4444;
-            border-radius: 20px;
-            padding: 22px;
-            width: 86%;
-            max-width: 320px;
-            text-align: center;
-            z-index: 25;
-            display: none;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-        }
-
-        .camera-error-card h4 {
-            font-size: 15px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
-
-        .camera-error-card p {
-            font-size: 12px;
-            color: #94a3b8;
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-
-        .retry-cam-btn {
             background: #0284c7;
-            border: none;
             color: #ffffff;
-            padding: 10px 18px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
+            border: 2px solid #ffffff;
+            border-radius: 24px;
+            padding: 12px 22px;
+            font-weight: 800;
+            font-size: 13.5px;
+            z-index: 20;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
             cursor: pointer;
+            display: none;
+            text-align: center;
+        }
+
+        .tap-start-btn:active {
+            background: #0369a1;
+            transform: translate(-50%, -50%) scale(0.97);
         }
 
         /* Matched Student Hero Popup */
@@ -382,7 +368,11 @@
 
     <!-- Camera Viewport -->
     <main class="camera-viewport" id="viewport">
+        <!-- Video Source Element -->
         <video id="scannerVideo" autoplay playsinline webkit-playsinline muted></video>
+        <!-- 2D Canvas Fallback Renderer (Ensures video frames render even on buggy Android WebView GPU layers) -->
+        <canvas id="cameraCanvas"></canvas>
+        <!-- Detection Canvas for Face Landmarks & Highlights -->
         <canvas id="scannerCanvas"></canvas>
 
         <div class="scan-laser"></div>
@@ -402,19 +392,19 @@
             </button>
         </div>
 
-        <!-- Floating AI Status Badge (Non-blocking) -->
-        <div class="ai-status-badge" id="aiStatusBadge">
-            <div class="badge-spinner" id="badgeSpinner"></div>
-            <div class="badge-text" id="badgeText">Memuat AI Biometrik...</div>
+        <!-- Diagnostics Status Bar -->
+        <div class="diagnostics-bar" id="diagBar">
+            <div class="diag-title">
+                <span id="diagTitle">Menyiapkan Kamera...</span>
+                <span id="diagFps" style="font-size: 9.5px; opacity: 0.8;"></span>
+            </div>
+            <div class="diag-desc" id="diagDesc">Memeriksa izin & perangkat kamera...</div>
         </div>
 
-        <!-- Camera Error Overlay Card -->
-        <div class="camera-error-card" id="cameraErrorCard">
-            <div style="font-size: 32px; margin-bottom: 8px;">📷</div>
-            <h4 id="errorTitle">Kamera Belum Aktif</h4>
-            <p id="errorDesc">Sentuh tombol di bawah untuk mengizinkan dan menghubungkan kamera.</p>
-            <button type="button" class="retry-cam-btn" id="retryCamBtn">Hubungkan Kamera</button>
-        </div>
+        <!-- User Gesture Tap-to-Start Button -->
+        <button class="tap-start-btn" id="tapStartBtn">
+            📸 Ketuk untuk Buka Kamera
+        </button>
 
         <!-- Match Popup -->
         <div class="match-popup" id="matchPopup">
@@ -455,7 +445,6 @@
         const MODEL_URL = '{{ asset("models/face") }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
 
-        // Ambil token dari query param URL jika dibuka via React Native WebView
         const urlParams = new URLSearchParams(window.location.search);
         const authToken = urlParams.get('token') || '';
         const tokenQuery = authToken ? ('?token=' + encodeURIComponent(authToken)) : '';
@@ -465,18 +454,16 @@
 
         const viewport = document.getElementById('viewport');
         const video = document.getElementById('scannerVideo');
-        const canvas = document.getElementById('scannerCanvas');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const scannerCanvas = document.getElementById('scannerCanvas');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const faceGuide = document.getElementById('faceGuide');
         const guideText = document.getElementById('guideText');
-        const aiStatusBadge = document.getElementById('aiStatusBadge');
-        const badgeSpinner = document.getElementById('badgeSpinner');
-        const badgeText = document.getElementById('badgeText');
-        const cameraErrorCard = document.getElementById('cameraErrorCard');
-        const errorTitle = document.getElementById('errorTitle');
-        const errorDesc = document.getElementById('errorDesc');
-        const retryCamBtn = document.getElementById('retryCamBtn');
+        const diagTitle = document.getElementById('diagTitle');
+        const diagDesc = document.getElementById('diagDesc');
+        const diagFps = document.getElementById('diagFps');
+        const tapStartBtn = document.getElementById('tapStartBtn');
         const matchPopup = document.getElementById('matchPopup');
         const matchAvatar = document.getElementById('matchAvatar');
         const matchInitial = document.getElementById('matchInitial');
@@ -497,12 +484,20 @@
         let faceMatcher = null;
         let enrolledStudentsMap = {};
         let currentStream = null;
-        let lastScanned = {}; // Cooldown map
+        let lastScanned = {};
         let popupTimer = null;
         let hadirCount = {{ $hadirTodayCount }};
-        const currentThreshold = 0.44; // Ambang batas ketat & presisi
+        const currentThreshold = 0.44;
 
-        // 1. WebAudio Chime
+        function updateDiag(title, desc, color) {
+            if (diagTitle) {
+                diagTitle.innerText = title;
+                if (color) diagTitle.style.color = color;
+            }
+            if (diagDesc) diagDesc.innerText = desc;
+        }
+
+        // WebAudio Chime
         function playSuccessChime() {
             if (!isAudioEnabled) return;
             try {
@@ -532,13 +527,13 @@
                 osc2.start(ctx.currentTime + 0.1);
                 osc2.stop(ctx.currentTime + 0.45);
             } catch (e) {
-                console.warn('Audio play error:', e);
+                console.warn('Audio error:', e);
             }
         }
 
-        // 2. Start Camera (LANGSUNG DIAKTIFKAN DI AWAL AGAR TIDAK BLANK HITAM)
+        // 2. Start Camera dengan fallback bertingkat
         async function startCamera() {
-            cameraErrorCard.style.display = 'none';
+            updateDiag('Meminta Izin Kamera...', 'Menghubungkan ke sensor kamera...', '#f59e0b');
             statusText.innerText = 'Buka Kamera...';
 
             if (currentStream) {
@@ -548,7 +543,6 @@
                 currentStream = null;
             }
 
-            // Atribut wajib untuk Android WebView / iOS inline video
             video.setAttribute('autoplay', '');
             video.setAttribute('muted', '');
             video.setAttribute('playsinline', '');
@@ -559,50 +553,50 @@
 
             let stream = null;
 
-            // Percobaan 1: Resolusi ideal HD
-            const constraints1 = {
-                video: {
-                    facingMode: isFrontCamera ? 'user' : 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                },
-                audio: false
-            };
-
-            // Percobaan 2: FacingMode dasar
-            const constraints2 = {
+            // Percobaan 1: facingMode dasar (paling kompatibel di Android WebView)
+            const c1 = {
                 video: {
                     facingMode: isFrontCamera ? 'user' : 'environment'
                 },
                 audio: false
             };
 
-            // Percobaan 3: Kamera paling dasar (fallback)
-            const constraints3 = {
-                video: true,
+            // Percobaan 2: generic video: true
+            const c2 = { video: true, audio: false };
+
+            // Percobaan 3: ideal 640x480
+            const c3 = {
+                video: {
+                    facingMode: isFrontCamera ? 'user' : 'environment',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
                 audio: false
             };
 
             try {
-                stream = await navigator.mediaDevices.getUserMedia(constraints1);
-            } catch (err1) {
-                console.warn('Constraints 1 failed, trying constraints 2...', err1);
+                stream = await navigator.mediaDevices.getUserMedia(c1);
+            } catch (e1) {
+                console.warn('c1 failed:', e1);
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia(constraints2);
-                } catch (err2) {
-                    console.warn('Constraints 2 failed, trying constraints 3...', err2);
+                    stream = await navigator.mediaDevices.getUserMedia(c2);
+                } catch (e2) {
+                    console.warn('c2 failed:', e2);
                     try {
-                        stream = await navigator.mediaDevices.getUserMedia(constraints3);
-                    } catch (err3) {
-                        console.error('Semua constraints gagal:', err3);
-                        showCameraError(err3);
+                        stream = await navigator.mediaDevices.getUserMedia(c3);
+                    } catch (e3) {
+                        console.error('All constraints failed:', e3);
+                        updateDiag('Kamera Gagal Dibuka', e3.name + ': ' + e3.message, '#ef4444');
+                        statusText.innerText = 'Kamera Gagal';
+                        tapStartBtn.style.display = 'block';
                         return;
                     }
                 }
             }
 
             if (!stream) {
-                showCameraError(new Error('Kamera tidak menghasilkan feed video'));
+                updateDiag('Kamera Tidak Ditemukan', 'Tidak ada aliran video dari sensor.', '#ef4444');
+                tapStartBtn.style.display = 'block';
                 return;
             }
 
@@ -610,24 +604,31 @@
             video.srcObject = stream;
             video.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none';
 
-            // Panggil play() langsung tanpa menunggu onloadedmetadata agar tidak deadlock di WebView
+            const track = stream.getVideoTracks()[0];
+            const trackInfo = track ? (track.label || 'Kamera Aktif') : 'Kamera Aktif';
+            updateDiag('Kamera Terhubung', trackInfo + ' • Memulai pemutaran...', '#38bdf8');
+
             try {
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
                     await playPromise;
                 }
-            } catch (playErr) {
-                console.warn('Direct video.play() warning:', playErr);
+            } catch (pErr) {
+                console.warn('Initial play promise rejected:', pErr);
+                tapStartBtn.style.display = 'block';
             }
 
             video.onloadedmetadata = () => {
                 video.play().catch(e => console.warn(e));
+                tapStartBtn.style.display = 'none';
                 updateCanvasDimensions();
                 checkAndStartDetection();
             };
 
             video.onplaying = () => {
+                tapStartBtn.style.display = 'none';
                 updateCanvasDimensions();
+                updateDiag('Kamera Aktif (' + video.videoWidth + 'x' + video.videoHeight + ')', isModelsReady ? 'AI siap memindai wajah' : 'Sedang memuat model AI...', '#10b981');
                 if (isModelsReady) {
                     statusDot.classList.add('ready');
                     statusText.innerText = 'Kamera Siap';
@@ -637,68 +638,87 @@
             };
         }
 
-        function showCameraError(err) {
-            cameraErrorCard.style.display = 'block';
-            errorTitle.innerText = 'Akses Kamera Terkendala';
-            errorDesc.innerText = 'Silakan izinkan kamera pada aplikasi SI-KASEP (' + (err.message || err.name) + ')';
-            statusText.innerText = 'Kamera Gagal';
-            statusDot.classList.remove('ready');
-        }
-
         function updateCanvasDimensions() {
             if (!video.videoWidth || !video.videoHeight) return;
-            canvas.width = video.clientWidth || 360;
-            canvas.height = video.clientHeight || 480;
-            faceapi.matchDimensions(canvas, {
-                width: video.clientWidth || 360,
-                height: video.clientHeight || 480
-            });
+            const w = viewport.clientWidth || 360;
+            const h = viewport.clientHeight || 640;
+
+            cameraCanvas.width = video.videoWidth;
+            cameraCanvas.height = video.videoHeight;
+            scannerCanvas.width = w;
+            scannerCanvas.height = h;
+
+            faceapi.matchDimensions(scannerCanvas, { width: w, height: h });
         }
 
-        // Tap di viewport untuk memicu play jika terpause oleh OS
+        // 3. Fallback Canvas Rendering Pipeline (Loop 60FPS yang menjamin feed tampil di Android)
+        function startCanvasRenderLoop() {
+            const ctx = cameraCanvas.getContext('2d');
+            function drawFrame() {
+                if (video && !video.paused && video.videoWidth > 0) {
+                    if (cameraCanvas.width !== video.videoWidth) {
+                        cameraCanvas.width = video.videoWidth;
+                        cameraCanvas.height = video.videoHeight;
+                    }
+                    if (isFrontCamera) {
+                        ctx.save();
+                        ctx.translate(cameraCanvas.width, 0);
+                        ctx.scale(-1, 1);
+                        ctx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                        ctx.restore();
+                    } else {
+                        ctx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                    }
+                    tapStartBtn.style.display = 'none';
+                }
+                requestAnimationFrame(drawFrame);
+            }
+            requestAnimationFrame(drawFrame);
+        }
+
+        // User Gesture handlers (mengatasi pembatasan autoplay / policy gesture MIUI)
+        tapStartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tapStartBtn.style.display = 'none';
+            startCamera();
+        });
+
         viewport.addEventListener('click', () => {
             if (video && video.paused && video.srcObject) {
                 video.play().catch(e => console.warn(e));
             }
         });
+        viewport.addEventListener('touchstart', () => {
+            if (video && video.paused && video.srcObject) {
+                video.play().catch(e => console.warn(e));
+            }
+        }, { passive: true });
 
-        // 3. Load Model Face API & Data Wajah Siswa
+        // 4. Load Models & Enrolled Students
         async function loadModels() {
             try {
-                badgeText.innerText = 'Memuat AI Biometrik...';
-
-                // Hanya model yang tersedia di folder public/models/face (TinyFaceDetector, Landmark68, FaceRecognition)
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
-                badgeText.innerText = 'Sinkronisasi Wajah Siswa...';
                 await loadEnrolledStudents();
 
                 isModelsReady = true;
-                badgeSpinner.style.display = 'none';
-                badgeText.innerText = 'AI Siap!';
-
-                // Sembunyikan badge status AI setelah 2 detik
-                setTimeout(() => {
-                    aiStatusBadge.classList.add('hidden');
-                }, 1800);
 
                 if (video && video.videoWidth > 0) {
                     statusDot.classList.add('ready');
                     statusText.innerText = 'Kamera Siap';
+                    updateDiag('Kamera & AI Siap', 'Posisikan wajah di dalam oval', '#10b981');
                 }
 
                 checkAndStartDetection();
             } catch (err) {
                 console.error('Gagal memuat model:', err);
-                badgeSpinner.style.display = 'none';
-                badgeText.innerText = 'AI Terkendala: ' + (err.message || 'Error');
+                updateDiag('AI Terkendala', err.message || 'Gagal memuat model', '#ef4444');
                 statusText.innerText = 'AI Error';
             }
         }
 
-        // 4. Fetch Enrolled Students
         async function loadEnrolledStudents() {
             try {
                 const res = await fetch(STUDENTS_API_URL, {
@@ -727,7 +747,7 @@
                     faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, currentThreshold);
                 }
             } catch (err) {
-                console.warn('Gagal memuat data siswa terdaftar:', err);
+                console.warn('Gagal memuat data siswa:', err);
             }
         }
 
@@ -758,7 +778,6 @@
                             const siswaId = parseInt(match.label);
                             const now = Date.now();
 
-                            // 5-detik cooldown per siswa agar tidak spam attendance
                             if (!lastScanned[siswaId] || (now - lastScanned[siswaId] > 5000)) {
                                 lastScanned[siswaId] = now;
                                 onStudentMatched(siswaId, match.distance);
@@ -772,7 +791,6 @@
                         faceGuide.classList.remove('matched');
                     }
                 } catch (e) {
-                    // Ignore transient cycle error
                 } finally {
                     isProcessing = false;
                 }
@@ -790,7 +808,6 @@
 
             showHeroPopup(student);
 
-            // Snapshot capture (low-res jpeg base64)
             let imageBase64 = null;
             try {
                 const snapCanvas = document.createElement('canvas');
@@ -830,7 +847,6 @@
             }
         }
 
-        // 7. Show Hero Popup
         function showHeroPopup(student) {
             clearTimeout(popupTimer);
 
@@ -855,13 +871,9 @@
             }, 3500);
         }
 
-        // 8. Event Listeners
+        // 7. Controls
         flipCameraBtn.addEventListener('click', () => {
             isFrontCamera = !isFrontCamera;
-            startCamera();
-        });
-
-        retryCamBtn.addEventListener('click', () => {
             startCamera();
         });
 
@@ -871,10 +883,18 @@
             audioToggleBtn.innerHTML = `<span>${audioIcon.innerText}</span> Suara ${isAudioEnabled ? 'ON' : 'OFF'}`;
         });
 
-        // 9. Boot: Nyalakan kamera & download model secara paralel
+        // 8. Boot
         window.addEventListener('DOMContentLoaded', () => {
             startCamera();
+            startCanvasRenderLoop();
             loadModels();
+
+            // Jika dalam 2 detik videoWidth masih 0, tampilkan tombol sentuh agar memicu gesture
+            setTimeout(() => {
+                if (!video.videoWidth || video.paused) {
+                    tapStartBtn.style.display = 'block';
+                }
+            }, 2000);
         });
     </script>
 </body>
