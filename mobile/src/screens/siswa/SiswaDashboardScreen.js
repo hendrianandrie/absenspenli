@@ -73,6 +73,10 @@ export default function SiswaDashboardScreen({ navigation }) {
     >
       {/* Header Banner Profil Siswa */}
       <View style={styles.profileHeroCard}>
+        {/* Ornamen Lingkaran Transparan */}
+        <View style={styles.heroCircle1} pointerEvents="none" />
+        <View style={styles.heroCircle2} pointerEvents="none" />
+
         <View style={styles.profileRow}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarInitials}>
@@ -96,7 +100,7 @@ export default function SiswaDashboardScreen({ navigation }) {
         {/* Info Wali Kelas */}
         {waliKelas && (
           <View style={styles.waliCard}>
-            <Ionicons name="person-circle-outline" size={16} color="#0369a1" />
+            <Ionicons name="person-circle-outline" size={17} color="#ffffff" />
             <Text style={styles.waliText}>
               Wali Kelas: <Text style={styles.waliName}>{waliKelas.nama}</Text>
             </Text>
@@ -240,33 +244,59 @@ const styles = StyleSheet.create({
   },
   profileHeroCard: {
     backgroundColor: '#0284c7',
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 20,
     marginBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
     shadowColor: '#0284c7',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  heroCircle1: {
+    position: 'absolute',
+    top: -30,
+    right: -20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  heroCircle2: {
+    position: 'absolute',
+    bottom: -30,
+    left: 20,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 1,
   },
   avatarCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#bae6fd',
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ffffff',
+    borderWidth: 2.5,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
   },
   avatarInitials: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: '#0369a1',
+    color: '#0284c7',
   },
   profileInfo: {
     flex: 1,
@@ -282,6 +312,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#ffffff',
     marginTop: 1,
+    letterSpacing: 0.3,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -290,10 +321,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   classBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
   classBadgeText: {
     color: '#ffffff',
@@ -301,22 +334,31 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   nisText: {
-    color: '#bae6fd',
+    color: '#e0f2fe',
     fontSize: 11.5,
+    fontWeight: '600',
   },
   waliCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0f2fe',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 12,
     marginTop: 14,
-    gap: 6,
+    gap: 8,
+    zIndex: 1,
   },
   waliText: {
-    fontSize: 11.5,
-    color: '#0369a1',
+    fontSize: 12,
+    color: '#e0f2fe',
+    fontWeight: '500',
+  },
+  waliName: {
+    fontWeight: '700',
+    color: '#ffffff',
   },
   waliName: {
     fontWeight: '700',

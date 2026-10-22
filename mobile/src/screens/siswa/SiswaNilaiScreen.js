@@ -224,13 +224,10 @@ export default function SiswaNilaiScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f1f5f9',
   },
   chipBar: {
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   chipScroll: {
     paddingHorizontal: 16,
@@ -238,15 +235,25 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   chipActive: {
     backgroundColor: '#0284c7',
     borderColor: '#0284c7',
+    shadowColor: '#0284c7',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   chipText: {
     fontSize: 12,
@@ -255,6 +262,7 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: '#ffffff',
+    fontWeight: '700',
   },
   scrollContent: {
     padding: 16,

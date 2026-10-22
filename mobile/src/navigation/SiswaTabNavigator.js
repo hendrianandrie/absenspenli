@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -21,6 +21,7 @@ export default function SiswaTabNavigator() {
         headerTitleStyle: {
           fontWeight: '700',
           fontSize: 16,
+          color: '#ffffff',
         },
         tabBarActiveTintColor: '#0284c7',
         tabBarInactiveTintColor: '#94a3b8',
@@ -58,19 +59,17 @@ export default function SiswaTabNavigator() {
         options={{
           title: 'Beranda',
           headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Image
-                source={require('../../assets/logo.png')}
-                style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: '#ffffff' }}
-                resizeMode="contain"
-              />
+            <View style={styles.brandTitleRow}>
+              <View style={styles.logoBadge}>
+                <Image
+                  source={require('../../assets/logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
               <View>
-                <Text style={{ color: '#ffffff', fontWeight: '800', fontSize: 15, lineHeight: 17 }}>
-                  SI-KASEP
-                </Text>
-                <Text style={{ color: '#e0f2fe', fontSize: 10, fontWeight: '600' }}>
-                  SMPN 5 CIAMIS
-                </Text>
+                <Text style={styles.brandTitleText}>SI-KASEP</Text>
+                <Text style={styles.brandSubtitleText}>SMP NEGERI 5 CIAMIS</Text>
               </View>
             </View>
           ),
@@ -99,13 +98,49 @@ export default function SiswaTabNavigator() {
           title: 'Profil',
           headerTitle: 'Profil Pengguna',
           headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: '#0284c7',
-            elevation: 0,
-            shadowOpacity: 0,
-          },
         }}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  brandTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 3,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  brandTitleText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 1,
+    lineHeight: 18,
+  },
+  brandSubtitleText: {
+    color: '#bae6fd',
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+});
