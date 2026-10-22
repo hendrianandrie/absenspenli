@@ -14,8 +14,8 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            background-color: #070b13;
+        html, body {
+            background-color: #000000;
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
@@ -32,16 +32,20 @@
             position: relative;
             background: #000000;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
         #scannerVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Default selfie mirror */
+            transform: scaleX(-1); /* Default mirror selfie */
+            background: #000000;
+            z-index: 1;
         }
 
         #scannerCanvas {
@@ -51,7 +55,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
+            z-index: 2;
         }
 
         /* Laser Scan Beam */
@@ -65,7 +69,7 @@
             box-shadow: 0 0 16px #38bdf8;
             animation: laserScan 2.2s infinite linear;
             pointer-events: none;
-            z-index: 6;
+            z-index: 3;
         }
 
         @keyframes laserScan {
@@ -83,17 +87,17 @@
             transform: translate(-50%, -50%);
             width: 230px;
             height: 290px;
-            border: 2.5px dashed rgba(255, 255, 255, 0.4);
+            border: 2.5px dashed rgba(255, 255, 255, 0.45);
             border-radius: 50% 50% 48% 48% / 60% 60% 40% 40%;
             pointer-events: none;
-            z-index: 7;
+            z-index: 4;
             transition: all 0.25s ease;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.38);
         }
 
         .face-guide-frame.matched {
             border: 3.5px solid #10b981;
-            box-shadow: 0 0 25px #10b981, 0 0 0 9999px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 25px #10b981, 0 0 0 9999px rgba(0, 0, 0, 0.45);
         }
 
         .guide-text {
@@ -101,14 +105,14 @@
             bottom: -32px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
+            background: rgba(15, 23, 42, 0.88);
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-size: 11.5px;
             font-weight: 600;
             color: #e0f2fe;
             white-space: nowrap;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         /* Floating Camera Controls */
@@ -120,7 +124,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(15, 23, 42, 0.82);
+            background: rgba(15, 23, 42, 0.85);
             padding: 6px 12px;
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.18);
@@ -132,9 +136,9 @@
             background: rgba(255, 255, 255, 0.12);
             border: none;
             color: #ffffff;
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 16px;
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -143,6 +147,94 @@
         }
         .control-btn:active {
             background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Non-blocking Floating AI Status Badge */
+        .ai-status-badge {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 18px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 11;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .ai-status-badge.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -15px);
+        }
+
+        .badge-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(56, 189, 248, 0.25);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .badge-text {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #e0f2fe;
+            white-space: nowrap;
+        }
+
+        /* Camera Error Overlay Card */
+        .camera-error-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.96);
+            border: 1.5px solid #ef4444;
+            border-radius: 20px;
+            padding: 22px;
+            width: 86%;
+            max-width: 320px;
+            text-align: center;
+            z-index: 25;
+            display: none;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .camera-error-card h4 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .camera-error-card p {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .retry-cam-btn {
+            background: #0284c7;
+            border: none;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         /* Matched Student Hero Popup */
@@ -285,58 +377,13 @@
             background: #10b981;
             box-shadow: 0 0 6px #10b981;
         }
-
-        /* Loading Overlay */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(7, 11, 19, 0.94);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            padding: 24px;
-            text-align: center;
-        }
-
-        .spinner {
-            width: 44px;
-            height: 44px;
-            border: 4px solid rgba(56, 189, 248, 0.2);
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .loading-desc {
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 6px;
-            max-width: 270px;
-            line-height: 1.5;
-        }
     </style>
 </head>
 <body>
 
     <!-- Camera Viewport -->
-    <main class="camera-viewport">
-        <video id="scannerVideo" playsinline autoplay muted></video>
+    <main class="camera-viewport" id="viewport">
+        <video id="scannerVideo" autoplay playsinline webkit-playsinline muted></video>
         <canvas id="scannerCanvas"></canvas>
 
         <div class="scan-laser"></div>
@@ -356,6 +403,20 @@
             </button>
         </div>
 
+        <!-- Floating AI Status Badge (Non-blocking) -->
+        <div class="ai-status-badge" id="aiStatusBadge">
+            <div class="badge-spinner" id="badgeSpinner"></div>
+            <div class="badge-text" id="badgeText">Memuat AI Biometrik...</div>
+        </div>
+
+        <!-- Camera Error Overlay Card -->
+        <div class="camera-error-card" id="cameraErrorCard">
+            <div style="font-size: 32px; margin-bottom: 8px;">📷</div>
+            <h4 id="errorTitle">Kamera Belum Aktif</h4>
+            <p id="errorDesc">Sentuh tombol di bawah untuk mengizinkan dan menghubungkan kamera.</p>
+            <button type="button" class="retry-cam-btn" id="retryCamBtn">Hubungkan Kamera</button>
+        </div>
+
         <!-- Match Popup -->
         <div class="match-popup" id="matchPopup">
             <div class="match-avatar" id="matchAvatar">
@@ -370,13 +431,6 @@
                 <span class="match-time" id="matchTime">--:--</span>
             </div>
         </div>
-
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="spinner"></div>
-            <div class="loading-title" id="loadingTitle">Memuat AI Biometrik...</div>
-            <div class="loading-desc" id="loadingDesc">Sedang mengunduh model TinyFaceDetector dan data wajah siswa SMPN 5 Ciamis...</div>
-        </div>
     </main>
 
     <!-- Bottom Footer Stats -->
@@ -388,7 +442,7 @@
         </div>
         <div class="status-pill">
             <span class="status-dot" id="statusDot"></span>
-            <span id="statusText">Memuat AI...</span>
+            <span id="statusText">Memulai...</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">Terdaftar:</span>
@@ -396,23 +450,34 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Face API Library -->
     <script src="{{ asset('js/face-api.min.js') }}"></script>
     <script>
         const MODEL_URL = '{{ asset("models/face") }}';
         const CSRF_TOKEN = '{{ csrf_token() }}';
-        const STUDENTS_API_URL = '{{ route("face.enrolledStudents") }}';
-        const RECORD_ATTENDANCE_URL = '{{ route("face.recordAttendance") }}';
 
+        // Ambil token dari query param URL jika dibuka via React Native WebView
+        const urlParams = new URLSearchParams(window.location.search);
+        const authToken = urlParams.get('token') || '';
+        const tokenQuery = authToken ? ('?token=' + encodeURIComponent(authToken)) : '';
+
+        const STUDENTS_API_URL = '{{ route("face.mobile.enrolledStudents") }}' + tokenQuery;
+        const RECORD_ATTENDANCE_URL = '{{ route("face.mobile.recordAttendance") }}' + tokenQuery;
+
+        const viewport = document.getElementById('viewport');
         const video = document.getElementById('scannerVideo');
         const canvas = document.getElementById('scannerCanvas');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const faceGuide = document.getElementById('faceGuide');
         const guideText = document.getElementById('guideText');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingTitle = document.getElementById('loadingTitle');
-        const loadingDesc = document.getElementById('loadingDesc');
+        const aiStatusBadge = document.getElementById('aiStatusBadge');
+        const badgeSpinner = document.getElementById('badgeSpinner');
+        const badgeText = document.getElementById('badgeText');
+        const cameraErrorCard = document.getElementById('cameraErrorCard');
+        const errorTitle = document.getElementById('errorTitle');
+        const errorDesc = document.getElementById('errorDesc');
+        const retryCamBtn = document.getElementById('retryCamBtn');
         const matchPopup = document.getElementById('matchPopup');
         const matchAvatar = document.getElementById('matchAvatar');
         const matchInitial = document.getElementById('matchInitial');
@@ -420,6 +485,7 @@
         const matchMeta = document.getElementById('matchMeta');
         const matchTime = document.getElementById('matchTime');
         const hadirCountEl = document.getElementById('hadirCount');
+        const enrolledCountEl = document.getElementById('enrolledCount');
         const flipCameraBtn = document.getElementById('flipCameraBtn');
         const audioToggleBtn = document.getElementById('audioToggleBtn');
         const audioIcon = document.getElementById('audioIcon');
@@ -427,22 +493,24 @@
         let isFrontCamera = true;
         let isAudioEnabled = true;
         let isProcessing = false;
+        let isModelsReady = false;
+        let isDetectionLoopRunning = false;
         let faceMatcher = null;
         let enrolledStudentsMap = {};
         let currentStream = null;
         let lastScanned = {}; // Cooldown map
         let popupTimer = null;
         let hadirCount = {{ $hadirTodayCount }};
-        const currentThreshold = 0.44; // Ambang batas ketat & akurat
+        const currentThreshold = 0.44; // Ambang batas ketat & presisi
 
-        // WebAudio Chime
+        // 1. WebAudio Chime
         function playSuccessChime() {
             if (!isAudioEnabled) return;
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtx) return;
                 const ctx = new AudioCtx();
-                
+
                 const osc1 = ctx.createOscillator();
                 const gain1 = ctx.createGain();
                 osc1.type = 'sine';
@@ -469,102 +537,211 @@
             }
         }
 
-        // Load Face API Models menggunakan TinyFaceDetector (sesuai file yang ada di public/models/face)
-        async function loadModels() {
-            try {
-                loadingTitle.innerText = 'Mengunduh Neural Network AI...';
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-
-                loadingTitle.innerText = 'Mengunduh Data Wajah Siswa...';
-                await loadEnrolledStudents();
-
-                loadingOverlay.style.display = 'none';
-                statusDot.classList.add('ready');
-                statusText.innerText = 'Kamera Siap';
-
-                startCamera();
-            } catch (err) {
-                console.error('Gagal memuat model:', err);
-                loadingTitle.innerText = 'Koneksi Bermasalah';
-                loadingDesc.innerText = 'Gagal mengunduh data pengenalan wajah: ' + err.message;
-            }
-        }
-
-        // Fetch Enrolled Students
-        async function loadEnrolledStudents() {
-            const res = await fetch(STUDENTS_API_URL, {
-                headers: { 'Accept': 'application/json' }
-            });
-            const data = await res.json();
-
-            if (!data.success || !data.students || data.students.length === 0) {
-                statusText.innerText = '0 Terdaftar';
-                return;
-            }
-
-            const labeledDescriptors = [];
-            data.students.forEach(s => {
-                if (s.descriptor && Array.isArray(s.descriptor) && s.descriptor.length === 128) {
-                    enrolledStudentsMap[s.id] = s;
-                    const descriptorArray = new Float32Array(s.descriptor);
-                    labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(s.id), [descriptorArray]));
-                }
-            });
-
-            if (labeledDescriptors.length > 0) {
-                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, currentThreshold);
-            }
-        }
-
-        // Start Camera
+        // 2. Start Camera (LANGSUNG DIAKTIFKAN DI AWAL AGAR TIDAK BLANK HITAM)
         async function startCamera() {
+            cameraErrorCard.style.display = 'none';
+            statusText.innerText = 'Buka Kamera...';
+
             if (currentStream) {
-                currentStream.getTracks().forEach(t => t.stop());
+                try {
+                    currentStream.getTracks().forEach(t => t.stop());
+                } catch (e) {}
+                currentStream = null;
             }
 
-            const constraints = {
+            // Atribut wajib untuk Android WebView / iOS inline video
+            video.setAttribute('autoplay', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.muted = true;
+            video.defaultMuted = true;
+            video.playsInline = true;
+
+            let stream = null;
+
+            // Percobaan 1: Resolusi ideal HD
+            const constraints1 = {
                 video: {
                     facingMode: isFrontCamera ? 'user' : 'environment',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 },
                 audio: false
             };
 
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                currentStream = stream;
-                video.srcObject = stream;
-                video.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none';
+            // Percobaan 2: FacingMode dasar
+            const constraints2 = {
+                video: {
+                    facingMode: isFrontCamera ? 'user' : 'environment'
+                },
+                audio: false
+            };
 
-                video.onloadedmetadata = () => {
-                    video.play();
-                    startDetectionLoop();
-                };
-            } catch (err) {
-                console.warn('Fallback basic camera constraints...', err);
+            // Percobaan 3: Kamera paling dasar (fallback)
+            const constraints3 = {
+                video: true,
+                audio: false
+            };
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints1);
+            } catch (err1) {
+                console.warn('Constraints 1 failed, trying constraints 2...', err1);
                 try {
-                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                    currentStream = fallbackStream;
-                    video.srcObject = fallbackStream;
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        startDetectionLoop();
-                    };
+                    stream = await navigator.mediaDevices.getUserMedia(constraints2);
                 } catch (err2) {
-                    alert('Izin kamera ditolak atau kamera tidak ditemukan: ' + err2.message);
+                    console.warn('Constraints 2 failed, trying constraints 3...', err2);
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia(constraints3);
+                    } catch (err3) {
+                        console.error('Semua constraints gagal:', err3);
+                        showCameraError(err3);
+                        return;
+                    }
                 }
+            }
+
+            if (!stream) {
+                showCameraError(new Error('Kamera tidak menghasilkan feed video'));
+                return;
+            }
+
+            currentStream = stream;
+            video.srcObject = stream;
+            video.style.transform = isFrontCamera ? 'scaleX(-1)' : 'none';
+
+            // Panggil play() langsung tanpa menunggu onloadedmetadata agar tidak deadlock di WebView
+            try {
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    await playPromise;
+                }
+            } catch (playErr) {
+                console.warn('Direct video.play() warning:', playErr);
+            }
+
+            video.onloadedmetadata = () => {
+                video.play().catch(e => console.warn(e));
+                updateCanvasDimensions();
+                checkAndStartDetection();
+            };
+
+            video.onplaying = () => {
+                updateCanvasDimensions();
+                if (isModelsReady) {
+                    statusDot.classList.add('ready');
+                    statusText.innerText = 'Kamera Siap';
+                } else {
+                    statusText.innerText = 'Kamera Aktif';
+                }
+            };
+        }
+
+        function showCameraError(err) {
+            cameraErrorCard.style.display = 'block';
+            errorTitle.innerText = 'Akses Kamera Terkendala';
+            errorDesc.innerText = 'Silakan izinkan kamera pada aplikasi SI-KASEP (' + (err.message || err.name) + ')';
+            statusText.innerText = 'Kamera Gagal';
+            statusDot.classList.remove('ready');
+        }
+
+        function updateCanvasDimensions() {
+            if (!video.videoWidth || !video.videoHeight) return;
+            canvas.width = video.clientWidth || 360;
+            canvas.height = video.clientHeight || 480;
+            faceapi.matchDimensions(canvas, {
+                width: video.clientWidth || 360,
+                height: video.clientHeight || 480
+            });
+        }
+
+        // Tap di viewport untuk memicu play jika terpause oleh OS
+        viewport.addEventListener('click', () => {
+            if (video && video.paused && video.srcObject) {
+                video.play().catch(e => console.warn(e));
+            }
+        });
+
+        // 3. Load Model Face API & Data Wajah Siswa
+        async function loadModels() {
+            try {
+                badgeText.innerText = 'Memuat AI Biometrik...';
+
+                // Hanya model yang tersedia di folder public/models/face (TinyFaceDetector, Landmark68, FaceRecognition)
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+                badgeText.innerText = 'Sinkronisasi Wajah Siswa...';
+                await loadEnrolledStudents();
+
+                isModelsReady = true;
+                badgeSpinner.style.display = 'none';
+                badgeText.innerText = 'AI Siap!';
+
+                // Sembunyikan badge status AI setelah 2 detik
+                setTimeout(() => {
+                    aiStatusBadge.classList.add('hidden');
+                }, 1800);
+
+                statusDot.classList.add('ready');
+                statusText.innerText = 'Kamera Siap';
+
+                checkAndStartDetection();
+            } catch (err) {
+                console.error('Gagal memuat model:', err);
+                badgeSpinner.style.display = 'none';
+                badgeText.innerText = 'AI Terkendala: ' + (err.message || 'Error');
+                statusText.innerText = 'AI Error';
             }
         }
 
-        // Detection Loop menggunakan TinyFaceDetector
+        // 4. Fetch Enrolled Students
+        async function loadEnrolledStudents() {
+            try {
+                const res = await fetch(STUDENTS_API_URL, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (!data.success || !data.students || data.students.length === 0) {
+                    enrolledCountEl.innerText = '0';
+                    return;
+                }
+
+                enrolledCountEl.innerText = data.students.length;
+
+                const labeledDescriptors = [];
+                data.students.forEach(s => {
+                    if (s.descriptor && Array.isArray(s.descriptor) && s.descriptor.length === 128) {
+                        enrolledStudentsMap[s.id] = s;
+                        const descriptorArray = new Float32Array(s.descriptor);
+                        labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(s.id), [descriptorArray]));
+                    }
+                });
+
+                if (labeledDescriptors.length > 0) {
+                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, currentThreshold);
+                }
+            } catch (err) {
+                console.warn('Gagal memuat data siswa terdaftar:', err);
+            }
+        }
+
+        // 5. Detection Loop
+        function checkAndStartDetection() {
+            if (isDetectionLoopRunning || !isModelsReady || !faceMatcher) return;
+            isDetectionLoopRunning = true;
+            startDetectionLoop();
+        }
+
         function startDetectionLoop() {
             const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
             setInterval(async () => {
-                if (isProcessing || !faceMatcher || video.paused || video.ended) return;
+                if (isProcessing || !faceMatcher || video.paused || video.ended || !video.videoWidth) return;
 
                 isProcessing = true;
                 try {
@@ -580,7 +757,7 @@
                             const siswaId = parseInt(match.label);
                             const now = Date.now();
 
-                            // 5-detik cooldown per siswa agar tidak double-scan
+                            // 5-detik cooldown per siswa agar tidak spam attendance
                             if (!lastScanned[siswaId] || (now - lastScanned[siswaId] > 5000)) {
                                 lastScanned[siswaId] = now;
                                 onStudentMatched(siswaId, match.distance);
@@ -594,27 +771,25 @@
                         faceGuide.classList.remove('matched');
                     }
                 } catch (e) {
-                    console.warn('Detection cycle error:', e);
+                    // Ignore transient cycle error
                 } finally {
                     isProcessing = false;
                 }
             }, 180);
         }
 
-        // Handle Matched Student
+        // 6. Handle Matched Student
         async function onStudentMatched(siswaId, distance) {
             const student = enrolledStudentsMap[siswaId];
             if (!student) return;
 
-            // Visual indicator
             faceGuide.classList.add('matched');
             guideText.innerText = `Terverifikasi: ${student.nama}`;
             playSuccessChime();
 
-            // Show Popup
             showHeroPopup(student);
 
-            // Capture snapshot frame (low-res jpeg base64)
+            // Snapshot capture (low-res jpeg base64)
             let imageBase64 = null;
             try {
                 const snapCanvas = document.createElement('canvas');
@@ -629,10 +804,10 @@
                 imageBase64 = snapCanvas.toDataURL('image/jpeg', 0.6);
             } catch (e) {}
 
-            // Send record to backend
             try {
                 const res = await fetch(RECORD_ATTENDANCE_URL, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': CSRF_TOKEN,
@@ -654,7 +829,7 @@
             }
         }
 
-        // Show Hero Popup
+        // 7. Show Hero Popup
         function showHeroPopup(student) {
             clearTimeout(popupTimer);
 
@@ -679,21 +854,27 @@
             }, 3500);
         }
 
-        // Flip Camera Event
+        // 8. Event Listeners
         flipCameraBtn.addEventListener('click', () => {
             isFrontCamera = !isFrontCamera;
             startCamera();
         });
 
-        // Audio Toggle Event
+        retryCamBtn.addEventListener('click', () => {
+            startCamera();
+        });
+
         audioToggleBtn.addEventListener('click', () => {
             isAudioEnabled = !isAudioEnabled;
             audioIcon.innerText = isAudioEnabled ? '🔔' : '🔕';
             audioToggleBtn.innerHTML = `<span>${audioIcon.innerText}</span> Suara ${isAudioEnabled ? 'ON' : 'OFF'}`;
         });
 
-        // Start loading
-        window.addEventListener('DOMContentLoaded', loadModels);
+        // 9. Boot: Nyalakan kamera & download model secara paralel
+        window.addEventListener('DOMContentLoaded', () => {
+            startCamera();
+            loadModels();
+        });
     </script>
 </body>
 </html>

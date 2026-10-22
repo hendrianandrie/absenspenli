@@ -312,6 +312,36 @@ class FaceRecognitionController extends Controller
     }
 
     /**
+     * API JSON: Mengambil data siswa terdaftar untuk Mobile Scanner
+     */
+    public function getEnrolledStudentsMobile(Request $request)
+    {
+        if (!\Illuminate\Support\Facades\Auth::check() && $request->has('token')) {
+            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
+            if ($pat && $pat->tokenable) {
+                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
+            }
+        }
+
+        return $this->getEnrolledStudents($request);
+    }
+
+    /**
+     * API: Catat presensi kehadiran untuk Mobile Scanner
+     */
+    public function recordAttendanceMobile(Request $request)
+    {
+        if (!\Illuminate\Support\Facades\Auth::check() && $request->has('token')) {
+            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
+            if ($pat && $pat->tokenable) {
+                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
+            }
+        }
+
+        return $this->recordAttendance($request);
+    }
+
+    /**
      * API JSON: Mengambil data siswa yang sudah terdaftar wajahnya
      */
     public function getEnrolledStudents(Request $request)

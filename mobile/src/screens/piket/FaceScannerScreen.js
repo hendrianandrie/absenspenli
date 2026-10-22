@@ -122,9 +122,18 @@ export default function FaceScannerScreen({ navigation }) {
           source={{ uri: scannerUrl }}
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}
+          mediaCapturePermissionGrantType="grant"
+          androidHardwareAccelerationDisabled={false}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           originWhitelist={['*']}
+          mixedContentMode="always"
+          allowsFullscreenVideo={false}
+          onPermissionRequest={(request) => {
+            if (typeof request.grant === 'function') {
+              request.grant(request.resources);
+            }
+          }}
           style={styles.webView}
           startInLoadingState={true}
           renderLoading={() => (
