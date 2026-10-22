@@ -6,6 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SiswaTabNavigator from './SiswaTabNavigator';
 import StaffDashboardScreen from '../screens/common/StaffDashboardScreen';
+import PiketDashboardScreen from '../screens/piket/PiketDashboardScreen';
+import FaceScannerScreen from '../screens/piket/FaceScannerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,18 +39,27 @@ export default function AppNavigator() {
       ) : user.role === 'siswa' ? (
         // Navigasi Khusus Siswa
         <Stack.Screen name="SiswaHome" component={SiswaTabNavigator} />
+      ) : user.role === 'piket' ? (
+        // Navigasi Khusus Petugas Piket (Fokus Presensi Wajah Kamera)
+        <>
+          <Stack.Screen name="PiketHome" component={PiketDashboardScreen} />
+          <Stack.Screen name="FaceScanner" component={FaceScannerScreen} />
+        </>
       ) : (
-        // Navigasi Pendidik / Staf / Admin
-        <Stack.Screen
-          name="StaffHome"
-          component={StaffDashboardScreen}
-          options={{
-            headerShown: true,
-            title: 'Portal Guru & Staf',
-            headerStyle: { backgroundColor: '#0284c7' },
-            headerTintColor: '#ffffff',
-          }}
-        />
+        // Navigasi Pendidik / Guru / Admin
+        <>
+          <Stack.Screen
+            name="StaffHome"
+            component={StaffDashboardScreen}
+            options={{
+              headerShown: true,
+              title: 'Portal Guru & Staf',
+              headerStyle: { backgroundColor: '#0284c7' },
+              headerTintColor: '#ffffff',
+            }}
+          />
+          <Stack.Screen name="FaceScanner" component={FaceScannerScreen} />
+        </>
       )}
     </Stack.Navigator>
   );

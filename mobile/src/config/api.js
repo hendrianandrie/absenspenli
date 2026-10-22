@@ -23,6 +23,11 @@ export function normalizeBaseUrl(url) {
   return trimmed;
 }
 
+export function getRootWebUrl(url) {
+  const norm = normalizeBaseUrl(url);
+  return norm.replace('/api/v1', '').replace('/api', '');
+}
+
 const apiClient = axios.create({
   baseURL: DEFAULT_BASE_URL,
   timeout: 15000,

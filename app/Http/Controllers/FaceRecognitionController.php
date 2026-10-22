@@ -252,6 +252,66 @@ class FaceRecognitionController extends Controller
     }
 
     /**
+     * Halaman Scanner Khusus Versi Mobile App (Petugas Piket)
+     */
+    public function mobileScannerView(Request $request)
+    {
+        // Mendukung token auth dari mobile app (Sanctum)
+        if ($request->has('token')) {
+            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
+            if ($pat && $pat->tokenable) {
+                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
+            }
+        }
+
+        $selectedKelas = $request->get('kelas', 'Semua');
+        $today = Carbon::today()->toDateString();
+
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $rawKelas = Siswa::select('kelas')->distinct()->pluck('kelas');
+        $daftarKelas = $rawKelas->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
+
+        $querySiswa = Siswa::query();
+        if ($selectedKelas !== 'Semua') {
+            $querySiswa->where('kelas', $selectedKelas);
+        }
+        $totalSiswa = $querySiswa->count();
+        $enrolledCount = (clone $querySiswa)->whereNotNull('face_descriptor')->count();
+
+        $absensiQuery = Absensi::whereDate('tanggal', $today)->where('status', 'Hadir');
+        if ($selectedKelas !== 'Semua') {
+            $siswaIds = (clone $querySiswa)->pluck('id');
+            $absensiQuery->whereIn('siswa_id', $siswaIds);
+        }
+        $hadirTodayCount = $absensiQuery->count();
+        $belumHadirCount = max(0, $totalSiswa - $hadirTodayCount);
+
+        // Ambil riwayat scan terbaru hari ini (maksimal 5 untuk mobile)
+        $recentScans = Absensi::with('siswa')
+            ->whereDate('tanggal', $today)
+            ->where('metode', 'face')
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('face.mobile_scanner', compact(
+            'selectedKelas',
+            'daftarKelas',
+            'recentScans',
+            'today',
+            'totalSiswa',
+            'enrolledCount',
+            'hadirTodayCount',
+            'belumHadirCount'
+        ));
+    }
+
+    /**
      * API JSON: Mengambil data siswa yang sudah terdaftar wajahnya
      */
     public function getEnrolledStudents(Request $request)

@@ -51,6 +51,12 @@ $registerApiRoutes = function () {
             Route::post('/test', [\App\Http\Controllers\Api\DeviceTokenController::class, 'test']);
             Route::get('/latest', [\App\Http\Controllers\Api\DeviceTokenController::class, 'latest']);
         });
+
+        // Presensi Wajah Endpoints (Mobile)
+        Route::prefix('face')->group(function () {
+            Route::get('/enrolled-students', [\App\Http\Controllers\FaceRecognitionController::class, 'getEnrolledStudents']);
+            Route::post('/record-attendance', [\App\Http\Controllers\FaceRecognitionController::class, 'recordAttendance']);
+        });
     });
 };
 

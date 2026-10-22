@@ -55,6 +55,17 @@ export default function StaffDashboardScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Tombol Akses Scanner Presensi Wajah */}
+      <TouchableOpacity
+        style={styles.scannerBtn}
+        onPress={() => navigation.navigate('FaceScanner')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="camera" size={20} color="#ffffff" />
+        <Text style={styles.scannerBtnText}>Buka Scanner Presensi Wajah</Text>
+        <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+      </TouchableOpacity>
+
       {/* Tombol Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <Ionicons name="log-out-outline" size={18} color="#dc2626" />
@@ -155,6 +166,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#0f172a',
+  },
+  scannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0284c7',
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 8,
+    marginBottom: 12,
+    shadowColor: '#0284c7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  scannerBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   logoutBtn: {
     flexDirection: 'row',

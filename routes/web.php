@@ -22,6 +22,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Route Khusus Mobile Scanner Presensi Wajah (Mendukung token auth dari React Native Mobile App)
+Route::get('/face-recognition/mobile-scanner', [FaceRecognitionController::class, 'mobileScannerView'])->name('face.mobileScanner');
+
 // Protected Routes (Hanya dapat diakses setelah login)
 Route::middleware('auth')->group(function () {
 
