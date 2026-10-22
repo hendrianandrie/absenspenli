@@ -28,6 +28,7 @@ export default function LoginScreen() {
   // Pengaturan Server URL dinamis
   const [showServerSetting, setShowServerSetting] = useState(false);
   const [serverUrl, setServerUrl] = useState(DEFAULT_BASE_URL);
+  const [devTapCount, setDevTapCount] = useState(0);
 
   React.useEffect(() => {
     AsyncStorage.getItem('custom_base_url').then((saved) => {
@@ -169,52 +170,46 @@ export default function LoginScreen() {
               </View>
             )}
           </TouchableOpacity>
-
-          {/* Status Server Saat Ini */}
-          <View style={styles.serverInfoBadge}>
-            <View style={styles.serverDot} />
-            <Text style={styles.serverInfoText} numberOfLines={1}>
-              {serverUrl}
-            </Text>
-          </View>
-
-          {/* Pengaturan Server Toggle */}
-          <TouchableOpacity
-            onPress={() => setShowServerSetting(!showServerSetting)}
-            style={styles.serverToggle}
-          >
-            <Ionicons name="settings-outline" size={14} color="#64748b" />
-            <Text style={styles.serverToggleText}>
-              {showServerSetting ? 'Tutup Pengaturan Server' : 'Ubah / Atur Alamat Server'}
-            </Text>
-          </TouchableOpacity>
-
-          {showServerSetting && (
-            <View style={styles.serverSettingBox}>
-              <Text style={styles.serverLabel}>Alamat API Backend:</Text>
-              <TextInput
-                style={styles.serverInput}
-                value={serverUrl}
-                onChangeText={setServerUrl}
-                placeholder="http://192.168.x.x:8000/api/v1"
-                autoCapitalize="none"
-              />
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1 }]} onPress={handleSaveServerUrl}>
-                  <Text style={styles.saveServerBtnText}>Simpan Server</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1, backgroundColor: '#64748b' }]} onPress={handleResetServerUrl}>
-                  <Text style={styles.saveServerBtnText}>Reset ke Default</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
         </View>
 
-        {/* Footer */}
-        <Text style={styles.footerText}>
-          Aplikasi Resmi SMPN 5 Ciamis • Versi 1.0 Mobile
-        </Text>
+        {/* Footer (Ketuk 5x jika ingin membuka menu rahasia ubah server pengembang) */}
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {
+            setDevTapCount(prev => {
+              if (prev + 1 >= 5) {
+                setShowServerSetting(!showServerSetting);
+                return 0;
+              }
+              return prev + 1;
+            });
+          }}
+        >
+          <Text style={styles.footerText}>
+            Aplikasi Resmi SMPN 5 Ciamis • Versi 1.0 Mobile
+          </Text>
+        </TouchableOpacity>
+
+        {showServerSetting && (
+          <View style={styles.serverSettingBox}>
+            <Text style={styles.serverLabel}>Alamat API Backend (Menu Pengembang):</Text>
+            <TextInput
+              style={styles.serverInput}
+              value={serverUrl}
+              onChangeText={setServerUrl}
+              placeholder="https://smpn5ciamis.sch.id/api/v1"
+              autoCapitalize="none"
+            />
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <TouchableOpacity style={[styles.saveServerBtn, { flex: 1 }]} onPress={handleSaveServerUrl}>
+                <Text style={styles.saveServerBtnText}>Simpan Server</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.saveServerBtn, { flex: 1, backgroundColor: '#64748b' }]} onPress={handleResetServerUrl}>
+                <Text style={styles.saveServerBtnText}>Reset ke Default</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
