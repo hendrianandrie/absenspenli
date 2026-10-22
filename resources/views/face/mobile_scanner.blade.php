@@ -26,73 +26,6 @@
             user-select: none;
         }
 
-        /* Top Header Bar */
-        .mobile-header {
-            background: linear-gradient(135deg, #0369a1, #0284c7);
-            padding: 12px 16px;
-            padding-top: max(12px, env(safe-area-inset-top));
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-            z-index: 20;
-            position: relative;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-logo {
-            width: 36px;
-            height: 36px;
-            border-radius: 18px;
-            background: #ffffff;
-            padding: 2px;
-            border: 1.5px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .header-title-box h1 {
-            font-size: 15px;
-            font-weight: 800;
-            letter-spacing: 0.6px;
-            line-height: 1.1;
-        }
-
-        .header-title-box p {
-            font-size: 10.5px;
-            color: #bae6fd;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-            margin-top: 2px;
-        }
-
-        .header-status-pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 4px;
-            background: #f59e0b;
-        }
-        .status-dot.ready {
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
-        }
-
         /* Camera Viewport */
         .camera-viewport {
             flex: 1;
@@ -330,14 +263,27 @@
             color: #38bdf8;
         }
 
-        .refresh-btn {
-            background: rgba(255, 255, 255, 0.1);
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            border-radius: 8px;
-            padding: 6px 12px;
+            padding: 4px 10px;
+            border-radius: 14px;
             font-size: 11px;
             font-weight: 600;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 4px;
+            background: #f59e0b;
+        }
+        .status-dot.ready {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
         }
 
         /* Loading Overlay */
@@ -347,7 +293,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(7, 11, 19, 0.92);
+            background: rgba(7, 11, 19, 0.94);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -381,27 +327,12 @@
             font-size: 12px;
             color: #94a3b8;
             margin-top: 6px;
-            max-width: 260px;
+            max-width: 270px;
             line-height: 1.5;
         }
     </style>
 </head>
 <body>
-
-    <!-- Header -->
-    <header class="mobile-header">
-        <div class="header-brand">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="header-logo" onerror="this.style.display='none'">
-            <div class="header-title-box">
-                <h1>PRESENSI WAJAH</h1>
-                <p>Petugas Piket • SMPN 5 Ciamis</p>
-            </div>
-        </div>
-        <div class="header-status-pill">
-            <span class="status-dot" id="statusDot"></span>
-            <span id="statusText">Memuat AI...</span>
-        </div>
-    </header>
 
     <!-- Camera Viewport -->
     <main class="camera-viewport">
@@ -443,23 +374,26 @@
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="spinner"></div>
-            <div class="loading-title" id="loadingTitle">Memuat Model Pengenalan Wajah</div>
-            <div class="loading-desc" id="loadingDesc">Mohon tunggu sebentar, sistem sedang mengunduh neural network dan database wajah siswa...</div>
+            <div class="loading-title" id="loadingTitle">Memuat AI Biometrik...</div>
+            <div class="loading-desc" id="loadingDesc">Sedang mengunduh model TinyFaceDetector dan data wajah siswa SMPN 5 Ciamis...</div>
         </div>
     </main>
 
     <!-- Bottom Footer Stats -->
     <footer class="mobile-footer">
         <div class="stat-item">
-            <span class="stat-label">Hadir Hari Ini:</span>
+            <span class="stat-label">Hadir:</span>
             <span class="stat-value" id="hadirCount">{{ $hadirTodayCount }}</span>
             <span class="stat-label">Siswa</span>
+        </div>
+        <div class="status-pill">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Memuat AI...</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">Terdaftar:</span>
             <span class="stat-value" id="enrolledCount" style="color: #a7f3d0;">{{ $enrolledCount }}</span>
         </div>
-        <button class="refresh-btn" onclick="location.reload()">Muat Ulang</button>
     </footer>
 
     <!-- Scripts -->
@@ -499,6 +433,7 @@
         let lastScanned = {}; // Cooldown map
         let popupTimer = null;
         let hadirCount = {{ $hadirTodayCount }};
+        const currentThreshold = 0.44; // Ambang batas ketat & akurat
 
         // WebAudio Chime
         function playSuccessChime() {
@@ -534,20 +469,20 @@
             }
         }
 
-        // Load Face API Models
+        // Load Face API Models menggunakan TinyFaceDetector (sesuai file yang ada di public/models/face)
         async function loadModels() {
             try {
-                loadingTitle.innerText = 'Mengunduh Neural Network...';
-                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                loadingTitle.innerText = 'Mengunduh Neural Network AI...';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
-                loadingTitle.innerText = 'Mengunduh Sampel Wajah Siswa...';
+                loadingTitle.innerText = 'Mengunduh Data Wajah Siswa...';
                 await loadEnrolledStudents();
 
                 loadingOverlay.style.display = 'none';
                 statusDot.classList.add('ready');
-                statusText.innerText = 'Kamera Aktif';
+                statusText.innerText = 'Kamera Siap';
 
                 startCamera();
             } catch (err) {
@@ -565,13 +500,13 @@
             const data = await res.json();
 
             if (!data.success || !data.students || data.students.length === 0) {
-                statusText.innerText = 'Belum Ada Wajah Terdaftar';
+                statusText.innerText = '0 Terdaftar';
                 return;
             }
 
             const labeledDescriptors = [];
             data.students.forEach(s => {
-                if (s.descriptor && Array.isArray(s.descriptor)) {
+                if (s.descriptor && Array.isArray(s.descriptor) && s.descriptor.length === 128) {
                     enrolledStudentsMap[s.id] = s;
                     const descriptorArray = new Float32Array(s.descriptor);
                     labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(String(s.id), [descriptorArray]));
@@ -579,8 +514,7 @@
             });
 
             if (labeledDescriptors.length > 0) {
-                // Ambang batas akurat 0.44
-                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.44);
+                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, currentThreshold);
             }
         }
 
@@ -610,27 +544,39 @@
                     startDetectionLoop();
                 };
             } catch (err) {
-                alert('Izin kamera ditolak atau kamera tidak ditemukan: ' + err.message);
+                console.warn('Fallback basic camera constraints...', err);
+                try {
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    currentStream = fallbackStream;
+                    video.srcObject = fallbackStream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        startDetectionLoop();
+                    };
+                } catch (err2) {
+                    alert('Izin kamera ditolak atau kamera tidak ditemukan: ' + err2.message);
+                }
             }
         }
 
-        // Detection Loop
+        // Detection Loop menggunakan TinyFaceDetector
         function startDetectionLoop() {
+            const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+
             setInterval(async () => {
                 if (isProcessing || !faceMatcher || video.paused || video.ended) return;
 
                 isProcessing = true;
                 try {
-                    // Detect single face with landmarks & descriptor
                     const detection = await faceapi
-                        .detectSingleFace(video)
+                        .detectSingleFace(video, detectorOptions)
                         .withFaceLandmarks()
                         .withFaceDescriptor();
 
                     if (detection) {
                         const match = faceMatcher.findBestMatch(detection.descriptor);
 
-                        if (match.label !== 'unknown') {
+                        if (match.label !== 'unknown' && match.distance <= currentThreshold) {
                             const siswaId = parseInt(match.label);
                             const now = Date.now();
 
