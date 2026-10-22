@@ -12,32 +12,38 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    // Listener saat notifikasi diterima ketika aplikasi sedang aktif di layar
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notifikasi diterima saat aktif:', notification.request.content.title);
-    });
+    try {
+      // Listener saat notifikasi diterima ketika aplikasi sedang aktif di layar
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        console.log('Notifikasi diterima saat aktif:', notification.request.content.title);
+      });
 
-    // Listener saat pengguna mengetuk (tap) notifikasi di status bar / lockscreen
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
-      console.log('Pengguna mengetuk notifikasi dengan data:', data);
+      // Listener saat pengguna mengetuk (tap) notifikasi di status bar / lockscreen
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        const data = response.notification?.request?.content?.data;
+        console.log('Pengguna mengetuk notifikasi dengan data:', data);
 
-      if (navigationRef.current && data) {
-        if (data.type === 'absen') {
-          navigationRef.current.navigate('SiswaAbsen');
-        } else if (data.type === 'nilai') {
-          navigationRef.current.navigate('SiswaNilai');
+        if (navigationRef.current && data) {
+          if (data.type === 'absen') {
+            navigationRef.current.navigate('SiswaAbsen');
+          } else if (data.type === 'nilai') {
+            navigationRef.current.navigate('SiswaNilai');
+          }
         }
-      }
-    });
+      });
+    } catch (e) {
+      console.warn('Notification listeners bypassed in Expo Go:', e.message);
+    }
 
     return () => {
-      if (notificationListener.current) {
-        notificationListener.current.remove();
-      }
-      if (responseListener.current) {
-        responseListener.current.remove();
-      }
+      try {
+        if (notificationListener.current) {
+          notificationListener.current.remove();
+        }
+        if (responseListener.current) {
+          responseListener.current.remove();
+        }
+      } catch (e) {}
     };
   }, []);
 
