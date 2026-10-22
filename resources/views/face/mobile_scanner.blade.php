@@ -44,7 +44,6 @@
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1); /* Default mirror selfie */
-            background: #000000;
             z-index: 1;
         }
 
@@ -685,8 +684,10 @@
                     aiStatusBadge.classList.add('hidden');
                 }, 1800);
 
-                statusDot.classList.add('ready');
-                statusText.innerText = 'Kamera Siap';
+                if (video && video.videoWidth > 0) {
+                    statusDot.classList.add('ready');
+                    statusText.innerText = 'Kamera Siap';
+                }
 
                 checkAndStartDetection();
             } catch (err) {

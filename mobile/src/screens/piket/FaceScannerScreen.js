@@ -22,22 +22,19 @@ export default function FaceScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 1. Minta Izin Kamera di Android
+  // 1. Minta Izin Kamera di Android sebelum WebView dimuat
   useEffect(() => {
     const requestCameraPermission = async () => {
       if (Platform.OS === 'android') {
         try {
-          const granted = await PermissionsAndroid.request(
+          const granted = await PermissionsAndroid.requestMultiple([
             PermissionsAndroid.PERMISSIONS.CAMERA,
-            {
-              title: 'Izin Kamera Scanner Wajah',
-              message:
-                'Aplikasi SI-KASEP membutuhkan akses kamera untuk memindai wajah siswa.',
-              buttonPositive: 'Izinkan',
-              buttonNegative: 'Batal',
-            }
-          );
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          ]);
+          if (
+            granted[PermissionsAndroid.PERMISSIONS.CAMERA] ===
+            PermissionsAndroid.RESULTS.GRANTED
+          ) {
             setHasPermission(true);
           } else {
             Alert.alert(
@@ -77,12 +74,14 @@ export default function FaceScannerScreen({ navigation }) {
     }
   }, [token]);
 
-  if (loading || !scannerUrl) {
+  if (loading || !scannerUrl || !hasPermission) {
     return (
       <View style={styles.centerContainer}>
         <StatusBar style="light" />
         <ActivityIndicator size="large" color="#0284c7" />
-        <Text style={styles.centerText}>Menyiapkan Scanner Presensi...</Text>
+        <Text style={styles.centerText}>
+          {!hasPermission ? 'Menyiapkan Izin Kamera...' : 'Menyiapkan Scanner Presensi...'}
+        </Text>
       </View>
     );
   }
@@ -129,9 +128,12 @@ export default function FaceScannerScreen({ navigation }) {
           originWhitelist={['*']}
           mixedContentMode="always"
           allowsFullscreenVideo={false}
-          onPermissionRequest={(request) => {
-            if (typeof request.grant === 'function') {
-              request.grant(request.resources);
+          onPermissionRequest={(event) => {
+            const req = event?.nativeEvent || event;
+            if (req && typeof req.grant === 'function') {
+              req.grant(req.resources);
+            } else if (typeof event?.grant === 'function') {
+              event.grant(event.resources);
             }
           }}
           style={styles.webView}
