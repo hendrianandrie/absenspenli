@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -88,15 +89,25 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      {/* Ambient Mesh Background Blobs (Pilihan 2: Soft Mesh) */}
-      <View style={styles.meshBlobTopRight} pointerEvents="none" />
-      <View style={styles.meshBlobTopLeft} pointerEvents="none" />
-      <View style={styles.meshBlobBottomLeft} pointerEvents="none" />
-      <View style={styles.meshBlobBottomRight} pointerEvents="none" />
+      {/* Full Linear Gradient Background (Pilihan 3) */}
+      <LinearGradient
+        colors={['#0369a1', '#0284c7', '#38bdf8']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {/* Subtle overlay decorative circle for premium lighting */}
+      <View style={styles.topGlow} pointerEvents="none" />
+      <View style={styles.bottomGlow} pointerEvents="none" />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header Logo & Branding */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
@@ -115,7 +126,7 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Glassmorphism Card */}
+        {/* Crisp Card over Gradient */}
         <View style={styles.card}>
           <Text style={styles.formTitle}>Masuk ke Akun</Text>
           <Text style={styles.formSubtitle}>
@@ -229,49 +240,25 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
     position: 'relative',
   },
-  // Ambient Mesh Gradient Blobs
-  meshBlobTopRight: {
+  topGlow: {
     position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#38bdf8', // Sky blue
-    opacity: 0.22,
-  },
-  meshBlobTopLeft: {
-    position: 'absolute',
-    top: 40,
-    left: -60,
+    top: -60,
+    right: -40,
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: '#34d399', // Emerald / Tosca
-    opacity: 0.18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
-  meshBlobBottomLeft: {
+  bottomGlow: {
     position: 'absolute',
-    bottom: -60,
+    bottom: -50,
     left: -40,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: '#818cf8', // Indigo
-    opacity: 0.18,
-  },
-  meshBlobBottomRight: {
-    position: 'absolute',
-    bottom: 80,
-    right: -40,
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: '#38bdf8', // Soft cyan
-    opacity: 0.15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   scrollContent: {
     flexGrow: 1,
@@ -284,20 +271,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logoContainer: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#0284c7',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.25,
     shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#ffffff',
     padding: 6,
   },
   logoImage: {
@@ -305,48 +292,51 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   brandTitle: {
-    fontSize: 29,
+    fontSize: 30,
     fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: 1.5,
+    color: '#ffffff',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
   badgePill: {
-    backgroundColor: '#e0f2fe',
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 14,
     paddingVertical: 4,
     borderRadius: 20,
     marginTop: 6,
     borderWidth: 1,
-    borderColor: '#bae6fd',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
   badgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0284c7',
-    letterSpacing: 1,
+    color: '#ffffff',
+    letterSpacing: 1.2,
   },
   brandDescription: {
     fontSize: 12,
-    color: '#64748b',
+    color: '#e0f2fe',
     marginTop: 6,
     textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 16,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: '#ffffff',
     borderRadius: 24,
     padding: 24,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 5,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 8,
   },
   formTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#0f172a',
   },
   formSubtitle: {
     fontSize: 12,
@@ -368,9 +358,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     borderRadius: 12,
-    backgroundColor: 'rgba(248, 250, 252, 0.85)',
+    backgroundColor: '#f8fafc',
     paddingHorizontal: 12,
   },
   inputIcon: {
@@ -394,7 +384,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     shadowColor: '#0284c7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -413,15 +403,15 @@ const styles = StyleSheet.create({
   serverSettingBox: {
     marginTop: 14,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 3,
   },
   serverLabel: {
     fontSize: 11,
@@ -453,7 +443,8 @@ const styles = StyleSheet.create({
   footerText: {
     textAlign: 'center',
     fontSize: 11,
-    color: '#64748b',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 24,
+    fontWeight: '500',
   },
 });
