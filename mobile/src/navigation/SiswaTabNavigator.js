@@ -30,9 +30,13 @@ function CustomTabHeader({ route }) {
                 resizeMode="contain"
               />
             </View>
-            <View>
-              <Text style={styles.brandTitleText}>SI-KASEP</Text>
-              <Text style={styles.brandSubtitleText}>SMP NEGERI 5 CIAMIS</Text>
+            <View style={styles.titleTextCol}>
+              <Text style={styles.brandTitleText} numberOfLines={1}>
+                SI-KASEP
+              </Text>
+              <Text style={styles.brandSubtitleText} numberOfLines={1}>
+                SMP NEGERI 5 CIAMIS
+              </Text>
             </View>
           </View>
         );
@@ -40,11 +44,15 @@ function CustomTabHeader({ route }) {
         return (
           <View style={styles.pageTitleRow}>
             <View style={styles.pageIconBadge}>
-              <Ionicons name="calendar" size={19} color="#ffffff" />
+              <Ionicons name="calendar-outline" size={19} color="#ffffff" />
             </View>
-            <View>
-              <Text style={styles.pageTitleText}>Riwayat Kehadiran Siswa</Text>
-              <Text style={styles.pageSubtitleText}>SMP NEGERI 5 CIAMIS</Text>
+            <View style={styles.titleTextCol}>
+              <Text style={styles.pageTitleText} numberOfLines={1}>
+                Riwayat Kehadiran Siswa
+              </Text>
+              <Text style={styles.pageSubtitleText} numberOfLines={1}>
+                SMP NEGERI 5 CIAMIS
+              </Text>
             </View>
           </View>
         );
@@ -52,11 +60,15 @@ function CustomTabHeader({ route }) {
         return (
           <View style={styles.pageTitleRow}>
             <View style={styles.pageIconBadge}>
-              <Ionicons name="ribbon" size={19} color="#ffffff" />
+              <Ionicons name="ribbon-outline" size={19} color="#ffffff" />
             </View>
-            <View>
-              <Text style={styles.pageTitleText}>Capaian Nilai Siswa</Text>
-              <Text style={styles.pageSubtitleText}>SMP NEGERI 5 CIAMIS</Text>
+            <View style={styles.titleTextCol}>
+              <Text style={styles.pageTitleText} numberOfLines={1}>
+                Capaian Nilai Siswa
+              </Text>
+              <Text style={styles.pageSubtitleText} numberOfLines={1}>
+                SMP NEGERI 5 CIAMIS
+              </Text>
             </View>
           </View>
         );
@@ -64,11 +76,15 @@ function CustomTabHeader({ route }) {
         return (
           <View style={styles.pageTitleRow}>
             <View style={styles.pageIconBadge}>
-              <Ionicons name="person" size={19} color="#ffffff" />
+              <Ionicons name="person-outline" size={19} color="#ffffff" />
             </View>
-            <View>
-              <Text style={styles.pageTitleText}>Profil Pengguna</Text>
-              <Text style={styles.pageSubtitleText}>SMP NEGERI 5 CIAMIS</Text>
+            <View style={styles.titleTextCol}>
+              <Text style={styles.pageTitleText} numberOfLines={1}>
+                Profil Pengguna
+              </Text>
+              <Text style={styles.pageSubtitleText} numberOfLines={1}>
+                SMP NEGERI 5 CIAMIS
+              </Text>
             </View>
           </View>
         );
@@ -172,11 +188,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#0284c7',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#0284c7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
-    elevation: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   headerBubble1: {
     position: 'absolute',
@@ -206,7 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(186, 230, 253, 0.16)',
   },
   customHeaderBar: {
-    height: 56,
+    height: 58,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -214,12 +232,13 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    flex: 1,
   },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
@@ -236,31 +255,38 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  titleTextCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   brandTitleText: {
     color: '#ffffff',
     fontWeight: '800',
     fontSize: 16.5,
-    letterSpacing: 1.2,
-    lineHeight: 19,
+    letterSpacing: 0.8,
+    includeFontPadding: false,
   },
   brandSubtitleText: {
     color: '#bae6fd',
     fontSize: 10.5,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+    marginTop: 2,
+    includeFontPadding: false,
   },
   pageTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    flex: 1,
   },
   pageIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.38)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -268,13 +294,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '800',
     fontSize: 16,
-    letterSpacing: 0.3,
-    lineHeight: 20,
+    letterSpacing: 0.2,
+    includeFontPadding: false,
   },
   pageSubtitleText: {
     color: '#bae6fd',
     fontSize: 10.5,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+    marginTop: 2,
+    includeFontPadding: false,
   },
 });
