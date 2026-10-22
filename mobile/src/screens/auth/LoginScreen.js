@@ -12,6 +12,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -87,129 +88,140 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header Branding */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/logo.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.brandTitle}>SI-KASEP</Text>
-          <Text style={styles.brandSubtitle}>SMP NEGERI 5 CIAMIS</Text>
-          <Text style={styles.brandDescription}>
-            Sistem Informasi Rekap Absen dan Penilaian
-          </Text>
-        </View>
+      <StatusBar style="light" />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
+        {/* Top Header Banner Melengkung dengan Ornamen Lingkaran */}
+        <View style={styles.topBanner}>
+          {/* Ornamen Lingkaran Transparan */}
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+          <View style={styles.decorCircle3} />
 
-        {/* Form Card */}
-        <View style={styles.card}>
-          <Text style={styles.formTitle}>Masuk ke Akun</Text>
-          <Text style={styles.formSubtitle}>
-            Gunakan NIS untuk Siswa, atau NIP/Email untuk Guru & Tenaga Kependidikan.
-          </Text>
-
-          {/* Input Username / NIS */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>NIS / NIP / Username</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Contoh: 0111582931"
-                placeholderTextColor="#94a3b8"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
+          {/* Logo & Branding */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../../assets/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
               />
             </View>
+            <Text style={styles.brandTitle}>SI-KASEP</Text>
+            <Text style={styles.brandSubtitle}>SMP NEGERI 5 CIAMIS</Text>
+            <Text style={styles.brandDescription}>
+              Sistem Informasi Rekap Absen dan Penilaian
+            </Text>
           </View>
+        </View>
 
-          {/* Input Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Kata Sandi</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Masukkan kata sandi Anda"
-                placeholderTextColor="#94a3b8"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#64748b"
+        {/* Form Card Melayang (Floating Card) */}
+        <View style={styles.cardContainer}>
+          <View style={styles.card}>
+            <Text style={styles.formTitle}>Masuk ke Akun</Text>
+            <Text style={styles.formSubtitle}>
+              Gunakan NIS untuk Siswa, atau NIP/Email untuk Guru & Tenaga Kependidikan.
+            </Text>
+
+            {/* Input Username / NIS */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>NIS / NIP / Username</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contoh: 0111582931"
+                  placeholderTextColor="#94a3b8"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Tombol Login */}
-          <TouchableOpacity
-            style={[styles.loginButton, isSubmitting && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isSubmitting}
-            activeOpacity={0.8}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <View style={styles.buttonInner}>
-                <Text style={styles.buttonText}>Masuk Sekarang</Text>
-                <Ionicons name="arrow-forward" size={18} color="#ffffff" style={{ marginLeft: 8 }} />
               </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer (Ketuk 5x jika ingin membuka menu rahasia ubah server pengembang) */}
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => {
-            setDevTapCount(prev => {
-              if (prev + 1 >= 5) {
-                setShowServerSetting(!showServerSetting);
-                return 0;
-              }
-              return prev + 1;
-            });
-          }}
-        >
-          <Text style={styles.footerText}>
-            Aplikasi Resmi SMPN 5 Ciamis • Versi 1.0 Mobile
-          </Text>
-        </TouchableOpacity>
-
-        {showServerSetting && (
-          <View style={styles.serverSettingBox}>
-            <Text style={styles.serverLabel}>Alamat API Backend (Menu Pengembang):</Text>
-            <TextInput
-              style={styles.serverInput}
-              value={serverUrl}
-              onChangeText={setServerUrl}
-              placeholder="https://smpn5ciamis.sch.id/api/v1"
-              autoCapitalize="none"
-            />
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              <TouchableOpacity style={[styles.saveServerBtn, { flex: 1 }]} onPress={handleSaveServerUrl}>
-                <Text style={styles.saveServerBtnText}>Simpan Server</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.saveServerBtn, { flex: 1, backgroundColor: '#64748b' }]} onPress={handleResetServerUrl}>
-                <Text style={styles.saveServerBtnText}>Reset ke Default</Text>
-              </TouchableOpacity>
             </View>
+
+            {/* Input Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Kata Sandi</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Masukkan kata sandi Anda"
+                  placeholderTextColor="#94a3b8"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#64748b"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Tombol Login */}
+            <TouchableOpacity
+              style={[styles.loginButton, isSubmitting && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={isSubmitting}
+              activeOpacity={0.8}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <View style={styles.buttonInner}>
+                  <Text style={styles.buttonText}>Masuk Sekarang</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#ffffff" style={{ marginLeft: 8 }} />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
-        )}
+
+          {/* Footer (Ketuk 5x jika ingin membuka menu rahasia ubah server pengembang) */}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              setDevTapCount((prev) => {
+                if (prev + 1 >= 5) {
+                  setShowServerSetting(!showServerSetting);
+                  return 0;
+                }
+                return prev + 1;
+              });
+            }}
+          >
+            <Text style={styles.footerText}>
+              Aplikasi Resmi SMPN 5 Ciamis • Versi 1.0 Mobile
+            </Text>
+          </TouchableOpacity>
+
+          {showServerSetting && (
+            <View style={styles.serverSettingBox}>
+              <Text style={styles.serverLabel}>Alamat API Backend (Menu Pengembang):</Text>
+              <TextInput
+                style={styles.serverInput}
+                value={serverUrl}
+                onChangeText={setServerUrl}
+                placeholder="https://smpn5ciamis.sch.id/api/v1"
+                autoCapitalize="none"
+              />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1 }]} onPress={handleSaveServerUrl}>
+                  <Text style={styles.saveServerBtnText}>Simpan Server</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.saveServerBtn, { flex: 1, backgroundColor: '#64748b' }]} onPress={handleResetServerUrl}>
+                  <Text style={styles.saveServerBtnText}>Reset ke Default</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -218,33 +230,74 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f1f5f9',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingBottom: 32,
+  },
+  topBanner: {
+    backgroundColor: '#0284c7',
+    paddingTop: Platform.OS === 'ios' ? 56 : 46,
+    paddingBottom: 48,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#0284c7',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  decorCircle2: {
+    position: 'absolute',
+    bottom: -30,
+    left: -30,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  decorCircle3: {
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(186, 230, 253, 0.15)',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 28,
+    paddingHorizontal: 20,
+    zIndex: 1,
   },
   logoContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
-    shadowColor: '#0284c7',
+    marginBottom: 12,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.18,
     shadowRadius: 10,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: '#e0f2fe',
+    elevation: 6,
+    borderWidth: 3,
+    borderColor: '#ffffff',
     padding: 6,
   },
   logoImage: {
@@ -254,31 +307,37 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     letterSpacing: 1.5,
   },
   brandSubtitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0284c7',
+    color: '#bae6fd',
     letterSpacing: 1,
     marginTop: 2,
   },
   brandDescription: {
     fontSize: 12,
-    color: '#64748b',
-    marginTop: 4,
+    color: '#e0f2fe',
+    marginTop: 6,
     textAlign: 'center',
+    lineHeight: 18,
+  },
+  cardContainer: {
+    paddingHorizontal: 20,
+    marginTop: -26,
+    zIndex: 2,
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 15,
-    elevation: 3,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
@@ -349,48 +408,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  serverInfoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  serverDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
-    marginRight: 6,
-  },
-  serverInfoText: {
-    fontSize: 11,
-    color: '#64748b',
-    flex: 1,
-  },
-  serverToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    gap: 6,
-  },
-  serverToggleText: {
-    fontSize: 11.5,
-    color: '#64748b',
-    fontWeight: '500',
-  },
   serverSettingBox: {
-    marginTop: 12,
+    marginTop: 14,
     padding: 12,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#cbd5e1',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   serverLabel: {
     fontSize: 11,
@@ -399,7 +428,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   serverInput: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 8,
@@ -409,15 +438,14 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   saveServerBtn: {
-    backgroundColor: '#334155',
-    borderRadius: 6,
-    paddingVertical: 6,
+    backgroundColor: '#0284c7',
+    borderRadius: 8,
+    paddingVertical: 8,
     alignItems: 'center',
-    marginTop: 8,
   },
   saveServerBtnText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   footerText: {
