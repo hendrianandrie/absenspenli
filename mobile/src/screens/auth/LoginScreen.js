@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
@@ -88,13 +89,17 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header Branding */}
         <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="school" size={44} color="#0284c7" />
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../../assets/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.brandTitle}>SI-KASEP</Text>
           <Text style={styles.brandSubtitle}>SMP NEGERI 5 CIAMIS</Text>
           <Text style={styles.brandDescription}>
-            Sistem Informasi Kehadiran & Akademik Siswa
+            Sistem Informasi Rekap Absen dan Penilaian
           </Text>
         </View>
 
@@ -230,19 +235,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 28,
   },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#e0f2fe',
+  logoContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
     shadowColor: '#0284c7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.16,
     shadowRadius: 10,
     elevation: 4,
+    borderWidth: 2,
+    borderColor: '#e0f2fe',
+    padding: 6,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
     fontSize: 28,

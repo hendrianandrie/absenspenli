@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -56,7 +57,23 @@ export default function SiswaTabNavigator() {
         component={SiswaDashboardScreen}
         options={{
           title: 'Beranda',
-          headerTitle: 'SI-KASEP — SMPN 5 Ciamis',
+          headerTitle: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: '#ffffff' }}
+                resizeMode="contain"
+              />
+              <View>
+                <Text style={{ color: '#ffffff', fontWeight: '800', fontSize: 15, lineHeight: 17 }}>
+                  SI-KASEP
+                </Text>
+                <Text style={{ color: '#e0f2fe', fontSize: 10, fontWeight: '600' }}>
+                  SMPN 5 CIAMIS
+                </Text>
+              </View>
+            </View>
+          ),
         }}
       />
       <Tab.Screen

@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text, Image } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthContext } from '../context/AuthContext';
 
@@ -15,8 +15,16 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View style={styles.splash}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 68, height: 68, marginBottom: 16 }}
+          resizeMode="contain"
+        />
         <ActivityIndicator size="large" color="#0284c7" />
         <Text style={styles.splashText}>Memuat SI-KASEP...</Text>
+        <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, fontWeight: '600' }}>
+          SMP NEGERI 5 CIAMIS
+        </Text>
       </View>
     );
   }

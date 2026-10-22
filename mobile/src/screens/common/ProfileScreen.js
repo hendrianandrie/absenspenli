@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -169,9 +169,19 @@ export default function ProfileScreen() {
 
       {/* Tentang Aplikasi */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Tentang Aplikasi</Text>
+        <View style={styles.aboutHeader}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.aboutLogo}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={styles.aboutBrandTitle}>SI-KASEP</Text>
+            <Text style={styles.aboutBrandSubtitle}>SMP NEGERI 5 CIAMIS</Text>
+          </View>
+        </View>
         <Text style={styles.aboutText}>
-          <Text style={{ fontWeight: '700' }}>SI-KASEP</Text> (Sistem Informasi Kehadiran & Akademik Siswa) adalah platform resmi SMP Negeri 5 Ciamis untuk mendukung pencatatan kehadiran presisi dan transparansi nilai peserta didik.
+          <Text style={{ fontWeight: '700' }}>SI-KASEP</Text> (Sistem Informasi Rekap Absen dan Penilaian) adalah platform resmi SMP Negeri 5 Ciamis untuk mendukung pencatatan kehadiran presisi dan transparansi nilai peserta didik.
         </Text>
         <Text style={styles.versionText}>Versi 1.0.0 (React Native Mobile)</Text>
       </View>
@@ -294,6 +304,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0f172a',
     marginTop: 1,
+  },
+  aboutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  aboutLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  aboutBrandTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  aboutBrandSubtitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0284c7',
+    letterSpacing: 0.5,
   },
   aboutText: {
     fontSize: 12,

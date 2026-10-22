@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -23,11 +23,15 @@ export default function StaffDashboardScreen({ navigation }) {
 
       {/* Info Notice */}
       <View style={styles.noticeCard}>
-        <Ionicons name="information-circle" size={24} color="#0284c7" />
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={{ width: 36, height: 36, borderRadius: 18 }}
+          resizeMode="contain"
+        />
         <View style={styles.noticeContent}>
-          <Text style={styles.noticeTitle}>Portal Pendidik Mobile</Text>
+          <Text style={styles.noticeTitle}>SI-KASEP — SMPN 5 Ciamis</Text>
           <Text style={styles.noticeDesc}>
-            Anda telah berhasil masuk ke aplikasi SI-KASEP. Untuk penginputan nilai massal dan rekap rapor semester saat ini tetap dapat diakses dengan optimal melalui versi web browser.
+            Selamat datang di aplikasi SI-KASEP (Sistem Informasi Rekap Absen dan Penilaian). Untuk penginputan nilai massal dan rekap rapor semester saat ini tetap dapat diakses dengan optimal melalui versi web browser.
           </Text>
         </View>
       </View>
