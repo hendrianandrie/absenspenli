@@ -7,7 +7,6 @@ import {
   Alert,
   ScrollView,
   Image,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
@@ -54,7 +53,7 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       bounces={false}
     >
-      {/* Top Banner Melengkung dengan Ornamen Lingkaran (Tema Pilihan 1) */}
+      {/* Top Banner Melengkung dengan Ornamen Lingkaran */}
       <View style={styles.topBanner}>
         {/* Ornamen Lingkaran Transparan */}
         <View style={styles.decorCircle1} />
@@ -71,7 +70,9 @@ export default function ProfileScreen() {
         </View>
 
         {/* Nama dan Status Pengguna */}
-        <Text style={styles.userName}>{user?.name || 'Pengguna'}</Text>
+        <Text style={styles.userName} numberOfLines={2}>
+          {user?.name || 'Pengguna'}
+        </Text>
         <View style={styles.roleBadge}>
           <Text style={styles.roleText}>{getRoleLabel(user?.role)}</Text>
         </View>
@@ -81,19 +82,30 @@ export default function ProfileScreen() {
       <View style={styles.cardContainer}>
         {/* Info Details Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Informasi Akun</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderIconBox}>
+              <Ionicons name="id-card-outline" size={16} color="#0284c7" />
+            </View>
+            <Text style={styles.cardTitle}>Informasi Akun</Text>
+          </View>
 
+          {/* Row Username / NIS */}
           <View style={styles.infoRow}>
-            <Ionicons name="finger-print-outline" size={18} color="#0284c7" style={styles.infoIcon} />
+            <View style={styles.iconBox}>
+              <Ionicons name="finger-print-outline" size={19} color="#0284c7" />
+            </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Username / NIS</Text>
               <Text style={styles.infoValue}>{user?.username || '-'}</Text>
             </View>
           </View>
 
+          {/* Row Kelas (Jika Akun Siswa) */}
           {user?.siswa?.kelas && (
             <View style={styles.infoRow}>
-              <Ionicons name="school-outline" size={18} color="#0284c7" style={styles.infoIcon} />
+              <View style={styles.iconBox}>
+                <Ionicons name="school-outline" size={19} color="#0284c7" />
+              </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Kelas</Text>
                 <Text style={styles.infoValue}>Kelas {user?.siswa?.kelas}</Text>
@@ -101,9 +113,12 @@ export default function ProfileScreen() {
             </View>
           )}
 
+          {/* Row Kelas Binaan (Jika Wali Kelas) */}
           {user?.is_wali_kelas && (
             <View style={styles.infoRow}>
-              <Ionicons name="people-outline" size={18} color="#0284c7" style={styles.infoIcon} />
+              <View style={styles.iconBox}>
+                <Ionicons name="people-outline" size={19} color="#0284c7" />
+              </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Kelas Binaan</Text>
                 <Text style={styles.infoValue}>Kelas {user?.kelas_binaan}</Text>
@@ -111,8 +126,11 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-            <Ionicons name="mail-outline" size={18} color="#0284c7" style={styles.infoIcon} />
+          {/* Row Email */}
+          <View style={[styles.infoRow, { borderBottomWidth: 0, paddingBottom: 4 }]}>
+            <View style={styles.iconBox}>
+              <Ionicons name="mail-outline" size={19} color="#0284c7" />
+            </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.infoValue}>{user?.email || '-'}</Text>
@@ -128,7 +146,7 @@ export default function ProfileScreen() {
               style={styles.aboutLogo}
               resizeMode="contain"
             />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.aboutBrandTitle}>SI-KASEP</Text>
               <Text style={styles.aboutBrandSubtitle}>SMP NEGERI 5 CIAMIS</Text>
             </View>
@@ -136,7 +154,10 @@ export default function ProfileScreen() {
           <Text style={styles.aboutText}>
             <Text style={{ fontWeight: '700', color: '#0f172a' }}>SI-KASEP</Text> (Sistem Informasi Rekap Absen dan Penilaian) adalah platform resmi SMP Negeri 5 Ciamis untuk mendukung pencatatan kehadiran presisi dan transparansi nilai peserta didik.
           </Text>
-          <Text style={styles.versionText}>Versi 1.0.0 (React Native Mobile)</Text>
+          <View style={styles.versionBadge}>
+            <Ionicons name="information-circle-outline" size={14} color="#64748b" />
+            <Text style={styles.versionText}>Versi 1.0.0 (React Native Mobile)</Text>
+          </View>
         </View>
 
         {/* Logout Button */}
@@ -160,8 +181,8 @@ const styles = StyleSheet.create({
   },
   topBanner: {
     backgroundColor: '#0284c7',
-    paddingTop: 20,
-    paddingBottom: 44,
+    paddingTop: 16,
+    paddingBottom: 46,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
     alignItems: 'center',
@@ -204,7 +225,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.16,
     shadowRadius: 8,
     elevation: 6,
   },
@@ -224,19 +245,20 @@ const styles = StyleSheet.create({
     color: '#0284c7',
   },
   userName: {
-    fontSize: 19,
+    fontSize: 18.5,
     fontWeight: '800',
     color: '#ffffff',
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     letterSpacing: 0.3,
+    lineHeight: 24,
   },
   roleBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 14,
     paddingVertical: 4,
     borderRadius: 16,
-    marginTop: 6,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.35)',
   },
@@ -247,8 +269,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cardContainer: {
-    paddingHorizontal: 18,
-    marginTop: -22,
+    paddingHorizontal: 20,
+    marginTop: -20,
     zIndex: 2,
   },
   card: {
@@ -264,36 +286,61 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    gap: 8,
+  },
+  cardHeaderIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#e0f2fe',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 12,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
-  infoIcon: {
-    marginRight: 12,
-    width: 22,
-    textAlign: 'center',
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#e0f2fe',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
   infoContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   infoLabel: {
     fontSize: 11,
     color: '#64748b',
-    fontWeight: '500',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   infoValue: {
-    fontSize: 13.5,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: '#0f172a',
     marginTop: 2,
   },
@@ -328,10 +375,22 @@ const styles = StyleSheet.create({
     color: '#475569',
     lineHeight: 19,
   },
+  versionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f8fafc',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: 12,
+  },
   versionText: {
     fontSize: 11,
-    color: '#94a3b8',
-    marginTop: 10,
+    color: '#64748b',
     fontWeight: '600',
   },
   logoutBtn: {
@@ -343,7 +402,7 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
     paddingVertical: 14,
     borderRadius: 16,
-    marginTop: 4,
+    marginTop: 2,
     gap: 8,
     shadowColor: '#dc2626',
     shadowOffset: { width: 0, height: 2 },
