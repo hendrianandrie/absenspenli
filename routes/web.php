@@ -166,6 +166,14 @@ Route::middleware('auth')->group(function () {
                     $messages[] = "✓ Kolom `semester` dan `tahun_ajaran` tabel `kegiatans` sudah ada";
                 }
 
+                // 6. Pastikan tabel device_tokens untuk push notification mobile ada
+                if (!\Illuminate\Support\Facades\Schema::hasTable('device_tokens')) {
+                    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                    $messages[] = "✓ Berhasil menjalankan migrasi tabel `device_tokens` untuk push notification";
+                } else {
+                    $messages[] = "✓ Tabel `device_tokens` push notification sudah ada";
+                }
+
                 // 5. Bersihkan cache route, config & view
                 \Illuminate\Support\Facades\Artisan::call('route:clear');
                 \Illuminate\Support\Facades\Artisan::call('config:clear');

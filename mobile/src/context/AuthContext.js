@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../config/api';
+import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from '../services/notificationService';
 
 export const AuthContext = createContext();
 
@@ -19,6 +20,8 @@ export const AuthProvider = ({ children }) => {
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          // Daftarkan ulang push token jika belum atau terbarui
+          registerForPushNotificationsAsync().catch(err => console.log('Push register bg error:', err));
         }
       } catch (e) {
         console.warn('Gagal membaca sesi lokal:', e);
@@ -47,6 +50,9 @@ export const AuthProvider = ({ children }) => {
         setToken(authToken);
         setUser(authUser);
 
+        // Daftarkan perangkat untuk push notifications
+        registerForPushNotificationsAsync().catch(err => console.log('Push register error:', err));
+
         return { success: true, user: authUser };
       } else {
         return {
@@ -72,6 +78,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      await unregisterPushNotificationsAsync();
       await apiClient.post('/logout');
     } catch (e) {
       // Abaikan error jaringan saat logout

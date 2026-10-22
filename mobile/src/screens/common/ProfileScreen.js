@@ -39,6 +39,17 @@ export default function ProfileScreen() {
         },
       ]
     );
+  const handleTestNotification = async () => {
+    try {
+      const res = await apiClient.post('/device-token/test');
+      if (res.data?.status === 'success') {
+        Alert.alert('Berhasil 🔔', 'Notifikasi tes berhasil dikirim! Periksa banner notifikasi di HP Anda.');
+      } else {
+        Alert.alert('Perhatian', res.data?.message || 'Gagal mengirim notifikasi tes.');
+      }
+    } catch (e) {
+      Alert.alert('Gagal', e.response?.data?.message || 'Koneksi ke server bermasalah saat mengirim notifikasi.');
+    }
   };
 
   const getRoleLabel = (role) => {
@@ -132,6 +143,12 @@ export default function ProfileScreen() {
         </Text>
         <Text style={styles.versionText}>Versi 1.0.0 (React Native Mobile)</Text>
       </View>
+
+      {/* Test Push Notification Button */}
+      <TouchableOpacity style={styles.testBtn} onPress={handleTestNotification} activeOpacity={0.8}>
+        <Ionicons name="notifications-outline" size={20} color="#059669" />
+        <Text style={styles.testBtnText}>Tes Push Notifikasi ke HP Ini</Text>
+      </TouchableOpacity>
 
       {/* Reset Server & Logout Button */}
       <TouchableOpacity style={styles.resetBtn} onPress={handleResetAndLogout} activeOpacity={0.8}>
@@ -245,6 +262,23 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     marginTop: 8,
     fontWeight: '500',
+  },
+  testBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 10,
+  },
+  testBtnText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '700',
   },
   resetBtn: {
     flexDirection: 'row',

@@ -304,6 +304,10 @@ class NilaiController extends Controller
         ]);
 
         if ($request->has('nilai')) {
+            $mapel = MataPelajaran::find($request->mata_pelajaran_id);
+            $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
+            $kkm = $mapel->kkm ?? 75;
+
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
                     $score = min(100, max(0, floatval($val)));
@@ -312,6 +316,25 @@ class NilaiController extends Controller
                         'siswa_id' => $siswa_id,
                         'nilai' => $score,
                     ]);
+
+                    try {
+                        $statusKetuntasan = $score >= $kkm ? 'Tuntas' : 'Perlu Remedial';
+                        $siswa = Siswa::find($siswa_id);
+                        if ($siswa) {
+                            \App\Services\NotificationService::sendToSiswa(
+                                $siswa->id,
+                                "🔔 Nilai Baru: {$mapelName}",
+                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diinput: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                                [
+                                    'type' => 'nilai',
+                                    'kegiatan_id' => $kegiatan->id,
+                                    'siswa_id' => $siswa->id,
+                                    'mapel' => $mapelName,
+                                    'nilai' => $score,
+                                ]
+                            );
+                        }
+                    } catch (\Throwable $e) {}
                 }
             }
         }
@@ -359,6 +382,10 @@ class NilaiController extends Controller
         ]);
 
         if ($request->has('nilai')) {
+            $mapel = $kegiatan->mataPelajaran;
+            $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
+            $kkm = $mapel->kkm ?? 75;
+
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
                     $score = min(100, max(0, floatval($val)));
@@ -366,6 +393,25 @@ class NilaiController extends Controller
                         ['kegiatan_id' => $kegiatan->id, 'siswa_id' => $siswa_id],
                         ['nilai' => $score]
                     );
+
+                    try {
+                        $statusKetuntasan = $score >= $kkm ? 'Tuntas' : 'Perlu Remedial';
+                        $siswa = Siswa::find($siswa_id);
+                        if ($siswa) {
+                            \App\Services\NotificationService::sendToSiswa(
+                                $siswa->id,
+                                "🔔 Nilai Diperbarui: {$mapelName}",
+                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diperbarui: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                                [
+                                    'type' => 'nilai',
+                                    'kegiatan_id' => $kegiatan->id,
+                                    'siswa_id' => $siswa->id,
+                                    'mapel' => $mapelName,
+                                    'nilai' => $score,
+                                ]
+                            );
+                        }
+                    } catch (\Throwable $e) {}
                 } else {
                     Nilai::where('kegiatan_id', $kegiatan->id)->where('siswa_id', $siswa_id)->delete();
                 }

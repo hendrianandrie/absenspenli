@@ -108,4 +108,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Siswa::class, 'siswa_id');
     }
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
 }

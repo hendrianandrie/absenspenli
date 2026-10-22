@@ -164,6 +164,28 @@ class GuruApiController extends Controller
                         'nilai' => $score,
                     ]
                 );
+
+                try {
+                    $mapel = $kegiatan->mataPelajaran;
+                    $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
+                    $kkm = $mapel->kkm ?? 75;
+                    $statusKetuntasan = $score >= $kkm ? 'Tuntas' : 'Perlu Remedial';
+                    $siswa = Siswa::find($siswaId);
+                    if ($siswa) {
+                        \App\Services\NotificationService::sendToSiswa(
+                            $siswa->id,
+                            "🔔 Nilai Baru: {$mapelName}",
+                            "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diinput: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                            [
+                                'type' => 'nilai',
+                                'kegiatan_id' => $kegiatan->id,
+                                'siswa_id' => $siswa->id,
+                                'mapel' => $mapelName,
+                                'nilai' => $score,
+                            ]
+                        );
+                    }
+                } catch (\Throwable $e) {}
             }
         }
 

@@ -114,6 +114,23 @@ class AbsensiController extends Controller
                 ['siswa_id' => $siswa_id, 'tanggal' => $tanggal],
                 ['status' => $status]
             );
+
+            try {
+                $siswa = \App\Models\Siswa::find($siswa_id);
+                if ($siswa) {
+                    \App\Services\NotificationService::sendToSiswa(
+                        $siswa->id,
+                        '🔔 Presensi Harian — SMPN 5 Ciamis',
+                        "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$tanggal} telah dicatat: {$status}.",
+                        [
+                            'type' => 'absen',
+                            'siswa_id' => $siswa->id,
+                            'status' => $status,
+                            'tanggal' => $tanggal,
+                        ]
+                    );
+                }
+            } catch (\Throwable $e) {}
         }
 
         return redirect()->route('absensi.harian', ['tanggal' => $tanggal, 'kelas' => $request->kelas])

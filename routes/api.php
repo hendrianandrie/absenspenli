@@ -43,6 +43,13 @@ $registerApiRoutes = function () {
             Route::get('/nilai', [WaliKelasApiController::class, 'myClass']);
             Route::get('/kehadiran', [WaliKelasApiController::class, 'kehadiran']);
         });
+
+        // Push Notification Device Token Endpoints
+        Route::prefix('device-token')->group(function () {
+            Route::post('/register', [\App\Http\Controllers\Api\DeviceTokenController::class, 'register']);
+            Route::post('/unregister', [\App\Http\Controllers\Api\DeviceTokenController::class, 'unregister']);
+            Route::post('/test', [\App\Http\Controllers\Api\DeviceTokenController::class, 'test']);
+        });
     });
 };
 

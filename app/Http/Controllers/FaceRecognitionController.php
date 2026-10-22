@@ -331,7 +331,24 @@ class FaceRecognitionController extends Controller
             ]);
         }
 
-        $waktuScan = Carbon::parse($absensi->updated_at)->format('H:i:s');
+        $waktuScan = Carbon::parse($absensi->updated_at)->format('H:i');
+
+        if (!$isAlreadyHadir) {
+            try {
+                \App\Services\NotificationService::sendToSiswa(
+                    $siswa->id,
+                    '🔔 Presensi Masuk — SMPN 5 Ciamis',
+                    "Ananda {$siswa->nama} ({$siswa->kelas}) telah tiba di sekolah dan tercatat HADIR pada pukul {$waktuScan} WIB via Face Scanner.",
+                    [
+                        'type' => 'absen',
+                        'siswa_id' => $siswa->id,
+                        'status' => 'Hadir',
+                        'waktu' => $waktuScan,
+                        'tanggal' => $today,
+                    ]
+                );
+            } catch (\Throwable $e) {}
+        }
 
         return response()->json([
             'success' => true,
@@ -422,6 +439,20 @@ class FaceRecognitionController extends Controller
                 'metode' => 'manual',
             ]
         );
+
+        try {
+            \App\Services\NotificationService::sendToSiswa(
+                $siswa->id,
+                '🔔 Pembaruan Presensi — SMPN 5 Ciamis',
+                "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$today} telah dicatat sebagai: {$request->status}.",
+                [
+                    'type' => 'absen',
+                    'siswa_id' => $siswa->id,
+                    'status' => $request->status,
+                    'tanggal' => $today,
+                ]
+            );
+        } catch (\Throwable $e) {}
 
         if ($request->wantsJson()) {
             return response()->json([
