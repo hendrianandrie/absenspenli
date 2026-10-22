@@ -45,13 +45,8 @@ export async function registerForPushNotificationsAsync() {
       console.warn('Permissions check skipped in Expo Go:', permErr.message);
     }
 
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ??
-      Constants?.easConfig?.projectId ??
-      '1c7f4228-3e91-4d32-b7f7-b24e6c4691bc';
-
     try {
-      const pushTokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+      const pushTokenData = await Notifications.getExpoPushTokenAsync();
       token = pushTokenData?.data;
     } catch (tokenErr) {
       console.warn('Gagal getExpoPushTokenAsync:', tokenErr.message);
