@@ -30,7 +30,11 @@ class DeviceTokenController extends Controller
         // Tentukan siswa_id jika user adalah akun siswa
         $siswaId = $user->siswa_id;
         if (!$siswaId && $user->role === 'siswa') {
-            $siswa = \App\Models\Siswa::where('nis', $user->username)->first();
+            $cleanUser = ltrim($user->username, '0');
+            $siswa = \App\Models\Siswa::where('nis', $user->username)
+                ->orWhere('nis', $cleanUser)
+                ->orWhere('nis', 'like', '%' . $cleanUser)
+                ->first();
             $siswaId = $siswa ? $siswa->id : null;
         }
 

@@ -17,10 +17,21 @@ class NotificationService
      */
     public static function sendToSiswa($siswaId, string $title, string $body, array $data = []): array
     {
-        // Cari token berdasarkan siswa_id langsung atau via user siswa
+        $siswa = Siswa::find($siswaId);
+        $nis = $siswa ? $siswa->nis : null;
+        $cleanNis = $nis ? ltrim($nis, '0') : null;
+
+        // Cari token berdasarkan siswa_id langsung, user.siswa_id, atau user.username yang cocok dengan NIS
         $tokens = DeviceToken::where('siswa_id', $siswaId)
-            ->orWhereHas('user', function ($q) use ($siswaId) {
+            ->orWhereHas('user', function ($q) use ($siswaId, $nis, $cleanNis) {
                 $q->where('siswa_id', $siswaId);
+                if ($nis) {
+                    $q->orWhere('username', $nis);
+                    if ($cleanNis !== '') {
+                        $q->orWhere('username', $cleanNis)
+                          ->orWhere('username', 'like', '%' . $cleanNis);
+                    }
+                }
             })
             ->pluck('expo_push_token')
             ->unique()
