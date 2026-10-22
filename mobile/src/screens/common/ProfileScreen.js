@@ -1,12 +1,15 @@
-import React, { useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import { AuthContext } from '../../context/AuthContext';
 import apiClient, { DEFAULT_BASE_URL } from '../../config/api';
+import { registerForPushNotificationsAsync } from '../../services/notificationService';
 
 export default function ProfileScreen() {
   const { user, logout } = useContext(AuthContext);
+  const [testingNotif, setTestingNotif] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -42,15 +45,42 @@ export default function ProfileScreen() {
   };
 
   const handleTestNotification = async () => {
+    setTestingNotif(true);
     try {
+      // 1. Daftarkan / pastikan token HP ini tersimpan di database server
+      const regRes = await registerForPushNotificationsAsync();
+      if (!regRes?.success) {
+        Alert.alert('Info Pendaftaran', regRes?.message || 'Gagal mendaftarkan token notifikasi HP.');
+        setTestingNotif(false);
+        return;
+      }
+
+      // 2. Tampilkan notifikasi pop-up langsung di layar HP (banner + bunyi)
+      try {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🔔 Notifikasi SI-KASEP Aktif!',
+            body: `Halo ${user?.name || 'Siswa'}, perangkat ini berhasil terhubung untuk notifikasi presensi & nilai.`,
+            data: { type: 'test' },
+            sound: 'default',
+          },
+          trigger: null,
+        });
+      } catch (localErr) {
+        console.warn('Local notification error:', localErr);
+      }
+
+      // 3. Panggil API server untuk mengirimkan notifikasi dari backend
       const res = await apiClient.post('/device-token/test');
       if (res.data?.status === 'success') {
-        Alert.alert('Berhasil 🔔', 'Notifikasi tes berhasil dikirim! Periksa banner notifikasi di HP Anda.');
+        Alert.alert('Berhasil 🔔', 'Perangkat berhasil didaftarkan dan notifikasi tes telah dikirim! Periksa banner notifikasi di HP Anda.');
       } else {
-        Alert.alert('Perhatian', res.data?.message || 'Gagal mengirim notifikasi tes.');
+        Alert.alert('Perangkat Terhubung 🔔', res.data?.message || 'Token perangkat telah terdaftar di database server.');
       }
     } catch (e) {
-      Alert.alert('Gagal', e.response?.data?.message || 'Koneksi ke server bermasalah saat mengirim notifikasi.');
+      Alert.alert('Info', e.response?.data?.message || e.message || 'Koneksi ke server bermasalah.');
+    } finally {
+      setTestingNotif(false);
     }
   };
 
@@ -147,9 +177,20 @@ export default function ProfileScreen() {
       </View>
 
       {/* Test Push Notification Button */}
-      <TouchableOpacity style={styles.testBtn} onPress={handleTestNotification} activeOpacity={0.8}>
-        <Ionicons name="notifications-outline" size={20} color="#059669" />
-        <Text style={styles.testBtnText}>Tes Push Notifikasi ke HP Ini</Text>
+      <TouchableOpacity 
+        style={styles.testBtn} 
+        onPress={handleTestNotification} 
+        disabled={testingNotif}
+        activeOpacity={0.8}
+      >
+        {testingNotif ? (
+          <ActivityIndicator size="small" color="#059669" />
+        ) : (
+          <Ionicons name="notifications-outline" size={20} color="#059669" />
+        )}
+        <Text style={styles.testBtnText}>
+          {testingNotif ? 'Menghubungkan ke Server...' : 'Tes Push Notifikasi ke HP Ini'}
+        </Text>
       </TouchableOpacity>
 
       {/* Reset Server & Logout Button */}
