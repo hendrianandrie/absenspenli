@@ -49,6 +49,7 @@ $registerApiRoutes = function () {
             Route::post('/register', [\App\Http\Controllers\Api\DeviceTokenController::class, 'register']);
             Route::post('/unregister', [\App\Http\Controllers\Api\DeviceTokenController::class, 'unregister']);
             Route::post('/test', [\App\Http\Controllers\Api\DeviceTokenController::class, 'test']);
+            Route::get('/latest', [\App\Http\Controllers\Api\DeviceTokenController::class, 'latest']);
         });
     });
 };

@@ -3,6 +3,8 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from './src/config/api';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
@@ -35,7 +37,36 @@ export default function App() {
       console.warn('Notification listeners bypassed in Expo Go:', e.message);
     }
 
+    // Active Real-Time Notification Watcher (Memastikan notifikasi selalu muncul di Expo Go maupun APK)
+    const pollInterval = setInterval(async () => {
+      try {
+        const authToken = await AsyncStorage.getItem('auth_token');
+        if (!authToken) return;
+
+        const res = await apiClient.get('/device-token/latest');
+        const notif = res.data?.data;
+        if (notif && notif.id) {
+          const lastShownId = await AsyncStorage.getItem('last_shown_notif_id');
+          if (lastShownId !== notif.id) {
+            await AsyncStorage.setItem('last_shown_notif_id', notif.id);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: notif.title,
+                body: notif.body,
+                data: notif.data,
+                sound: 'default',
+              },
+              trigger: null,
+            });
+          }
+        }
+      } catch (err) {
+        // silent fail on network errors
+      }
+    }, 5000);
+
     return () => {
+      clearInterval(pollInterval);
       try {
         if (notificationListener.current) {
           notificationListener.current.remove();

@@ -107,4 +107,37 @@ class DeviceTokenController extends Controller
             'result' => $result,
         ]);
     }
+
+    /**
+     * Ambil notifikasi terbaru untuk akun siswa / user yang sedang login
+     */
+    public function latest(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['status' => 'error'], 401);
+        }
+
+        $siswaId = $user->siswa_id;
+        if (!$siswaId && $user->role === 'siswa') {
+            $cleanUser = ltrim($user->username, '0');
+            $siswa = \App\Models\Siswa::where('nis', $user->username)
+                ->orWhere('nis', $cleanUser)
+                ->first();
+            $siswaId = $siswa ? $siswa->id : null;
+        }
+
+        $notif = null;
+        if ($siswaId) {
+            $notif = \Illuminate\Support\Facades\Cache::get("latest_notif_siswa_{$siswaId}");
+        }
+        if (!$notif) {
+            $notif = \Illuminate\Support\Facades\Cache::get("latest_notif_user_{$user->id}");
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $notif,
+        ]);
+    }
 }
