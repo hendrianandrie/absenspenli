@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../../context/AuthContext';
-import { DEFAULT_BASE_URL } from '../../config/api';
+import apiClient, { DEFAULT_BASE_URL } from '../../config/api';
 
 export default function ProfileScreen() {
   const { user, logout } = useContext(AuthContext);
@@ -39,6 +39,8 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
   const handleTestNotification = async () => {
     try {
       const res = await apiClient.post('/device-token/test');
