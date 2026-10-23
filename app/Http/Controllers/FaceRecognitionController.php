@@ -347,13 +347,24 @@ class FaceRecognitionController extends Controller
     public function getEnrolledStudents(Request $request)
     {
         $selectedKelas = $request->get('kelas', 'Semua');
+        $today = Carbon::today()->toDateString();
+
+        // Ambil daftar siswa yang sudah hadir hari ini agar frontend langsung mengetahui statusnya
+        $attendedMap = Absensi::whereDate('tanggal', $today)
+            ->where('status', 'Hadir')
+            ->get()
+            ->keyBy('siswa_id')
+            ->map(function ($ab) {
+                return Carbon::parse($ab->created_at ?: $ab->updated_at)->format('H:i');
+            });
 
         $query = Siswa::whereNotNull('face_descriptor');
         if ($selectedKelas !== 'Semua') {
             $query->where('kelas', $selectedKelas);
         }
 
-        $students = $query->get()->map(function ($s) {
+        $students = $query->get()->map(function ($s) use ($attendedMap) {
+            $isHadir = isset($attendedMap[$s->id]);
             return [
                 'id' => $s->id,
                 'nama' => $s->nama,
@@ -361,6 +372,8 @@ class FaceRecognitionController extends Controller
                 'kelas' => $s->kelas,
                 'descriptor' => json_decode($s->face_descriptor),
                 'foto_url' => $s->foto_wajah ? asset('storage/' . $s->foto_wajah) : null,
+                'already_hadir_today' => $isHadir,
+                'waktu_hadir' => $isHadir ? $attendedMap[$s->id] : null,
             ];
         });
 
@@ -389,8 +402,29 @@ class FaceRecognitionController extends Controller
             ->whereDate('tanggal', $today)
             ->first();
 
-        $statusLama = $absensi ? $absensi->status : null;
         $isAlreadyHadir = $absensi && $absensi->status === 'Hadir';
+
+        // JIKA SISWA SUDAH HADIR SEBELUMNYA:
+        // Batasi dan tolak absensi ulang agar jam masuk awal tidak tertimpa dan tidak spam
+        if ($isAlreadyHadir) {
+            $waktuScanAwal = Carbon::parse($absensi->created_at ?: $absensi->updated_at)->format('H:i');
+            return response()->json([
+                'success' => true,
+                'already_hadir' => true,
+                'is_duplicate' => true,
+                'waktu_absen_awal' => $waktuScanAwal,
+                'message' => "Siswa {$siswa->nama} ({$siswa->kelas}) SUDAH ABSEN sebelumnya pada pukul {$waktuScanAwal} WIB.",
+                'siswa' => [
+                    'id' => $siswa->id,
+                    'nama' => $siswa->nama,
+                    'nis' => $siswa->nis,
+                    'kelas' => $siswa->kelas,
+                    'foto_url' => $siswa->foto_wajah ? asset('storage/' . $siswa->foto_wajah) : null,
+                    'waktu' => $waktuScanAwal,
+                ],
+                'distance' => $request->distance,
+            ]);
+        }
 
         $snapshotPath = null;
         if ($request->filled('image') && str_starts_with($request->image, 'data:image')) {
@@ -423,29 +457,27 @@ class FaceRecognitionController extends Controller
 
         $waktuScan = Carbon::parse($absensi->updated_at)->format('H:i');
 
-        if (!$isAlreadyHadir) {
-            try {
-                \App\Services\NotificationService::sendToSiswa(
-                    $siswa->id,
-                    '🔔 Presensi Masuk — SMPN 5 Ciamis',
-                    "Ananda {$siswa->nama} ({$siswa->kelas}) telah tiba di sekolah dan tercatat HADIR pada pukul {$waktuScan} WIB via Face Scanner.",
-                    [
-                        'type' => 'absen',
-                        'siswa_id' => $siswa->id,
-                        'status' => 'Hadir',
-                        'waktu' => $waktuScan,
-                        'tanggal' => $today,
-                    ]
-                );
-            } catch (\Throwable $e) {}
-        }
+        try {
+            \App\Services\NotificationService::sendToSiswa(
+                $siswa->id,
+                '🔔 Presensi Masuk — SMPN 5 Ciamis',
+                "Ananda {$siswa->nama} ({$siswa->kelas}) telah tiba di sekolah dan tercatat HADIR pada pukul {$waktuScan} WIB via Face Scanner.",
+                [
+                    'type' => 'absen',
+                    'siswa_id' => $siswa->id,
+                    'status' => 'Hadir',
+                    'waktu' => $waktuScan,
+                    'tanggal' => $today,
+                ]
+            );
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'success' => true,
-            'is_duplicate' => $isAlreadyHadir,
-            'message' => $isAlreadyHadir
-                ? "Siswa {$siswa->nama} sudah tercatat Hadir sebelumnya."
-                : "Presensi BERHASIL! {$siswa->nama} ({$siswa->kelas}) tercatat Hadir pada {$waktuScan} WIB.",
+            'already_hadir' => false,
+            'is_duplicate' => false,
+            'waktu_absen_awal' => $waktuScan,
+            'message' => "Presensi BERHASIL! {$siswa->nama} ({$siswa->kelas}) tercatat Hadir pada {$waktuScan} WIB.",
             'siswa' => [
                 'id' => $siswa->id,
                 'nama' => $siswa->nama,

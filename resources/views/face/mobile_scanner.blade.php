@@ -111,6 +111,11 @@
             box-shadow: 0 0 25px #10b981, 0 0 0 9999px rgba(0, 0, 0, 0.45);
         }
 
+        .face-guide-frame.duplicate {
+            border: 3.5px solid #f59e0b;
+            box-shadow: 0 0 25px #f59e0b, 0 0 0 9999px rgba(0, 0, 0, 0.45);
+        }
+
         .guide-text {
             position: absolute;
             bottom: -32px;
@@ -304,6 +309,15 @@
             line-height: 1.2;
         }
 
+        .match-popup.duplicate {
+            border-color: #f59e0b;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .match-badge.duplicate {
+            background: #d97706;
+        }
+
         .match-time {
             font-size: 9.5px;
             font-weight: 600;
@@ -415,8 +429,8 @@
                 <div class="match-name" id="matchName">Nama Siswa</div>
                 <div class="match-meta" id="matchMeta">NIS: - • Kelas -</div>
             </div>
-            <div class="match-badge">
-                <span>HADIR</span>
+            <div class="match-badge" id="matchBadge">
+                <span id="matchBadgeTitle">HADIR</span>
                 <span class="match-time" id="matchTime">--:--</span>
             </div>
         </div>
@@ -529,6 +543,28 @@
             } catch (e) {
                 console.warn('Audio error:', e);
             }
+        }
+
+        // WebAudio Warning Chime (Khusus bila siswa sudah absen sebelumnya)
+        function playWarningChime() {
+            if (!isAudioEnabled) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, ctx.currentTime);
+                osc.frequency.setValueAtTime(392, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.35);
+            } catch (e) {}
         }
 
         // 2. Start Camera dengan fallback bertingkat
@@ -806,11 +842,17 @@
             const student = enrolledStudentsMap[siswaId];
             if (!student) return;
 
-            faceGuide.classList.add('matched');
-            guideText.innerText = `Terverifikasi: ${student.nama}`;
-            playSuccessChime();
-
-            showHeroPopup(student);
+            // CEK APAKAH SISWA SUDAH TERCATAT HADIR HARI INI
+            if (student.already_hadir_today) {
+                faceGuide.classList.remove('matched');
+                faceGuide.classList.add('duplicate');
+                guideText.innerText = `Sudah Hadir: ${student.nama}`;
+                playWarningChime();
+                showHeroPopup(student, true, student.waktu_hadir);
+                // Beri jeda 8 detik agar tidak berulang kali memicu popup
+                lastScanned[siswaId] = Date.now() + 3000;
+                return;
+            }
 
             let imageBase64 = null;
             try {
@@ -842,24 +884,59 @@
                     })
                 });
                 const resData = await res.json();
-                if (resData.success && !resData.already_hadir) {
-                    hadirCount++;
-                    hadirCountEl.innerText = hadirCount;
+
+                if (resData.success) {
+                    student.already_hadir_today = true;
+
+                    if (resData.already_hadir || resData.is_duplicate) {
+                        student.waktu_hadir = resData.waktu_absen_awal;
+                        faceGuide.classList.remove('matched');
+                        faceGuide.classList.add('duplicate');
+                        guideText.innerText = `Sudah Hadir: ${student.nama}`;
+                        playWarningChime();
+                        showHeroPopup(student, true, resData.waktu_absen_awal);
+                    } else {
+                        student.waktu_hadir = resData.siswa ? resData.siswa.waktu : null;
+                        faceGuide.classList.remove('duplicate');
+                        faceGuide.classList.add('matched');
+                        guideText.innerText = `Terverifikasi: ${student.nama}`;
+                        playSuccessChime();
+                        showHeroPopup(student, false, student.waktu_hadir);
+
+                        hadirCount++;
+                        hadirCountEl.innerText = hadirCount;
+                    }
                 }
             } catch (err) {
                 console.error('Gagal mencatat presensi:', err);
             }
         }
 
-        function showHeroPopup(student) {
+        function showHeroPopup(student, isAlreadyHadir = false, waktu = null) {
             clearTimeout(popupTimer);
 
             matchName.innerText = student.nama;
-            matchMeta.innerText = `NIS: ${student.nis} • Kelas ${student.kelas}`;
 
             const now = new Date();
-            const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const timeStr = waktu || (String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
             matchTime.innerText = `${timeStr} WIB`;
+
+            const matchBadge = document.getElementById('matchBadge');
+            const matchBadgeTitle = document.getElementById('matchBadgeTitle');
+
+            if (isAlreadyHadir) {
+                matchPopup.classList.add('duplicate');
+                if (matchBadge) matchBadge.classList.add('duplicate');
+                if (matchBadgeTitle) matchBadgeTitle.innerText = 'SUDAH HADIR';
+                matchMeta.innerText = `NIS: ${student.nis} • Kelas ${student.kelas} (Tercatat sebelumnya)`;
+                matchName.style.color = '#fde68a';
+            } else {
+                matchPopup.classList.remove('duplicate');
+                if (matchBadge) matchBadge.classList.remove('duplicate');
+                if (matchBadgeTitle) matchBadgeTitle.innerText = 'HADIR';
+                matchMeta.innerText = `NIS: ${student.nis} • Kelas ${student.kelas}`;
+                matchName.style.color = '#ffffff';
+            }
 
             if (student.foto_url) {
                 matchAvatar.innerHTML = `<img src="${student.foto_url}" alt="${student.nama}">`;
@@ -872,6 +949,7 @@
             popupTimer = setTimeout(() => {
                 matchPopup.classList.remove('show');
                 faceGuide.classList.remove('matched');
+                faceGuide.classList.remove('duplicate');
             }, 3500);
         }
 
