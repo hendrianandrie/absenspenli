@@ -79,9 +79,11 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 260px;
-        height: 330px;
-        border: 2px dashed rgba(255, 255, 255, 0.35);
+        /* Responsif Otomatis untuk Laptop, Tablet & HP */
+        width: clamp(260px, 46vmin, 440px);
+        height: calc(clamp(260px, 46vmin, 440px) * 1.28);
+        max-height: 70vh;
+        border: 2.5px dashed rgba(255, 255, 255, 0.45);
         border-radius: 50% 50% 48% 48% / 60% 60% 40% 40%;
         pointer-events: none;
         z-index: 6;

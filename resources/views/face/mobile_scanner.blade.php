@@ -90,15 +90,17 @@
             100% { top: 95%; opacity: 0; }
         }
 
-        /* Face Guide Oval */
+        /* Face Guide Oval (Responsif Otomatis untuk HP & Tablet) */
         .face-guide-frame {
             position: absolute;
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 230px;
-            height: 290px;
-            border: 2.5px dashed rgba(255, 255, 255, 0.45);
+            /* Di HP: ~230px, di Tablet: otomatis membesar hingga ~380px - 440px mengikuti lebar & orientasi layar */
+            width: clamp(230px, 48vmin, 440px);
+            height: calc(clamp(230px, 48vmin, 440px) * 1.28);
+            max-height: 70vh;
+            border: 3px dashed rgba(255, 255, 255, 0.55);
             border-radius: 50% 50% 48% 48% / 60% 60% 40% 40%;
             pointer-events: none;
             z-index: 5;
@@ -107,28 +109,55 @@
         }
 
         .face-guide-frame.matched {
-            border: 3.5px solid #10b981;
-            box-shadow: 0 0 25px #10b981, 0 0 0 9999px rgba(0, 0, 0, 0.45);
+            border: 4px solid #10b981;
+            box-shadow: 0 0 30px #10b981, 0 0 0 9999px rgba(0, 0, 0, 0.45);
         }
 
         .face-guide-frame.duplicate {
-            border: 3.5px solid #f59e0b;
-            box-shadow: 0 0 25px #f59e0b, 0 0 0 9999px rgba(0, 0, 0, 0.45);
+            border: 4px solid #f59e0b;
+            box-shadow: 0 0 30px #f59e0b, 0 0 0 9999px rgba(0, 0, 0, 0.45);
         }
 
         .guide-text {
             position: absolute;
-            bottom: -32px;
+            bottom: -36px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.88);
-            padding: 5px 14px;
-            border-radius: 14px;
-            font-size: 11.5px;
+            background: rgba(15, 23, 42, 0.92);
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: clamp(11.5px, 2.2vmin, 14px);
             font-weight: 600;
             color: #e0f2fe;
             white-space: nowrap;
             border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Penyesuaian Tablet (Layar Lebar & Landscape) */
+        @media (min-width: 600px) {
+            .face-guide-frame {
+                border-width: 4px;
+            }
+            .guide-text {
+                bottom: -44px;
+                padding: 7px 18px;
+            }
+            .diagnostics-bar {
+                max-width: 580px;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+            }
+            .match-popup {
+                left: 50%;
+                right: auto;
+                width: 480px;
+                max-width: 90%;
+                transform: translate(-50%, 120px);
+            }
+            .match-popup.show {
+                transform: translate(-50%, 0);
+            }
         }
 
         /* Floating Camera Controls */
@@ -690,6 +719,11 @@
 
             faceapi.matchDimensions(scannerCanvas, { width: w, height: h });
         }
+
+        window.addEventListener('resize', updateCanvasDimensions);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateCanvasDimensions, 250);
+        });
 
         // 3. Fallback Canvas Rendering Pipeline (Loop 60FPS yang menjamin feed tampil di Android)
         function startCanvasRenderLoop() {
