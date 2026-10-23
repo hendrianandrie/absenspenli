@@ -372,6 +372,20 @@
             background-color: #f8fafc;
             border-color: #e2e8f0;
         }
+
+        @if(request('mobile_view') == '1' || session('mobile_view'))
+        /* Style Override Khusus Akses dari WebView Mobile App */
+        #mosaicSidebar, .mosaic-header, .mosaic-footer, #sidebarBackdrop {
+            display: none !important;
+        }
+        .mosaic-main-wrapper {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        .mosaic-main-content {
+            padding: 12px 10px 48px !important;
+        }
+        @endif
     </style>
     @stack('styles')
 </head>

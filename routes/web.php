@@ -27,6 +27,25 @@ Route::get('/face-recognition/mobile-scanner', [FaceRecognitionController::class
 Route::get('/face-recognition/mobile/enrolled-students', [FaceRecognitionController::class, 'getEnrolledStudentsMobile'])->name('face.mobile.enrolledStudents');
 Route::post('/face-recognition/mobile/record-attendance', [FaceRecognitionController::class, 'recordAttendanceMobile'])->name('face.mobile.recordAttendance');
 
+// Route Bridge Single Sign-On (SSO) dari Mobile App ke Web Portal Guru / Wali Kelas
+Route::get('/auth/mobile-bridge', function (\Illuminate\Http\Request $request) {
+    if ($request->has('token')) {
+        $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
+        if ($pat && $pat->tokenable) {
+            \Illuminate\Support\Facades\Auth::login($pat->tokenable);
+            session(['mobile_view' => true]);
+        }
+    }
+
+    $redirect = $request->query('redirect', '/dashboard');
+    if (!str_starts_with($redirect, '/')) {
+        $redirect = '/dashboard';
+    }
+
+    $separator = str_contains($redirect, '?') ? '&' : '?';
+    return redirect($redirect . $separator . 'mobile_view=1');
+})->name('auth.mobileBridge');
+
 // Protected Routes (Hanya dapat diakses setelah login)
 Route::middleware('auth')->group(function () {
 

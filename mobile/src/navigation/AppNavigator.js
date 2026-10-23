@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SiswaTabNavigator from './SiswaTabNavigator';
 import StaffDashboardScreen from '../screens/common/StaffDashboardScreen';
+import StaffWebScreen from '../screens/common/StaffWebScreen';
 import PiketDashboardScreen from '../screens/piket/PiketDashboardScreen';
 import FaceScannerScreen from '../screens/piket/FaceScannerScreen';
 
@@ -61,6 +62,11 @@ export default function AppNavigator() {
           {(user.role === 'admin' || user.role === 'piket') && (
             <Stack.Screen name="FaceScanner" component={FaceScannerScreen} />
           )}
+          <Stack.Screen
+            name="StaffWeb"
+            component={StaffWebScreen}
+            options={{ headerShown: false }}
+          />
         </>
       )}
     </Stack.Navigator>
