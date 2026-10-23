@@ -193,7 +193,9 @@ export default function SiswaDashboardScreen({ navigation }) {
                 <Text style={styles.gradeKegiatan} numberOfLines={1}>
                   {item.nama_kegiatan} • {item.jenis}
                 </Text>
-                <Text style={styles.gradeDate}>{item.tanggal_formatted}</Text>
+                <Text style={styles.gradeDate}>
+                  {item.tanggal_formatted}{item.guru ? ` • Oleh ${item.guru}` : ''}
+                </Text>
               </View>
               <View style={styles.gradeScoreBox}>
                 <Text style={styles.gradeScore}>{item.nilai}</Text>

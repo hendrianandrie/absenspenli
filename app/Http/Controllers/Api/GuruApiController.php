@@ -146,6 +146,9 @@ class GuruApiController extends Controller
 
         $kegiatan = Kegiatan::findOrFail($request->kegiatan_id);
 
+        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        $namaGuru = $currentUser ? ($currentUser->name ?: $currentUser->username) : 'Guru Pengampu';
+
         foreach ($request->nilai_data as $item) {
             $siswaId = $item['siswa_id'];
             $score = $item['nilai'];
@@ -155,6 +158,10 @@ class GuruApiController extends Controller
                     ->where('siswa_id', $siswaId)
                     ->delete();
             } else {
+                $isUpdate = Nilai::where('kegiatan_id', $kegiatan->id)
+                    ->where('siswa_id', $siswaId)
+                    ->exists();
+
                 Nilai::updateOrCreate(
                     [
                         'kegiatan_id' => $kegiatan->id,
@@ -172,16 +179,20 @@ class GuruApiController extends Controller
                     $statusKetuntasan = $score >= $kkm ? 'Tuntas' : 'Perlu Remedial';
                     $siswa = Siswa::find($siswaId);
                     if ($siswa) {
+                        $titleNotif = $isUpdate ? "🔔 Nilai Diperbarui: {$mapelName}" : "🔔 Nilai Baru: {$mapelName}";
+                        $aksiNotif = $isUpdate ? "telah diperbarui oleh {$namaGuru}" : "telah diinput oleh {$namaGuru}";
+
                         \App\Services\NotificationService::sendToSiswa(
                             $siswa->id,
-                            "🔔 Nilai Baru: {$mapelName}",
-                            "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diinput: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                            $titleNotif,
+                            "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} {$aksiNotif}: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
                             [
                                 'type' => 'nilai',
                                 'kegiatan_id' => $kegiatan->id,
                                 'siswa_id' => $siswa->id,
                                 'mapel' => $mapelName,
                                 'nilai' => $score,
+                                'guru' => $namaGuru,
                             ]
                         );
                     }

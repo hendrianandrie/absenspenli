@@ -307,6 +307,8 @@ class NilaiController extends Controller
             $mapel = MataPelajaran::find($request->mata_pelajaran_id);
             $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
             $kkm = $mapel->kkm ?? 75;
+            $currentUser = \Illuminate\Support\Facades\Auth::user();
+            $namaGuru = $currentUser ? ($currentUser->name ?: $currentUser->username) : 'Guru Pengampu';
 
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
@@ -324,13 +326,14 @@ class NilaiController extends Controller
                             \App\Services\NotificationService::sendToSiswa(
                                 $siswa->id,
                                 "🔔 Nilai Baru: {$mapelName}",
-                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diinput: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diinput oleh {$namaGuru}: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
                                 [
                                     'type' => 'nilai',
                                     'kegiatan_id' => $kegiatan->id,
                                     'siswa_id' => $siswa->id,
                                     'mapel' => $mapelName,
                                     'nilai' => $score,
+                                    'guru' => $namaGuru,
                                 ]
                             );
                         }
@@ -385,6 +388,8 @@ class NilaiController extends Controller
             $mapel = $kegiatan->mataPelajaran;
             $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
             $kkm = $mapel->kkm ?? 75;
+            $currentUser = \Illuminate\Support\Facades\Auth::user();
+            $namaGuru = $currentUser ? ($currentUser->name ?: $currentUser->username) : 'Guru Pengampu';
 
             foreach ($request->nilai as $siswa_id => $val) {
                 if ($val !== null && $val !== '') {
@@ -401,13 +406,14 @@ class NilaiController extends Controller
                             \App\Services\NotificationService::sendToSiswa(
                                 $siswa->id,
                                 "🔔 Nilai Diperbarui: {$mapelName}",
-                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diperbarui: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
+                                "Nilai {$kegiatan->nama_kegiatan} Ananda {$siswa->nama} telah diperbarui oleh {$namaGuru}: {$score} ({$statusKetuntasan}). KKM: {$kkm}.",
                                 [
                                     'type' => 'nilai',
                                     'kegiatan_id' => $kegiatan->id,
                                     'siswa_id' => $siswa->id,
                                     'mapel' => $mapelName,
                                     'nilai' => $score,
+                                    'guru' => $namaGuru,
                                 ]
                             );
                         }

@@ -456,18 +456,21 @@ class FaceRecognitionController extends Controller
         }
 
         $waktuScan = Carbon::parse($absensi->updated_at)->format('H:i');
+        $petugas = \Illuminate\Support\Facades\Auth::user() ?? $request->user();
+        $namaPetugas = $petugas ? ($petugas->name ?: $petugas->username) : 'Petugas Piket';
 
         try {
             \App\Services\NotificationService::sendToSiswa(
                 $siswa->id,
                 '🔔 Presensi Masuk — SMPN 5 Ciamis',
-                "Ananda {$siswa->nama} ({$siswa->kelas}) telah tiba di sekolah dan tercatat HADIR pada pukul {$waktuScan} WIB via Face Scanner.",
+                "Ananda {$siswa->nama} ({$siswa->kelas}) telah tiba di sekolah dan tercatat HADIR pada pukul {$waktuScan} WIB oleh {$namaPetugas} via Face Scanner.",
                 [
                     'type' => 'absen',
                     'siswa_id' => $siswa->id,
                     'status' => 'Hadir',
                     'waktu' => $waktuScan,
                     'tanggal' => $today,
+                    'petugas' => $namaPetugas,
                 ]
             );
         } catch (\Throwable $e) {}
@@ -562,16 +565,20 @@ class FaceRecognitionController extends Controller
             ]
         );
 
+        $petugas = \Illuminate\Support\Facades\Auth::user() ?? $request->user();
+        $namaPetugas = $petugas ? ($petugas->name ?: $petugas->username) : 'Petugas Piket';
+
         try {
             \App\Services\NotificationService::sendToSiswa(
                 $siswa->id,
                 '🔔 Pembaruan Presensi — SMPN 5 Ciamis',
-                "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$today} telah dicatat sebagai: {$request->status}.",
+                "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$today} telah dicatat sebagai: {$request->status} oleh {$namaPetugas}.",
                 [
                     'type' => 'absen',
                     'siswa_id' => $siswa->id,
                     'status' => $request->status,
                     'tanggal' => $today,
+                    'petugas' => $namaPetugas,
                 ]
             );
         } catch (\Throwable $e) {}

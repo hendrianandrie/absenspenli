@@ -118,15 +118,19 @@ class AbsensiController extends Controller
             try {
                 $siswa = \App\Models\Siswa::find($siswa_id);
                 if ($siswa) {
+                    $petugas = \Illuminate\Support\Facades\Auth::user();
+                    $namaPetugas = $petugas ? ($petugas->name ?: $petugas->username) : 'Guru / Petugas';
+
                     \App\Services\NotificationService::sendToSiswa(
                         $siswa->id,
                         '🔔 Presensi Harian — SMPN 5 Ciamis',
-                        "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$tanggal} telah dicatat: {$status}.",
+                        "Status presensi Ananda {$siswa->nama} ({$siswa->kelas}) tanggal {$tanggal} telah dicatat: {$status} oleh {$namaPetugas}.",
                         [
                             'type' => 'absen',
                             'siswa_id' => $siswa->id,
                             'status' => $status,
                             'tanggal' => $tanggal,
+                            'petugas' => $namaPetugas,
                         ]
                     );
                 }

@@ -125,7 +125,7 @@ class SiswaApiController extends Controller
         $kegiatanKelas = Kegiatan::where('kelas', $siswa->kelas)
             ->where('semester', $semester)
             ->where('tahun_ajaran', $tahunAjaran)
-            ->with('mataPelajaran')
+            ->with(['mataPelajaran.users'])
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -141,6 +141,16 @@ class SiswaApiController extends Controller
                 $nilaiObj = $nilaiSiswaMap->get($keg->id);
                 $kkm = $keg->mataPelajaran->kkm ?? 75;
                 $score = (float) $nilaiObj->nilai;
+
+                $guruName = null;
+                if ($keg->mataPelajaran) {
+                    $firstGuru = $keg->mataPelajaran->users->first()
+                        ?? \App\Models\User::where('mata_pelajaran_id', $keg->mata_pelajaran_id)->first();
+                    if ($firstGuru) {
+                        $guruName = $firstGuru->name ?: $firstGuru->username;
+                    }
+                }
+
                 $nilaiTerbaru[] = [
                     'id' => $nilaiObj->id,
                     'mapel' => $keg->mataPelajaran->nama_mapel ?? '-',
@@ -151,6 +161,7 @@ class SiswaApiController extends Controller
                     'nilai' => $score,
                     'kkm' => $kkm,
                     'is_tuntas' => $score >= $kkm,
+                    'guru' => $guruName,
                 ];
                 if (count($nilaiTerbaru) >= 5) {
                     break;
@@ -323,6 +334,10 @@ class SiswaApiController extends Controller
             $remedialCount = 0;
             $kkm = $mapel->kkm ?? 75;
 
+            $guruMapel = $mapel->users->first()
+                ?? \App\Models\User::where('mata_pelajaran_id', $mapel->id)->first();
+            $namaGuruMapel = $guruMapel ? ($guruMapel->name ?: $guruMapel->username) : null;
+
             foreach ($kegiatans as $keg) {
                 $nilaiObj = $nilaiMap->get($keg->id);
                 $hasNilai = !is_null($nilaiObj);
@@ -348,6 +363,7 @@ class SiswaApiController extends Controller
                     'kkm' => $kkm,
                     'is_dinilai' => $hasNilai,
                     'is_tuntas' => $isTuntas,
+                    'guru' => $namaGuruMapel,
                 ];
             }
 
@@ -357,6 +373,7 @@ class SiswaApiController extends Controller
                 'mapel_id' => $mapel->id,
                 'nama_mapel' => $mapel->nama_mapel,
                 'kode_mapel' => $mapel->kode_mapel ?? null,
+                'guru' => $namaGuruMapel,
                 'kkm' => $kkm,
                 'statistik' => [
                     'total_kegiatan' => count($kegiatans),

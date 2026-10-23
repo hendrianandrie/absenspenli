@@ -148,6 +148,11 @@ export default function SiswaNilaiScreen() {
                 <View style={styles.mapelHeader}>
                   <View style={styles.mapelTitleBox}>
                     <Text style={styles.mapelTitle}>{mapelItem.nama_mapel}</Text>
+                    {mapelItem.guru && (
+                      <Text style={{ fontSize: 11, color: '#64748b', marginTop: 1, fontWeight: '500' }}>
+                        Guru: {mapelItem.guru}
+                      </Text>
+                    )}
                     <View style={styles.kkmBadge}>
                       <Text style={styles.kkmText}>KKM: {mapelItem.kkm}</Text>
                     </View>
@@ -183,7 +188,7 @@ export default function SiswaNilaiScreen() {
                         <View style={styles.assessLeft}>
                           <Text style={styles.assessTitle}>{p.nama_kegiatan}</Text>
                           <Text style={styles.assessMeta}>
-                            {p.jenis} • {p.tanggal_formatted}
+                            {p.jenis} • {p.tanggal_formatted}{(p.guru || mapelItem.guru) ? ` • Oleh ${p.guru || mapelItem.guru}` : ''}
                           </Text>
                         </View>
                         <View style={styles.assessRight}>
