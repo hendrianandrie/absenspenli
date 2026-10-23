@@ -7,6 +7,7 @@ export default function StaffDashboardScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
 
   const isWali = user?.is_wali_kelas;
+  const canAccessScanner = user?.role === 'admin' || user?.role === 'piket';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -55,16 +56,18 @@ export default function StaffDashboardScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Tombol Akses Scanner Presensi Wajah */}
-      <TouchableOpacity
-        style={styles.scannerBtn}
-        onPress={() => navigation.navigate('FaceScanner')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="camera" size={20} color="#ffffff" />
-        <Text style={styles.scannerBtnText}>Buka Scanner Presensi Wajah</Text>
-        <Ionicons name="arrow-forward" size={16} color="#ffffff" />
-      </TouchableOpacity>
+      {/* Tombol Akses Scanner Presensi Wajah (Hanya Admin & Petugas Piket) */}
+      {canAccessScanner && (
+        <TouchableOpacity
+          style={styles.scannerBtn}
+          onPress={() => navigation.navigate('FaceScanner')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="camera" size={20} color="#ffffff" />
+          <Text style={styles.scannerBtnText}>Buka Scanner Presensi Wajah</Text>
+          <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+        </TouchableOpacity>
+      )}
 
       {/* Tombol Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>

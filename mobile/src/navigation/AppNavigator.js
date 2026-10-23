@@ -58,7 +58,9 @@ export default function AppNavigator() {
               headerTintColor: '#ffffff',
             }}
           />
-          <Stack.Screen name="FaceScanner" component={FaceScannerScreen} />
+          {(user.role === 'admin' || user.role === 'piket') && (
+            <Stack.Screen name="FaceScanner" component={FaceScannerScreen} />
+          )}
         </>
       )}
     </Stack.Navigator>
