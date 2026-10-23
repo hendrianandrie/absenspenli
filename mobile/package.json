@@ -12,6 +12,7 @@
     "@react-navigation/stack": "^7.12.1",
     "axios": "^1.20.0",
     "expo": "^57.0.30",
+    "expo-camera": "~57.0.6",
     "expo-device": "~57.0.2",
     "expo-linear-gradient": "~57.0.2",
     "expo-notifications": "~57.0.23",

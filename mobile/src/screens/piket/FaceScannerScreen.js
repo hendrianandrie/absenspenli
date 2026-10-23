@@ -9,6 +9,7 @@ import {
   PermissionsAndroid,
   Alert,
 } from 'react-native';
+import { Camera } from 'expo-camera';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -22,9 +23,19 @@ export default function FaceScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 1. Minta Izin Kamera di Android sebelum WebView dimuat
+  // 1. Minta Izin Kamera melalui expo-camera (kompatibel penuh dengan Expo Go & Android)
   useEffect(() => {
     const requestCameraPermission = async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if (status === 'granted') {
+          setHasPermission(true);
+          return;
+        }
+      } catch (e) {
+        console.warn('Camera.requestCameraPermissionsAsync error:', e);
+      }
+
       if (Platform.OS === 'android') {
         try {
           const granted = await PermissionsAndroid.requestMultiple([
