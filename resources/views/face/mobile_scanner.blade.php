@@ -635,6 +635,10 @@
                 } else {
                     statusText.innerText = 'Kamera Aktif';
                 }
+                setTimeout(() => {
+                    const db = document.getElementById('diagBar');
+                    if (db) db.style.opacity = '0';
+                }, 3000);
             };
         }
 
