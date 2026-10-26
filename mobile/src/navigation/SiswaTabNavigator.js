@@ -117,22 +117,36 @@ function CustomTabHeader({ route }) {
 }
 
 export default function SiswaTabNavigator() {
+  const insets = useSafeAreaInsets();
+  // Tangani Android System Navigation Bar (terutama tablet dalam posisi landscape)
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 16 : 8);
+
   return (
     <Tab.Navigator
+      safeAreaInsets={{ bottom: bottomInset }}
       screenOptions={({ route }) => ({
         header: (props) => <CustomTabHeader {...props} />,
         tabBarActiveTintColor: '#0284c7',
         tabBarInactiveTintColor: '#94a3b8',
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopColor: '#e2e8f0',
-          paddingBottom: 6,
+          paddingBottom: bottomInset,
           paddingTop: 6,
-          height: 60,
+          height: 60 + bottomInset,
+          elevation: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.12,
+          shadowRadius: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 10.5,
+          fontSize: 11,
           fontWeight: '600',
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;

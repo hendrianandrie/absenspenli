@@ -108,6 +108,39 @@ export default function SiswaDashboardScreen({ navigation }) {
         )}
       </View>
 
+      {/* Menu Akses Cepat (Sangat Membantu di Tablet & Layar Lebar) */}
+      <View style={styles.quickNavRow}>
+        <TouchableOpacity
+          style={[styles.quickNavCard, { backgroundColor: '#ffffff', borderColor: '#bae6fd' }]}
+          activeOpacity={0.75}
+          onPress={() => navigation.navigate('RekapAbsenTab')}
+        >
+          <View style={[styles.quickNavIconWrap, { backgroundColor: '#e0f2fe' }]}>
+            <Ionicons name="calendar" size={22} color="#0284c7" />
+          </View>
+          <View style={styles.quickNavTextCol}>
+            <Text style={styles.quickNavTitle}>Rekap Absen</Text>
+            <Text style={styles.quickNavSubtitle}>Riwayat kehadiran</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#0284c7" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickNavCard, { backgroundColor: '#ffffff', borderColor: '#e9d5ff' }]}
+          activeOpacity={0.75}
+          onPress={() => navigation.navigate('RekapNilaiTab')}
+        >
+          <View style={[styles.quickNavIconWrap, { backgroundColor: '#f3e8ff' }]}>
+            <Ionicons name="ribbon" size={22} color="#9333ea" />
+          </View>
+          <View style={styles.quickNavTextCol}>
+            <Text style={styles.quickNavTitle}>Rekap Nilai</Text>
+            <Text style={styles.quickNavSubtitle}>Capaian & rapor</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#9333ea" />
+        </TouchableOpacity>
+      </View>
+
       {/* Ringkasan Presensi Bulan Berjalan */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
@@ -230,7 +263,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: 60,
   },
   centerContainer: {
     flex: 1,
@@ -361,6 +394,45 @@ const styles = StyleSheet.create({
   waliName: {
     fontWeight: '700',
     color: '#ffffff',
+  },
+  quickNavRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  quickNavCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1.5,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  quickNavIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  quickNavTextCol: {
+    flex: 1,
+  },
+  quickNavTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  quickNavSubtitle: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 1,
   },
   waliName: {
     fontWeight: '700',
