@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exports\NilaiExport;
+use App\Exports\NilaiTemplateExport;
+use App\Imports\NilaiImport;
 use App\Models\Kegiatan;
 use App\Models\MataPelajaran;
 use App\Models\Nilai;
@@ -303,6 +305,13 @@ class NilaiController extends Controller
             'tanggal' => $request->tanggal,
         ]);
 
+        if ($request->hasFile('file_excel')) {
+            try {
+                $import = new NilaiImport($kegiatan);
+                Excel::import($import, $request->file('file_excel'));
+            } catch (\Throwable $e) {}
+        }
+
         if ($request->has('nilai')) {
             $mapel = MataPelajaran::find($request->mata_pelajaran_id);
             $mapelName = $mapel ? $mapel->nama_mapel : 'Mata Pelajaran';
@@ -383,6 +392,13 @@ class NilaiController extends Controller
             'tahun_ajaran' => $tahunAjaran,
             'tanggal' => $request->tanggal,
         ]);
+
+        if ($request->hasFile('file_excel')) {
+            try {
+                $import = new NilaiImport($kegiatan);
+                Excel::import($import, $request->file('file_excel'));
+            } catch (\Throwable $e) {}
+        }
 
         if ($request->has('nilai')) {
             $mapel = $kegiatan->mataPelajaran;
@@ -493,6 +509,277 @@ class NilaiController extends Controller
         $fileName = 'Rekap_Nilai_'.$mapel->kode_mapel.'_Kelas_'.$kelas.'_Sem_'.$semester.'.xlsx';
 
         return Excel::download(new NilaiExport($kelas, $mapelId, $semester, $tahunAjaran), $fileName);
+    }
+
+    public function downloadTemplateExcel(Request $request)
+    {
+        $kelas = $request->get('kelas');
+        $mapelId = $request->get('mata_pelajaran_id');
+        $kegiatanId = $request->get('kegiatan_id');
+
+        if (empty($kelas)) {
+            return back()->with('error', 'Kelas wajib dipilih untuk mengunduh template nilai.');
+        }
+
+        $mapel = $mapelId ? MataPelajaran::find($mapelId) : null;
+        $mapelCode = $mapel ? preg_replace('/[^a-zA-Z0-9]/', '_', $mapel->kode_mapel ?: $mapel->nama_mapel) : 'Mapel';
+        $cleanKelas = preg_replace('/[^a-zA-Z0-9]/', '_', $kelas);
+
+        $kegiatan = $kegiatanId ? Kegiatan::find($kegiatanId) : null;
+        $kegiatanPart = $kegiatan ? '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $kegiatan->nama_kegiatan) : '';
+
+        $fileName = 'Template_Nilai_' . $cleanKelas . '_' . $mapelCode . $kegiatanPart . '.xlsx';
+
+        return Excel::download(new NilaiTemplateExport($kelas, $kegiatanId), $fileName);
+    }
+
+    public function parseExcel(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'kelas' => 'required|string',
+        ], [
+            'file_excel.required' => 'Pilih file Excel yang ingin dimuat.',
+            'file_excel.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau CSV.',
+            'kelas.required' => 'Kelas harus dipilih.',
+        ]);
+
+        try {
+            $kelas = $request->kelas;
+            $file = $request->file('file_excel');
+
+            $importHelper = new class implements \Maatwebsite\Excel\Concerns\ToArray, \Maatwebsite\Excel\Concerns\WithHeadingRow, \Maatwebsite\Excel\Concerns\WithCustomCsvSettings {
+                public function array(array $array) {
+                    return $array;
+                }
+                public function getCsvSettings(): array {
+                    return [
+                        'delimiter' => ';',
+                        'enclosure' => '"',
+                        'input_encoding' => 'UTF-8',
+                    ];
+                }
+            };
+
+            $sheets = Excel::toArray($importHelper, $file);
+            $rows = $sheets[0] ?? [];
+
+            $siswas = Siswa::where('kelas', $kelas)->get();
+            $siswaByNis = [];
+            $siswaByCleanNis = [];
+            $siswaByName = [];
+
+            foreach ($siswas as $s) {
+                $rawNis = trim((string) $s->nis);
+                $cleanNis = ltrim($rawNis, '0');
+                $cleanName = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', (string) $s->nama)));
+
+                $siswaByNis[$rawNis] = $s;
+                if ($cleanNis !== '') {
+                    $siswaByCleanNis[$cleanNis] = $s;
+                }
+                if ($cleanName !== '') {
+                    $siswaByName[$cleanName] = $s;
+                }
+            }
+
+            $matched = [];
+            $unmatched = [];
+            $skipped = [];
+
+            foreach ($rows as $index => $row) {
+                $cleanRow = [];
+                foreach ($row as $key => $val) {
+                    $k = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', (string) $key)));
+                    $cleanRow[$k] = is_string($val) ? trim($val) : $val;
+                }
+
+                // 1. NISN
+                $rawNisInput = $cleanRow['nisn'] 
+                    ?? $cleanRow['nis'] 
+                    ?? $cleanRow['noinduk'] 
+                    ?? $cleanRow['nomorinduk'] 
+                    ?? $cleanRow['nissiswa']
+                    ?? (isset($row[1]) ? trim((string) $row[1]) : null);
+                $rawNisStr = is_string($rawNisInput) ? trim(ltrim($rawNisInput, "'")) : (string) $rawNisInput;
+
+                // 2. Nama
+                $namaInput = $cleanRow['namasiswa'] 
+                    ?? $cleanRow['nama'] 
+                    ?? $cleanRow['namalengkap'] 
+                    ?? $cleanRow['siswa'] 
+                    ?? (isset($row[2]) ? trim((string) $row[2]) : '');
+
+                // 3. Nilai
+                $nilaiInput = $cleanRow['nilai'] 
+                    ?? $cleanRow['nilai0100'] 
+                    ?? $cleanRow['skor'] 
+                    ?? $cleanRow['score'] 
+                    ?? $cleanRow['angka']
+                    ?? (isset($row[3]) ? $row[3] : null);
+
+                if (empty($rawNisStr) && empty($namaInput) && ($nilaiInput === null || $nilaiInput === '')) {
+                    continue;
+                }
+
+                $namaUpper = strtoupper(trim((string) $namaInput));
+                if ($namaUpper === 'NAMA' || $namaUpper === 'NAMA SISWA' || $namaUpper === 'NAMA_SISWA') {
+                    continue;
+                }
+
+                $matchedSiswa = null;
+                if (!empty($rawNisStr)) {
+                    if (isset($siswaByNis[$rawNisStr])) {
+                        $matchedSiswa = $siswaByNis[$rawNisStr];
+                    } else {
+                        $cleanNisSearch = ltrim($rawNisStr, '0');
+                        if (isset($siswaByCleanNis[$cleanNisSearch])) {
+                            $matchedSiswa = $siswaByCleanNis[$cleanNisSearch];
+                        } else {
+                            $paddedNis = str_pad($rawNisStr, 10, '0', STR_PAD_LEFT);
+                            if (isset($siswaByNis[$paddedNis])) {
+                                $matchedSiswa = $siswaByNis[$paddedNis];
+                            }
+                        }
+                    }
+                }
+
+                if (!$matchedSiswa && !empty($namaInput)) {
+                    $cleanSearchName = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', (string) $namaInput)));
+                    if (isset($siswaByName[$cleanSearchName])) {
+                        $matchedSiswa = $siswaByName[$cleanSearchName];
+                    }
+                }
+
+                if (!$matchedSiswa) {
+                    $unmatched[] = [
+                        'baris' => $index + 2,
+                        'nisn' => $rawNisStr ?: '-',
+                        'nama' => $namaInput ?: '-',
+                        'alasan' => "Siswa tidak ditemukan di kelas {$kelas}",
+                    ];
+                    continue;
+                }
+
+                if ($nilaiInput === null || $nilaiInput === '' || $nilaiInput === '-') {
+                    $skipped[] = [
+                        'siswa_id' => $matchedSiswa->id,
+                        'nama' => $matchedSiswa->nama,
+                        'alasan' => 'Nilai kosong',
+                    ];
+                    continue;
+                }
+
+                if (is_string($nilaiInput)) {
+                    $nilaiInput = str_replace(',', '.', trim($nilaiInput));
+                }
+
+                if (!is_numeric($nilaiInput)) {
+                    $skipped[] = [
+                        'siswa_id' => $matchedSiswa->id,
+                        'nama' => $matchedSiswa->nama,
+                        'alasan' => "Format nilai tidak valid ('{$nilaiInput}')",
+                    ];
+                    continue;
+                }
+
+                $score = min(100, max(0, floatval($nilaiInput)));
+
+                $matched[] = [
+                    'siswa_id' => $matchedSiswa->id,
+                    'nisn' => $matchedSiswa->nis,
+                    'nama' => $matchedSiswa->nama,
+                    'nilai' => $score,
+                ];
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'kelas' => $kelas,
+                'total_rows' => count($rows),
+                'matched_count' => count($matched),
+                'skipped_count' => count($skipped),
+                'unmatched_count' => count($unmatched),
+                'matched' => $matched,
+                'unmatched' => $unmatched,
+                'skipped' => $skipped,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membaca file Excel: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'mode' => 'nullable|in:existing,new',
+        ], [
+            'file_excel.required' => 'File Excel nilai wajib diunggah.',
+            'file_excel.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau CSV.',
+            'file_excel.max' => 'Ukuran file Excel maksimal 5MB.',
+        ]);
+
+        $mode = $request->input('mode', 'new');
+        $kegiatan = null;
+
+        if ($mode === 'existing' || $request->filled('kegiatan_id')) {
+            $request->validate([
+                'kegiatan_id' => 'required|exists:kegiatans,id',
+            ], [
+                'kegiatan_id.required' => 'Pilih kegiatan penilaian yang ingin diimpor nilainya.',
+            ]);
+            $kegiatan = Kegiatan::findOrFail($request->kegiatan_id);
+        } else {
+            $request->validate([
+                'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
+                'kelas' => 'required|string',
+                'nama_kegiatan' => 'required|string|max:150',
+                'jenis' => 'required|in:Tugas,UH,UTS,UAS',
+                'tanggal' => 'required|date',
+            ], [
+                'mata_pelajaran_id.required' => 'Mata pelajaran wajib dipilih.',
+                'kelas.required' => 'Kelas wajib dipilih.',
+                'nama_kegiatan.required' => 'Nama kegiatan penilaian wajib diisi.',
+                'jenis.required' => 'Jenis penilaian wajib dipilih.',
+                'tanggal.required' => 'Tanggal kegiatan penilaian wajib diisi.',
+            ]);
+
+            $semester = $request->filled('semester') ? (int) $request->semester : Kegiatan::determineSemester($request->tanggal);
+            $tahunAjaran = $request->filled('tahun_ajaran') ? $request->tahun_ajaran : Kegiatan::determineTahunAjaran($request->tanggal);
+
+            $kegiatan = Kegiatan::create([
+                'mata_pelajaran_id' => $request->mata_pelajaran_id,
+                'kelas' => $request->kelas,
+                'nama_kegiatan' => $request->nama_kegiatan,
+                'jenis' => $request->jenis,
+                'semester' => $semester,
+                'tahun_ajaran' => $tahunAjaran,
+                'tanggal' => $request->tanggal,
+            ]);
+        }
+
+        try {
+            $import = new NilaiImport($kegiatan);
+            Excel::import($import, $request->file('file_excel'));
+
+            $message = "Berhasil mengimpor {$import->successCount} nilai siswa untuk kegiatan '{$kegiatan->nama_kegiatan}' ({$import->tuntasCount} Tuntas, {$import->remedialCount} Perlu Remedial).";
+            if ($import->skippedCount > 0) {
+                $message .= " Sebanyak {$import->skippedCount} baris/siswa dilewati atau bernilai kosong.";
+            }
+
+            return redirect()->route('nilai.index', [
+                'kelas' => $kegiatan->kelas,
+                'mata_pelajaran_id' => $kegiatan->mata_pelajaran_id,
+                'semester' => $kegiatan->semester,
+                'tahun_ajaran' => $kegiatan->tahun_ajaran,
+            ])->with('success', $message);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal memproses file Excel: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function lembarKosongPdf(Request $request)

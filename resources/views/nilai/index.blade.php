@@ -141,9 +141,14 @@
                 Bobot Mapel: Tugas ({{ $selectedMapel->bobot_tugas ?? 20 }}%), UH ({{ $selectedMapel->bobot_uh ?? 30 }}%), UTS ({{ $selectedMapel->bobot_uts ?? 25 }}%), UAS ({{ $selectedMapel->bobot_uas ?? 25 }}%).
             </small>
         </div>
-        <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-success rounded-3 shadow-sm">
-            <i class="fa-solid fa-plus-circle me-1"></i> Tambah Kegiatan Penilaian Baru
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalImportNilai">
+                <i class="fa-solid fa-file-arrow-up me-1"></i> Import Nilai Excel
+            </button>
+            <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-success rounded-3 shadow-sm">
+                <i class="fa-solid fa-plus-circle me-1"></i> Tambah Kegiatan Penilaian Baru
+            </a>
+        </div>
     </div>
 
     <!-- Daftar Matriks Nilai -->
@@ -244,7 +249,156 @@
     </div>
 @endif
 
+@if($selectedKelas && $selectedMapel)
+<!-- Modal Import Nilai Excel -->
+<div class="modal fade" id="modalImportNilai" tabindex="-1" aria-labelledby="modalImportNilaiLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalImportNilaiLabel">
+                    <i class="fa-solid fa-file-excel me-2"></i> Import Nilai Siswa dari Excel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('nilai.importExcel') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body p-4">
+                    <!-- Informasi & Download Template -->
+                    <div class="alert alert-primary d-flex align-items-center justify-content-between p-3 rounded-3 mb-3" role="alert">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary text-white p-2 rounded-circle">
+                                <i class="fa-solid fa-download"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-primary">Belum punya format Excel?</h6>
+                                <p class="text-muted small mb-0">Unduh template yang sudah terisi NISN & nama siswa Kelas {{ $selectedKelas }}.</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('nilai.templateExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-primary btn-sm px-3 shadow-sm text-nowrap">
+                            <i class="fa-solid fa-file-excel me-1"></i> Unduh Template
+                        </a>
+                    </div>
+
+                    <!-- Opsi Tinjau di Halaman Input Nilai -->
+                    <div class="p-2 px-3 mb-4 rounded-3 bg-light border d-flex align-items-center justify-content-between">
+                        <div class="small text-muted me-2">
+                            <i class="fa-solid fa-eye text-primary me-1"></i> Ingin <strong>melihat & memeriksa nilai di tabel</strong> sebelum disimpan?
+                        </div>
+                        <a href="{{ route('nilai.kegiatan.create', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId, 'semester' => $selectedSemester, 'tahun_ajaran' => $selectedTahunAjaran]) }}" class="btn btn-outline-primary btn-sm py-1 px-3 text-nowrap shadow-sm">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Buka Form Input Nilai
+                        </a>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold fs-7">Mata Pelajaran</label>
+                            <input type="text" class="form-control bg-light" value="{{ $selectedMapel->nama_mapel }} (KKM: {{ $selectedMapel->kkm }})" readonly>
+                            <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedMapelId }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold fs-7">Kelas</label>
+                            <input type="text" class="form-control bg-light" value="Kelas {{ $selectedKelas }}" readonly>
+                            <input type="hidden" name="kelas" value="{{ $selectedKelas }}">
+                            <input type="hidden" name="semester" value="{{ $selectedSemester }}">
+                            <input type="hidden" name="tahun_ajaran" value="{{ $selectedTahunAjaran }}">
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Target Kegiatan: Baru atau Yang Sudah Ada -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold fs-7">Tujuan Kegiatan Penilaian</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mode" id="modeNew" value="new" checked onchange="toggleImportMode(this.value)">
+                                <label class="form-check-label fw-medium" for="modeNew">
+                                    <i class="fa-solid fa-plus-circle text-success me-1"></i> Buat Kegiatan Baru
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mode" id="modeExisting" value="existing" {{ $kegiatans->isEmpty() ? 'disabled' : '' }} onchange="toggleImportMode(this.value)">
+                                <label class="form-check-label fw-medium {{ $kegiatans->isEmpty() ? 'text-muted' : '' }}" for="modeExisting">
+                                    <i class="fa-solid fa-pen-to-square text-primary me-1"></i> Perbarui Kegiatan Yang Sudah Ada
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Kegiatan Baru -->
+                    <div id="sectionNewKegiatan" class="border rounded-3 p-3 bg-light mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold fs-7">Nama / Judul Kegiatan <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_kegiatan" id="inputNamaKegiatanImport" class="form-control" placeholder="Contoh: UH 1 Bab Aljabar">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold fs-7">Jenis Penilaian <span class="text-danger">*</span></label>
+                                <select name="jenis" class="form-select">
+                                    <option value="Tugas">Tugas</option>
+                                    <option value="UH">Ulangan Harian (UH)</option>
+                                    <option value="UTS">UTS</option>
+                                    <option value="UAS">UAS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold fs-7">Tanggal <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Pilih Kegiatan Eksisting -->
+                    <div id="sectionExistingKegiatan" class="border rounded-3 p-3 bg-light mb-3 d-none">
+                        <label class="form-label fw-semibold fs-7">Pilih Kegiatan yang Akan Diperbarui / Ditimpa <span class="text-danger">*</span></label>
+                        <select name="kegiatan_id" id="selectKegiatanExisting" class="form-select">
+                            <option value="">-- Pilih Kegiatan --</option>
+                            @foreach($kegiatans as $kg)
+                                <option value="{{ $kg->id }}">{{ $kg->nama_kegiatan }} ({{ $kg->jenis }}) — {{ \Carbon\Carbon::parse($kg->tanggal)->format('d/m/Y') }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted d-block mt-1">Nilai siswa yang ada pada file Excel akan memperbarui/mengisi nilai kegiatan ini.</small>
+                    </div>
+
+                    <!-- Upload File Excel -->
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold fs-7">Upload File Excel / CSV <span class="text-danger">*</span></label>
+                        <input type="file" name="file_excel" class="form-control" accept=".xlsx, .xls, .csv" required>
+                        <div class="form-text small mt-1">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i> Format yang didukung: <strong>.xlsx, .xls, .csv</strong> (Maks 5MB). Sistem otomatis mencocokkan siswa berdasarkan <strong>NISN</strong> dan membaca nilai antara 0-100.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm">
+                        <i class="fa-solid fa-upload me-1"></i> Upload & Simpan Nilai
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 <script>
+    function toggleImportMode(mode) {
+        const secNew = document.getElementById('sectionNewKegiatan');
+        const secExisting = document.getElementById('sectionExistingKegiatan');
+        const inputNama = document.getElementById('inputNamaKegiatanImport');
+        const selectExisting = document.getElementById('selectKegiatanExisting');
+
+        if (mode === 'existing') {
+            secNew.classList.add('d-none');
+            secExisting.classList.remove('d-none');
+            if (inputNama) inputNama.removeAttribute('required');
+            if (selectExisting) selectExisting.setAttribute('required', 'required');
+        } else {
+            secExisting.classList.add('d-none');
+            secNew.classList.remove('d-none');
+            if (inputNama) inputNama.setAttribute('required', 'required');
+            if (selectExisting) selectExisting.removeAttribute('required');
+        }
+    }
+
     function handleMapelFilterChange(selectElem) {
         const form = selectElem.form;
         const kelasSelect = document.getElementById('selectKelasFilter');

@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<form action="{{ route('nilai.kegiatan.store') }}" method="POST">
+<form action="{{ route('nilai.kegiatan.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card card-custom p-4 bg-white mb-4 shadow-sm">
         <h5 class="fw-bold mb-3"><i class="fa-solid fa-file-pen text-primary me-2"></i> Detail Kegiatan Penilaian</h5>
@@ -70,9 +70,43 @@
 
     <!-- Input Nilai Siswa -->
     <div class="card card-custom p-4 bg-white shadow-sm">
-        <h5 class="fw-bold mb-3">
-            <i class="fa-solid fa-list-check text-primary me-2"></i> Input Nilai Siswa <span id="labelKelasHeader">Kelas {{ $selectedKelas }}</span>
-        </h5>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h5 class="fw-bold mb-0">
+                <i class="fa-solid fa-list-check text-primary me-2"></i> Input Nilai Siswa <span id="labelKelasHeader">Kelas {{ $selectedKelas }}</span>
+            </h5>
+            <a id="btnDownloadTemplateCreate" href="{{ route('nilai.templateExcel', ['kelas' => $selectedKelas, 'mata_pelajaran_id' => $selectedMapelId]) }}" class="btn btn-outline-success btn-sm rounded-3 shadow-sm">
+                <i class="fa-solid fa-file-excel me-1"></i> Unduh Template Excel Kelas Ini
+            </a>
+        </div>
+
+        <!-- Banner Opsi Import File Excel -->
+        <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+            <div class="row align-items-center g-3">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-excel text-success fs-3"></i>
+                        <div>
+                            <span class="fw-bold d-block text-dark fs-7">Opsi Import Nilai via Excel / CSV</span>
+                            <small class="text-muted">Pilih file Excel nilai Anda, lalu klik <strong>"Muat ke Tabel"</strong> untuk melihat dan memeriksa nilai di tabel sebelum disimpan.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-md-end">
+                        <div class="input-group input-group-sm flex-grow-1" style="max-width: 300px;">
+                            <label class="input-group-text bg-white" for="inputFileExcelCreate"><i class="fa-solid fa-file-excel text-success me-1"></i> File</label>
+                            <input type="file" name="file_excel" id="inputFileExcelCreate" class="form-control" accept=".xlsx, .xls, .csv">
+                        </div>
+                        <button type="button" id="btnMuatExcelCreate" class="btn btn-primary btn-sm px-3 shadow-sm text-nowrap" onclick="muatNilaiDariExcel()">
+                            <i class="fa-solid fa-file-import me-1"></i> Muat ke Tabel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wadah Notifikasi / Alert Hasil Muat Excel -->
+        <div id="alertBoxMuatExcel" class="d-none"></div>
         
         <div id="emptyContainer" class="text-center py-4 text-muted {{ $siswas->isEmpty() ? '' : 'd-none' }}">
             Belum ada siswa terdaftar di <span id="labelKelasEmpty">kelas {{ $selectedKelas }}</span>.
@@ -84,7 +118,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 50px;">No</th>
-                            <th>NIS</th>
+                            <th>NISN</th>
                             <th>Nama Siswa</th>
                             <th style="width: 200px;">Nilai (0 - 100)</th>
                         </tr>
@@ -190,6 +224,12 @@
             if (labelHeader) labelHeader.innerText = 'Kelas ' + selectedKelas;
             if (labelEmpty) labelEmpty.innerText = 'kelas ' + selectedKelas;
 
+            const btnDownload = document.getElementById('btnDownloadTemplateCreate');
+            const mapelId = document.getElementById('selectMapelKegiatan') ? document.getElementById('selectMapelKegiatan').value : '';
+            if (btnDownload && selectedKelas) {
+                btnDownload.href = `{{ route('nilai.templateExcel') }}?kelas=${encodeURIComponent(selectedKelas)}&mata_pelajaran_id=${encodeURIComponent(mapelId)}`;
+            }
+
             const siswas = siswasByKelas[selectedKelas] || [];
 
             if (siswas.length === 0) {
@@ -220,5 +260,107 @@
         // Inisialisasi filter kelas sesuai mapel tingkat awal
         filterKelasKegiatanByMapel(document.getElementById('selectMapelKegiatan'));
     });
+
+    function muatNilaiDariExcel() {
+        const fileInput = document.getElementById('inputFileExcelCreate');
+        const btn = document.getElementById('btnMuatExcelCreate');
+        const alertBox = document.getElementById('alertBoxMuatExcel');
+        const selectKelas = document.getElementById('selectKelas');
+        const kelasVal = selectKelas ? selectKelas.value : '';
+
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            alert('Silakan pilih file Excel (.xlsx / .xls / .csv) terlebih dahulu.');
+            return;
+        }
+
+        if (!kelasVal) {
+            alert('Silakan pilih kelas terlebih dahulu.');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file_excel', file);
+        formData.append('kelas', kelasVal);
+
+        const originalBtnHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Membaca...';
+
+        fetch('{{ route("nilai.parseExcel") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Gagal memproses file Excel'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            let filledCount = 0;
+
+            if (data.matched && data.matched.length > 0) {
+                data.matched.forEach(item => {
+                    const input = document.querySelector(`input[name="nilai[${item.siswa_id}]"]`);
+                    if (input) {
+                        input.value = item.nilai;
+                        input.classList.remove('bg-light');
+                        input.classList.add('bg-success-subtle', 'border-success', 'border-2');
+                        validateNilaiInput(input);
+                        filledCount++;
+                    }
+                });
+            }
+
+            let alertHtml = '';
+            if (filledCount > 0) {
+                alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-3" role="alert">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-success text-white p-2 rounded-circle mt-1">
+                                <i class="fa-solid fa-check-double"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-success">Berhasil Memuat ${filledCount} Nilai Siswa ke Tabel!</h6>
+                                <p class="mb-1 small text-dark">Nilai dari Excel telah dimasukkan ke kolom input di bawah (ditandai dengan kotak hijau). Silakan <strong>periksa kembali</strong> nilai-nilai tersebut, sesuaikan jika ada yang perlu diubah, lalu klik tombol <strong>"Simpan Kegiatan & Nilai Siswa"</strong> di bagian bawah untuk menyimpan permanen.</p>
+                                ${data.unmatched_count > 0 ? `<div class="small text-danger fw-semibold mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> ${data.unmatched_count} data siswa di file Excel tidak ditemukan di kelas ${kelasVal}.</div>` : ''}
+                                ${data.skipped_count > 0 ? `<div class="small text-secondary mt-1"><i class="fa-solid fa-circle-info me-1"></i> ${data.skipped_count} siswa dikosongkan nilainya (belum ikut penilaian / nilai kosong di Excel).</div>` : ''}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } else {
+                alertHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm mb-3" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> Tidak ada nilai siswa yang cocok untuk dimasukkan. Pastikan format file menggunakan kolom <strong>NISN</strong> dan <strong>NILAI</strong> yang sesuai.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+
+            alertBox.innerHTML = alertHtml;
+            alertBox.classList.remove('d-none');
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        })
+        .catch(error => {
+            alertBox.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-3" role="alert">
+                    <i class="fa-solid fa-circle-xmark me-2"></i> ${error.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            alertBox.classList.remove('d-none');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        });
+    }
 </script>
 @endsection

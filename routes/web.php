@@ -125,6 +125,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/nilai/kegiatan/{id}/edit', [NilaiController::class, 'editKegiatan'])->name('nilai.kegiatan.edit');
         Route::post('/nilai/kegiatan/{id}/update', [NilaiController::class, 'updateKegiatan'])->name('nilai.kegiatan.update');
         Route::delete('/nilai/kegiatan/{id}', [NilaiController::class, 'destroyKegiatan'])->name('nilai.kegiatan.destroy');
+        Route::get('/nilai/template-excel', [NilaiController::class, 'downloadTemplateExcel'])->name('nilai.templateExcel');
+        Route::post('/nilai/parse-excel', [NilaiController::class, 'parseExcel'])->name('nilai.parseExcel');
+        Route::post('/nilai/import-excel', [NilaiController::class, 'importExcel'])->name('nilai.importExcel');
         Route::get('/nilai/rekap-pdf', [NilaiController::class, 'rekapPdf'])->name('nilai.rekapPdf');
         Route::get('/nilai/rekap-excel', [NilaiController::class, 'rekapExcel'])->name('nilai.rekapExcel');
         Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
