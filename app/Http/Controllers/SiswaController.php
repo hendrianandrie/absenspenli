@@ -77,7 +77,7 @@ class SiswaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv,txt',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:5120',
         ]);
 
         try {

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 $registerApiRoutes = function () {
     // 1. PUBLIC ROUTES (AUTENTIKASI)
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
     // 2. PROTECTED ROUTES (SANCTUM TOKEN AUTH)
     Route::middleware('auth:sanctum')->group(function () {

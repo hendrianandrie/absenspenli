@@ -117,7 +117,7 @@ class FaceRecognitionController extends Controller
     {
         $request->validate([
             'descriptor' => 'required',
-            'image' => 'nullable|string', // base64 data url
+            'image' => 'nullable|string|max:15000000', // base64 data url (maks ~10-15MB)
         ]);
 
         $descriptor = is_array($request->descriptor) ? $request->descriptor : json_decode($request->descriptor, true);
