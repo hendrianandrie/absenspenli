@@ -38,7 +38,7 @@ Route::get('/auth/mobile-bridge', function (\Illuminate\Http\Request $request) {
     }
 
     $redirect = $request->query('redirect', '/dashboard');
-    if (!str_starts_with($redirect, '/')) {
+    if (!str_starts_with($redirect, '/') || str_starts_with($redirect, '//') || str_starts_with($redirect, '/\\')) {
         $redirect = '/dashboard';
     }
 
@@ -240,8 +240,9 @@ Route::middleware('auth')->group(function () {
 
 // Setup API Runner publik yang aman (dengan kode rahasia) untuk Hosting tanpa Terminal / SSH
 Route::get('/run-api-setup/{secret}', function ($secret) {
-    if ($secret !== 'spenli2026') {
-        abort(403, 'Akses ditolak. Kunci rahasia salah.');
+    $expectedSecret = env('SETUP_SECRET_KEY', app()->isLocal() ? 'spenli2026' : null);
+    if (!$expectedSecret || !hash_equals($expectedSecret, (string) $secret)) {
+        abort(403, 'Akses ditolak. Kunci rahasia salah atau belum dikonfigurasi.');
     }
 
     @set_time_limit(30);

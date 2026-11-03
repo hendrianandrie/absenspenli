@@ -60,14 +60,6 @@ class SiswaApiController extends Controller
             if ($s) return $s;
         }
 
-        // 6. Fallback siswa pertama agar akun testing siswa selalu mendapatkan profil
-        if ($user->role === 'siswa') {
-            $firstSiswa = Siswa::first();
-            if ($firstSiswa) {
-                return $firstSiswa;
-            }
-        }
-
         return null;
     }
 

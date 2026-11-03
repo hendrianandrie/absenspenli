@@ -77,6 +77,11 @@ class GuruApiController extends Controller
      */
     public function daftarKegiatan(Request $request)
     {
+        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$user || !in_array($user->role, ['guru', 'walikelas', 'admin'])) {
+            return response()->json(['status' => 'error', 'message' => 'Akses terbatas untuk akun Guru/Admin.'], 403);
+        }
+
         $request->validate([
             'mata_pelajaran_id' => 'required|integer',
             'kelas' => 'required|string',
@@ -137,6 +142,11 @@ class GuruApiController extends Controller
      */
     public function simpanNilai(Request $request)
     {
+        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser || !in_array($currentUser->role, ['guru', 'walikelas', 'admin'])) {
+            return response()->json(['status' => 'error', 'message' => 'Akses terbatas untuk akun Guru/Admin.'], 403);
+        }
+
         $request->validate([
             'kegiatan_id' => 'required|exists:kegiatans,id',
             'nilai_data' => 'required|array',
@@ -146,8 +156,7 @@ class GuruApiController extends Controller
 
         $kegiatan = Kegiatan::findOrFail($request->kegiatan_id);
 
-        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
-        $namaGuru = $currentUser ? ($currentUser->name ?: $currentUser->username) : 'Guru Pengampu';
+        $namaGuru = $currentUser->name ?: $currentUser->username;
 
         foreach ($request->nilai_data as $item) {
             $siswaId = $item['siswa_id'];

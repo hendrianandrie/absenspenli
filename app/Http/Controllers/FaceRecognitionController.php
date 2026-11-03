@@ -129,6 +129,14 @@ class FaceRecognitionController extends Controller
             ], 422);
         }
 
+        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser || !in_array($currentUser->role, ['guru', 'walikelas', 'admin', 'piket'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: Anda tidak memiliki izin untuk mengelola sampel wajah.',
+            ], 403);
+        }
+
         $imagePath = $siswa->foto_wajah;
 
         // Simpan foto capture jika dikirimkan
@@ -136,18 +144,27 @@ class FaceRecognitionController extends Controller
             try {
                 $imageParts = explode(';base64,', $request->image);
                 $imageTypeAux = explode('image/', $imageParts[0]);
-                $imageType = $imageTypeAux[1] ?? 'jpeg';
+                $rawType = strtolower($imageTypeAux[1] ?? 'jpeg');
+                $allowedExtensions = [
+                    'jpeg' => 'jpg',
+                    'jpg'  => 'jpg',
+                    'png'  => 'png',
+                    'webp' => 'webp',
+                ];
+                $extension = $allowedExtensions[$rawType] ?? 'jpg';
                 $imageBase64 = base64_decode($imageParts[1]);
 
-                $filename = 'faces/' . $siswa->nis . '_' . time() . '.' . $imageType;
-                Storage::disk('public')->put($filename, $imageBase64);
+                if ($imageBase64 !== false) {
+                    $filename = 'faces/' . $siswa->nis . '_' . time() . '.' . $extension;
+                    Storage::disk('public')->put($filename, $imageBase64);
 
-                // Hapus foto lama jika ada
-                if ($siswa->foto_wajah && Storage::disk('public')->exists($siswa->foto_wajah)) {
-                    Storage::disk('public')->delete($siswa->foto_wajah);
+                    // Hapus foto lama jika ada
+                    if ($siswa->foto_wajah && Storage::disk('public')->exists($siswa->foto_wajah)) {
+                        Storage::disk('public')->delete($siswa->foto_wajah);
+                    }
+
+                    $imagePath = $filename;
                 }
-
-                $imagePath = $filename;
             } catch (\Exception $e) {
                 // Abaikan jika penyimpanan file gagal, descriptor tetap disimpan
             }
@@ -178,6 +195,17 @@ class FaceRecognitionController extends Controller
      */
     public function deleteEnrollment(Siswa $siswa)
     {
+        $currentUser = request()->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser || !in_array($currentUser->role, ['guru', 'walikelas', 'admin', 'piket'])) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden: Akses ditolak.',
+                ], 403);
+            }
+            abort(403, 'Akses ditolak.');
+        }
+
         if ($siswa->foto_wajah && Storage::disk('public')->exists($siswa->foto_wajah)) {
             Storage::disk('public')->delete($siswa->foto_wajah);
         }
@@ -252,16 +280,35 @@ class FaceRecognitionController extends Controller
     }
 
     /**
+     * Helper autentikasi token mobile (Sanctum)
+     */
+    private function authenticateMobileToken(Request $request): void
+    {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            $tokenStr = $request->query('token') ?: $request->bearerToken();
+            if ($tokenStr) {
+                $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($tokenStr);
+                if ($pat && $pat->tokenable) {
+                    \Illuminate\Support\Facades\Auth::login($pat->tokenable);
+                }
+            }
+        }
+    }
+
+    /**
      * Halaman Scanner Khusus Versi Mobile App (Petugas Piket)
      */
     public function mobileScannerView(Request $request)
     {
-        // Mendukung token auth dari mobile app (Sanctum)
-        if ($request->has('token')) {
-            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
-            if ($pat && $pat->tokenable) {
-                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
-            }
+        $this->authenticateMobileToken($request);
+
+        $currentUser = \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu untuk mengakses scanner.');
+        }
+
+        if (!in_array($currentUser->role, ['guru', 'walikelas', 'admin', 'piket'])) {
+            abort(403, 'Akses ditolak: Hanya staf atau petugas piket yang diizinkan mengakses scanner.');
         }
 
         $selectedKelas = $request->get('kelas', 'Semua');
@@ -316,13 +363,7 @@ class FaceRecognitionController extends Controller
      */
     public function getEnrolledStudentsMobile(Request $request)
     {
-        if (!\Illuminate\Support\Facades\Auth::check() && $request->has('token')) {
-            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
-            if ($pat && $pat->tokenable) {
-                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
-            }
-        }
-
+        $this->authenticateMobileToken($request);
         return $this->getEnrolledStudents($request);
     }
 
@@ -331,13 +372,7 @@ class FaceRecognitionController extends Controller
      */
     public function recordAttendanceMobile(Request $request)
     {
-        if (!\Illuminate\Support\Facades\Auth::check() && $request->has('token')) {
-            $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($request->query('token'));
-            if ($pat && $pat->tokenable) {
-                \Illuminate\Support\Facades\Auth::login($pat->tokenable);
-            }
-        }
-
+        $this->authenticateMobileToken($request);
         return $this->recordAttendance($request);
     }
 
@@ -346,6 +381,21 @@ class FaceRecognitionController extends Controller
      */
     public function getEnrolledStudents(Request $request)
     {
+        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Silakan autentikasi terlebih dahulu.',
+            ], 401);
+        }
+
+        if (!in_array($currentUser->role, ['guru', 'walikelas', 'admin', 'piket'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: Akses ditolak. Hanya staf atau petugas piket yang berwenang.',
+            ], 403);
+        }
+
         $selectedKelas = $request->get('kelas', 'Semua');
         $today = Carbon::today()->toDateString();
 
@@ -389,6 +439,21 @@ class FaceRecognitionController extends Controller
      */
     public function recordAttendance(Request $request)
     {
+        $currentUser = $request->user() ?? \Illuminate\Support\Facades\Auth::user();
+        if (!$currentUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Silakan autentikasi terlebih dahulu.',
+            ], 401);
+        }
+
+        if (!in_array($currentUser->role, ['guru', 'walikelas', 'admin', 'piket'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: Akses ditolak. Anda tidak berwenang mencatat presensi.',
+            ], 403);
+        }
+
         $request->validate([
             'siswa_id' => 'required|exists:siswas,id',
             'distance' => 'nullable|numeric',

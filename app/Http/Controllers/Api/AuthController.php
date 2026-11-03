@@ -45,9 +45,9 @@ class AuthController extends Controller
                 return $this->respondWithToken($user, 'Login berhasil.');
             }
 
-            // Jika akun siswa dan password yang dimasukkan sama dengan username/NIS atau default
+            // Jika akun siswa dan password yang dimasukkan sama dengan username/NIS default awal
             if ($user->role === 'siswa') {
-                if ($password === (string) $user->username || in_array($password, ['123456', 'password'])) {
+                if ($password === (string) $user->username) {
                     $user->update(['password' => Hash::make($password)]);
                     return $this->respondWithToken($user, 'Login siswa berhasil.');
                 }
@@ -70,8 +70,7 @@ class AuthController extends Controller
         if ($siswa) {
             $isPassMatch = ($password === (string) $siswa->nis) ||
                            ($hasNisnCol && !empty($siswa->nisn) && $password === (string) $siswa->nisn) ||
-                           ($cleanInput !== '' && $password === $cleanInput) ||
-                           in_array($password, ['123456', 'password']);
+                           ($cleanInput !== '' && $password === $cleanInput);
 
             if ($isPassMatch) {
                 $hasSiswaIdCol = Schema::hasColumn('users', 'siswa_id');
