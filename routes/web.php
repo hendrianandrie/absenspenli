@@ -11,6 +11,8 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SiswaPortalController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WaliKelasController;
+use App\Http\Controllers\UjianController;
+use App\Http\Controllers\UjianSiswaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -62,6 +64,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [SiswaPortalController::class, 'dashboard'])->name('siswa.dashboard');
         Route::get('/nilai', [SiswaPortalController::class, 'rekapNilai'])->name('siswa.nilai');
         Route::get('/absen', [SiswaPortalController::class, 'rekapAbsen'])->name('siswa.absen');
+
+        // Asesmen Online Siswa (CBT)
+        Route::prefix('asesmen')->name('siswa.ujian.')->group(function () {
+            Route::get('/', [UjianSiswaController::class, 'index'])->name('index');
+            Route::get('/{ujian}/konfirmasi', [UjianSiswaController::class, 'konfirmasi'])->name('konfirmasi');
+            Route::post('/{ujian}/mulai', [UjianSiswaController::class, 'mulai'])->name('mulai');
+            Route::get('/{ujian}/kerjakan', [UjianSiswaController::class, 'kerjakan'])->name('kerjakan');
+            Route::post('/{ujian}/simpan-jawaban', [UjianSiswaController::class, 'simpanJawaban'])->name('simpanJawaban');
+            Route::post('/{ujian}/selesai', [UjianSiswaController::class, 'selesai'])->name('selesai');
+            Route::get('/{ujian}/hasil', [UjianSiswaController::class, 'hasil'])->name('hasil');
+        });
     });
 
     // ==========================================
@@ -132,6 +145,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/nilai/rekap-excel', [NilaiController::class, 'rekapExcel'])->name('nilai.rekapExcel');
         Route::get('/nilai/lembar-kosong-pdf', [NilaiController::class, 'lembarKosongPdf'])->name('nilai.lembarKosongPdf');
         Route::get('/nilai/rapor-siswa/{id}', [NilaiController::class, 'raporSiswaPdf'])->name('nilai.raporSiswaPdf');
+
+        // Asesmen CBT (Ujian Online) - Khusus Guru & Admin
+        Route::prefix('ujian')->name('ujian.')->group(function () {
+            Route::get('/', [UjianController::class, 'index'])->name('index');
+            Route::get('/create', [UjianController::class, 'create'])->name('create');
+            Route::post('/store', [UjianController::class, 'store'])->name('store');
+            Route::get('/{ujian}/edit', [UjianController::class, 'edit'])->name('edit');
+            Route::put('/{ujian}', [UjianController::class, 'update'])->name('update');
+            Route::delete('/{ujian}', [UjianController::class, 'destroy'])->name('destroy');
+            Route::post('/{ujian}/toggle-status', [UjianController::class, 'toggleStatus'])->name('toggleStatus');
+            Route::post('/{ujian}/generate-token', [UjianController::class, 'generateToken'])->name('generateToken');
+
+            // Soal
+            Route::get('/{ujian}/soal', [UjianController::class, 'kelolaSoal'])->name('soal');
+            Route::post('/{ujian}/soal', [UjianController::class, 'storeSoal'])->name('soal.store');
+            Route::put('/{ujian}/soal/{soal}', [UjianController::class, 'updateSoal'])->name('soal.update');
+            Route::delete('/{ujian}/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
+            Route::get('/{ujian}/download-template', [UjianController::class, 'downloadTemplate'])->name('downloadTemplate');
+            Route::post('/{ujian}/import-soal', [UjianController::class, 'importSoal'])->name('importSoal');
+
+            // Monitoring & Sinkronisasi
+            Route::get('/{ujian}/monitoring', [UjianController::class, 'monitoring'])->name('monitoring');
+            Route::post('/{ujian}/reset-sesi/{siswa}', [UjianController::class, 'resetSesiSiswa'])->name('resetSesi');
+            Route::post('/{ujian}/force-submit/{siswa}', [UjianController::class, 'forceSubmitSiswa'])->name('forceSubmit');
+            Route::post('/{ujian}/sinkron-nilai', [UjianController::class, 'sinkronNilai'])->name('sinkronNilai');
+        });
 
         // Wali Kelas (Pengaturan Admin, Monitoring Nilai & Rekap Kehadiran)
         Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');

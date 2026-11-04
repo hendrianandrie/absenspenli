@@ -141,6 +141,24 @@ export default function SiswaDashboardScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* Tombol Shortcut Asesmen CBT Online */}
+      <TouchableOpacity
+        style={styles.cbtBannerCard}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('SiswaWeb', { title: 'Asesmen CBT Online', path: '/portal-siswa/asesmen' })}
+      >
+        <View style={styles.cbtBannerIconWrap}>
+          <Ionicons name="document-text" size={24} color="#4f46e5" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cbtBannerTitle}>Asesmen CBT Online</Text>
+          <Text style={styles.cbtBannerSubtitle}>Ujian harian, STS, & SAS berbasis komputer/HP</Text>
+        </View>
+        <View style={styles.cbtBannerArrow}>
+          <Ionicons name="arrow-forward" size={16} color="#4f46e5" />
+        </View>
+      </TouchableOpacity>
+
       {/* Ringkasan Presensi Bulan Berjalan */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
@@ -592,5 +610,49 @@ const styles = StyleSheet.create({
   tuntasText: {
     fontSize: 9.5,
     fontWeight: '700',
+  },
+  cbtBannerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#c7d2fe',
+    shadowColor: '#4f46e5',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cbtBannerIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#e0e7ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  cbtBannerTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e1b4b',
+    marginBottom: 2,
+  },
+  cbtBannerSubtitle: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  cbtBannerArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#eef2ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });

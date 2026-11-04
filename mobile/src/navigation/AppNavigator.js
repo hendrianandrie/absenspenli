@@ -39,7 +39,14 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : user.role === 'siswa' ? (
         // Navigasi Khusus Siswa
-        <Stack.Screen name="SiswaHome" component={SiswaTabNavigator} />
+        <>
+          <Stack.Screen name="SiswaHome" component={SiswaTabNavigator} />
+          <Stack.Screen
+            name="SiswaWeb"
+            component={StaffWebScreen}
+            options={{ headerShown: false }}
+          />
+        </>
       ) : user.role === 'piket' ? (
         // Navigasi Khusus Petugas Piket (Fokus Presensi Wajah Kamera)
         <>

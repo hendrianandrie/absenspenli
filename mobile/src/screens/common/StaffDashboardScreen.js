@@ -97,6 +97,24 @@ export default function StaffDashboardScreen({ navigation }) {
           </View>
           <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
         </TouchableOpacity>
+
+        {/* 3. Asesmen CBT & Bank Soal */}
+        <TouchableOpacity
+          style={styles.menuCard}
+          activeOpacity={0.7}
+          onPress={() => navigateToWeb('Asesmen CBT', '/ujian')}
+        >
+          <View style={[styles.menuIconWrap, { backgroundColor: '#e0e7ff' }]}>
+            <Ionicons name="document-text" size={22} color="#4f46e5" />
+          </View>
+          <View style={styles.menuInfo}>
+            <Text style={styles.menuTitle}>Asesmen CBT & Bank Soal</Text>
+            <Text style={styles.menuSubtitle}>
+              Kelola ujian online, impor soal Excel, & live monitor
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+        </TouchableOpacity>
       </View>
 
       {/* SECTION 2: Menu Khusus Wali Kelas (Hanya untuk Wali Kelas) */}

@@ -436,6 +436,12 @@
                             <span>Rekap Absen</span>
                         </a>
                     </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.ujian.*') ? 'active' : '' }}" href="{{ route('siswa.ujian.index') }}">
+                            <i class="fa-solid fa-file-pen" style="color: #a855f7;"></i>
+                            <span>Asesmen Online</span>
+                        </a>
+                    </div>
 
                 @elseif(Auth::check() && Auth::user()->role === 'piket')
                     <!-- MENU PIKET -->
@@ -494,6 +500,12 @@
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.kegiatan.*') ? 'active' : '' }}" href="{{ route('nilai.kegiatan.create') }}">
                             <i class="fa-solid fa-circle-plus" style="color: #22c55e;"></i>
                             <span>Input Nilai Baru</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
+                            <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
+                            <span>Asesmen CBT</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
@@ -573,6 +585,12 @@
                         <a class="mosaic-nav-link {{ request()->routeIs('nilai.*') ? 'active' : '' }}" href="{{ route('nilai.index') }}">
                             <i class="fa-solid fa-star" style="color: #f43f5e;"></i>
                             <span>Penilaian Siswa</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
+                            <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
+                            <span>Asesmen CBT</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
