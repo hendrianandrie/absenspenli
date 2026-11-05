@@ -366,9 +366,16 @@
 <script>
     const TOTAL_SOAL = {{ count($soals) }};
     const SAVE_URL = "{{ route('siswa.ujian.simpanJawaban', $ujian->id) }}";
+    const SYNC_TIME_URL = "{{ route('siswa.ujian.syncWaktu', $ujian->id) }}";
     const CSRF_TOKEN = "{{ csrf_token() }}";
     let currentIndex = 0;
     let sisaDetik = Math.max(0, Math.floor({{ (int) $sisaDetik }}));
+    let endTime = Date.now() + (sisaDetik * 1000);
+
+    // Hitung sisa detik secara akurat berbasis selisih waktu
+    function getRemainingSeconds() {
+        return Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+    }
 
     // Jawaban state lokal
     const userAnswers = {};
@@ -498,6 +505,8 @@
         const statusText = document.getElementById('saveStatusText');
         if (statusText) statusText.innerText = 'Menyimpan...';
 
+        const remaining = getRemainingSeconds();
+
         fetch(SAVE_URL, {
             method: 'POST',
             headers: {
@@ -508,7 +517,8 @@
             body: JSON.stringify({
                 soal_id: soalId,
                 jawaban: jawaban,
-                ragu_ragu: ragu ? 1 : 0
+                ragu_ragu: ragu ? 1 : 0,
+                sisa_waktu: remaining
             })
         })
         .then(res => res.json())
@@ -518,6 +528,30 @@
         .catch(err => {
             if (statusText) statusText.innerText = 'Koneksi Lambat ⚠️';
         });
+    }
+
+    // Background sync sisa waktu ke server (Heartbeat & Tab close/hide)
+    function syncWaktuToServer(isBeacon = false) {
+        const remaining = getRemainingSeconds();
+        try {
+            if (isBeacon && navigator.sendBeacon) {
+                const formData = new FormData();
+                formData.append('_token', CSRF_TOKEN);
+                formData.append('sisa_waktu', remaining);
+                navigator.sendBeacon(SYNC_TIME_URL, formData);
+            } else {
+                fetch(SYNC_TIME_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN,
+                        'Accept': 'application/json'
+                    },
+                    keepalive: isBeacon,
+                    body: JSON.stringify({ sisa_waktu: remaining })
+                }).catch(() => {});
+            }
+        } catch (e) {}
     }
 
     // Modal Konfirmasi Selesai
@@ -567,11 +601,8 @@
         const box = document.getElementById('timerBox');
         const icon = document.getElementById('timerIcon');
 
-        const endTime = Date.now() + (sisaDetik * 1000);
-
         function updateTick() {
-            const now = Date.now();
-            const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+            const remaining = getRemainingSeconds();
 
             display.innerText = formatTime(remaining);
 
@@ -588,6 +619,7 @@
             if (remaining <= 0) {
                 clearInterval(interval);
                 display.innerText = '00:00';
+                syncWaktuToServer(true);
                 alert('Waktu ujian telah berakhir! Lembar jawaban Anda akan otomatis dikumpulkan.');
                 document.getElementById('finishExamForm').submit();
             }
@@ -597,15 +629,29 @@
         updateTick();
 
         const interval = setInterval(updateTick, 1000);
+
+        // Heartbeat sinkronisasi waktu ke server setiap 10 detik
+        setInterval(function () {
+            syncWaktuToServer(false);
+        }, 10000);
     }
 
-    // Deteksi Anti-Curang (Pindah Tab / Minimize Layar)
+    // Deteksi Anti-Curang (Pindah Tab / Minimize Layar) & Sinkronisasi Sisa Waktu
     let cheatWarnings = 0;
     document.addEventListener('visibilitychange', function () {
+        syncWaktuToServer(false);
         if (document.hidden) {
             cheatWarnings++;
             alert(`⚠️ PERINGATAN KECURANGAN (#${cheatWarnings}): Anda terdeteksi meninggalkan layar ujian! Tetap fokus pada layar asesmen ini.`);
         }
+    });
+
+    // Sinkronisasi sisa waktu saat menutup atau merefresh halaman / tab
+    window.addEventListener('beforeunload', function () {
+        syncWaktuToServer(true);
+    });
+    window.addEventListener('pagehide', function () {
+        syncWaktuToServer(true);
     });
 
     document.addEventListener('DOMContentLoaded', function () {

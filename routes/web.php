@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/{ujian}/mulai', [UjianSiswaController::class, 'mulai'])->name('mulai');
             Route::get('/{ujian}/kerjakan', [UjianSiswaController::class, 'kerjakan'])->name('kerjakan');
             Route::post('/{ujian}/simpan-jawaban', [UjianSiswaController::class, 'simpanJawaban'])->name('simpanJawaban');
+            Route::post('/{ujian}/sync-waktu', [UjianSiswaController::class, 'syncWaktu'])->name('syncWaktu');
             Route::post('/{ujian}/selesai', [UjianSiswaController::class, 'selesai'])->name('selesai');
             Route::get('/{ujian}/hasil', [UjianSiswaController::class, 'hasil'])->name('hasil');
         });

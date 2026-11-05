@@ -89,6 +89,11 @@ class UjianSiswaController extends Controller
             return redirect()->route('siswa.ujian.hasil', $ujian->id);
         }
 
+        // Jika sesi sudah berjalan, langsung lanjutkan ke lembar ujian tanpa input token ulang
+        if ($sesi && $sesi->status === 'mengerjakan') {
+            return redirect()->route('siswa.ujian.kerjakan', $ujian->id);
+        }
+
         $totalSoal = $ujian->soals()->count();
 
         return view('siswa.ujian.konfirmasi', compact('siswa', 'ujian', 'sesi', 'totalSoal'));
@@ -112,18 +117,23 @@ class UjianSiswaController extends Controller
             return redirect()->route('siswa.ujian.index')->with('error', 'Ujian ini sedang tidak aktif.');
         }
 
+        $sesi = UjianSiswa::where('ujian_id', $ujian->id)->where('siswa_id', $siswa->id)->first();
+
+        if ($sesi && $sesi->status === 'selesai') {
+            return redirect()->route('siswa.ujian.hasil', $ujian->id);
+        }
+
+        // Jika sesi sudah berjalan, langsung lanjutkan pengerjaan
+        if ($sesi && $sesi->status === 'mengerjakan') {
+            return redirect()->route('siswa.ujian.kerjakan', $ujian->id);
+        }
+
         // Cek Token jika ujian memiliki token
         if (!empty($ujian->token)) {
             $inputToken = strtoupper(trim((string) $request->input('token')));
             if ($inputToken !== strtoupper($ujian->token)) {
                 return back()->with('error', 'Kode Token Ujian salah! Silakan tanyakan kepada pengawas.');
             }
-        }
-
-        $sesi = UjianSiswa::where('ujian_id', $ujian->id)->where('siswa_id', $siswa->id)->first();
-
-        if ($sesi && $sesi->status === 'selesai') {
-            return redirect()->route('siswa.ujian.hasil', $ujian->id);
         }
 
         if (!$sesi) {
@@ -167,16 +177,22 @@ class UjianSiswaController extends Controller
             return redirect()->route('siswa.ujian.hasil', $ujian->id);
         }
 
-        // Cek kedaluwarsa waktu
         $maxSeconds = (int) ($ujian->durasi_menit * 60);
-        $elapsed = (int) floor(now()->diffInSeconds($sesi->waktu_mulai));
 
-        if ($elapsed >= $maxSeconds) {
+        // Prioritaskan sisa_waktu_detik yang tercatat pada sesi siswa
+        if ($sesi->sisa_waktu_detik !== null) {
+            $sisaDetik = (int) $sesi->sisa_waktu_detik;
+        } else {
+            $elapsed = (int) floor($sesi->waktu_mulai ? $sesi->waktu_mulai->diffInSeconds(now()) : 0);
+            $sisaDetik = max(0, $maxSeconds - $elapsed);
+            $sesi->update(['sisa_waktu_detik' => $sisaDetik]);
+        }
+
+        // Cek kedaluwarsa waktu
+        if ($sisaDetik <= 0) {
             $sesi->hitungHasil();
             return redirect()->route('siswa.ujian.hasil', $ujian->id)->with('info', 'Waktu ujian telah habis.');
         }
-
-        $sisaDetik = (int) max(0, $maxSeconds - $elapsed);
 
         // Ambil soal sesuai urutan
         $urutanSoalIds = $sesi->urutan_soal ?: $ujian->soals()->pluck('id')->toArray();
@@ -211,7 +227,15 @@ class UjianSiswaController extends Controller
             'soal_id' => 'required|exists:ujian_soals,id',
             'jawaban' => 'nullable|in:A,B,C,D',
             'ragu_ragu' => 'nullable|boolean',
+            'sisa_waktu' => 'nullable|numeric',
         ]);
+
+        // Simpan pembaruan sisa waktu ujian jika dikirim
+        if ($request->has('sisa_waktu') && is_numeric($request->sisa_waktu)) {
+            $sesi->update([
+                'sisa_waktu_detik' => max(0, (int) floor($request->sisa_waktu))
+            ]);
+        }
 
         $jawaban = UjianJawaban::updateOrCreate(
             [
@@ -229,6 +253,38 @@ class UjianSiswaController extends Controller
             'soal_id' => $jawaban->soal_id,
             'jawaban' => $jawaban->jawaban,
             'ragu_ragu' => $jawaban->ragu_ragu,
+            'sisa_waktu_detik' => $sesi->sisa_waktu_detik,
+        ]);
+    }
+
+    /**
+     * Sinkronisasi berkala sisa waktu ujian siswa (Heartbeat & Background Tab)
+     */
+    public function syncWaktu(Request $request, Ujian $ujian)
+    {
+        $siswa = $this->getSiswa();
+        if (!$siswa) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $sesi = UjianSiswa::where('ujian_id', $ujian->id)->where('siswa_id', $siswa->id)->first();
+        if (!$sesi || $sesi->status === 'selesai') {
+            return response()->json(['success' => false, 'message' => 'Sesi ujian telah berakhir.', 'status' => 'selesai'], 403);
+        }
+
+        $sisaWaktu = (int) floor($request->input('sisa_waktu', 0));
+        $sisaWaktu = max(0, $sisaWaktu);
+
+        $sesi->update(['sisa_waktu_detik' => $sisaWaktu]);
+
+        if ($sisaWaktu <= 0) {
+            $sesi->hitungHasil();
+            return response()->json(['success' => true, 'status' => 'selesai']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'sisa_waktu_detik' => $sisaWaktu
         ]);
     }
 
