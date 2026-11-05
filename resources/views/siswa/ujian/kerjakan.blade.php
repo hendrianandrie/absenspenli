@@ -75,16 +75,23 @@
 
                         <!-- Options Choices -->
                         <div class="options-container d-flex flex-column gap-2.5 mb-4">
-                            @foreach(['A' => $s->opsi_a, 'B' => $s->opsi_b, 'C' => $s->opsi_c, 'D' => $s->opsi_d] as $optKey => $optVal)
-                                <label class="option-card p-3 rounded-3 border d-flex align-items-center gap-3 cursor-pointer transition-all {{ $currentVal === $optKey ? 'selected-option' : '' }}" 
+                            @foreach(['A' => [$s->opsi_a, $s->gambar_a], 'B' => [$s->opsi_b, $s->gambar_b], 'C' => [$s->opsi_c, $s->gambar_c], 'D' => [$s->opsi_d, $s->gambar_d]] as $optKey => [$optVal, $optImg])
+                                <label class="option-card p-3 rounded-3 border d-flex align-items-start gap-3 cursor-pointer transition-all {{ $currentVal === $optKey ? 'selected-option' : '' }}" 
                                        id="label_{{ $s->id }}_{{ $optKey }}"
                                        onclick="selectOption({{ $idx }}, {{ $s->id }}, '{{ $optKey }}')">
-                                    <div class="option-badge rounded-circle border fw-bold d-flex align-items-center justify-content-center flex-shrink-0" 
+                                    <div class="option-badge rounded-circle border fw-bold d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5" 
                                          style="width: 32px; height: 32px; font-size: 14px;">
                                         {{ $optKey }}
                                     </div>
                                     <div class="flex-grow-1 text-slate-700 fw-medium" style="font-size: 15px;">
-                                        {{ $optVal }}
+                                        @if($optVal)
+                                            <div class="text-slate-800">{{ $optVal }}</div>
+                                        @endif
+                                        @if($optImg)
+                                            <div class="mt-2">
+                                                <img src="{{ asset('storage/' . $optImg) }}" alt="Pilihan {{ $optKey }}" class="img-fluid rounded border bg-white p-1 shadow-2xs" style="max-height: 200px; max-width: 100%; object-fit: contain;">
+                                            </div>
+                                        @endif
                                     </div>
                                     <input type="radio" name="jawaban_{{ $s->id }}" value="{{ $optKey }}" class="d-none" {{ $currentVal === $optKey ? 'checked' : '' }}>
                                 </label>

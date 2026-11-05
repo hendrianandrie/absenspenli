@@ -15,9 +15,13 @@ class UjianSoal extends Model
         'pertanyaan',
         'gambar',
         'opsi_a',
+        'gambar_a',
         'opsi_b',
+        'gambar_b',
         'opsi_c',
+        'gambar_c',
         'opsi_d',
+        'gambar_d',
         'kunci_jawaban',
         'bobot',
     ];
@@ -40,11 +44,10 @@ class UjianSoal extends Model
     public function getOpsiList(): array
     {
         return [
-            'A' => $this->opsi_a,
-            'B' => $this->opsi_b,
-            'C' => $this->opsi_c,
-            'D' => $this->opsi_d,
+            'A' => ['teks' => $this->opsi_a, 'gambar' => $this->gambar_a],
+            'B' => ['teks' => $this->opsi_b, 'gambar' => $this->gambar_b],
+            'C' => ['teks' => $this->opsi_c, 'gambar' => $this->gambar_c],
+            'D' => ['teks' => $this->opsi_d, 'gambar' => $this->gambar_d],
         ];
     }
 }
-

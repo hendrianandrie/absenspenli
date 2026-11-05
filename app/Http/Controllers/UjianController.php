@@ -316,19 +316,31 @@ class UjianController extends Controller
 
         $request->validate([
             'pertanyaan' => 'required|string',
-            'opsi_a' => 'required|string',
-            'opsi_b' => 'required|string',
-            'opsi_c' => 'required|string',
-            'opsi_d' => 'required|string',
+            'opsi_a' => 'nullable|string',
+            'opsi_b' => 'nullable|string',
+            'opsi_c' => 'nullable|string',
+            'opsi_d' => 'nullable|string',
             'kunci_jawaban' => 'required|in:A,B,C,D',
             'bobot' => 'nullable|numeric|min:0.1',
             'gambar' => 'nullable|image|max:3072',
+            'gambar_a' => 'nullable|image|max:3072',
+            'gambar_b' => 'nullable|image|max:3072',
+            'gambar_c' => 'nullable|image|max:3072',
+            'gambar_d' => 'nullable|image|max:3072',
         ]);
 
-        $gambarPath = null;
-        if ($request->hasFile('gambar')) {
-            $gambarPath = $request->file('gambar')->store('ujian_soal', 'public');
+        // Validasi: Setiap opsi wajib memiliki minimal teks ATAU gambar
+        foreach (['a', 'b', 'c', 'd'] as $opt) {
+            if (!$request->filled("opsi_{$opt}") && !$request->hasFile("gambar_{$opt}")) {
+                return back()->withInput()->with('error', "Pilihan Opsi " . strtoupper($opt) . " harus memiliki teks atau gambar!");
+            }
         }
+
+        $gambarPath = $request->hasFile('gambar') ? $request->file('gambar')->store('ujian_soal', 'public') : null;
+        $gambarAPath = $request->hasFile('gambar_a') ? $request->file('gambar_a')->store('ujian_soal', 'public') : null;
+        $gambarBPath = $request->hasFile('gambar_b') ? $request->file('gambar_b')->store('ujian_soal', 'public') : null;
+        $gambarCPath = $request->hasFile('gambar_c') ? $request->file('gambar_c')->store('ujian_soal', 'public') : null;
+        $gambarDPath = $request->hasFile('gambar_d') ? $request->file('gambar_d')->store('ujian_soal', 'public') : null;
 
         $nomorUrut = ($ujian->soals()->max('nomor_urut') ?? 0) + 1;
 
@@ -338,9 +350,13 @@ class UjianController extends Controller
             'pertanyaan' => $request->pertanyaan,
             'gambar' => $gambarPath,
             'opsi_a' => $request->opsi_a,
+            'gambar_a' => $gambarAPath,
             'opsi_b' => $request->opsi_b,
+            'gambar_b' => $gambarBPath,
             'opsi_c' => $request->opsi_c,
+            'gambar_c' => $gambarCPath,
             'opsi_d' => $request->opsi_d,
+            'gambar_d' => $gambarDPath,
             'kunci_jawaban' => strtoupper($request->kunci_jawaban),
             'bobot' => $request->filled('bobot') ? (float) $request->bobot : 1.0,
         ]);
@@ -357,14 +373,28 @@ class UjianController extends Controller
 
         $request->validate([
             'pertanyaan' => 'required|string',
-            'opsi_a' => 'required|string',
-            'opsi_b' => 'required|string',
-            'opsi_c' => 'required|string',
-            'opsi_d' => 'required|string',
+            'opsi_a' => 'nullable|string',
+            'opsi_b' => 'nullable|string',
+            'opsi_c' => 'nullable|string',
+            'opsi_d' => 'nullable|string',
             'kunci_jawaban' => 'required|in:A,B,C,D',
             'bobot' => 'nullable|numeric|min:0.1',
             'gambar' => 'nullable|image|max:3072',
+            'gambar_a' => 'nullable|image|max:3072',
+            'gambar_b' => 'nullable|image|max:3072',
+            'gambar_c' => 'nullable|image|max:3072',
+            'gambar_d' => 'nullable|image|max:3072',
         ]);
+
+        // Cek kelengkapan opsi (bisa teks, gambar baru, atau gambar lama)
+        foreach (['a', 'b', 'c', 'd'] as $opt) {
+            $hasText = $request->filled("opsi_{$opt}");
+            $hasNewImg = $request->hasFile("gambar_{$opt}");
+            $hasOldImg = !empty($soal->{"gambar_{$opt}"});
+            if (!$hasText && !$hasNewImg && !$hasOldImg) {
+                return back()->withInput()->with('error', "Pilihan Opsi " . strtoupper($opt) . " harus memiliki teks atau gambar!");
+            }
+        }
 
         $gambarPath = $soal->gambar;
         if ($request->hasFile('gambar')) {
@@ -374,13 +404,49 @@ class UjianController extends Controller
             $gambarPath = $request->file('gambar')->store('ujian_soal', 'public');
         }
 
+        $gambarAPath = $soal->gambar_a;
+        if ($request->hasFile('gambar_a')) {
+            if ($soal->gambar_a && Storage::disk('public')->exists($soal->gambar_a)) {
+                Storage::disk('public')->delete($soal->gambar_a);
+            }
+            $gambarAPath = $request->file('gambar_a')->store('ujian_soal', 'public');
+        }
+
+        $gambarBPath = $soal->gambar_b;
+        if ($request->hasFile('gambar_b')) {
+            if ($soal->gambar_b && Storage::disk('public')->exists($soal->gambar_b)) {
+                Storage::disk('public')->delete($soal->gambar_b);
+            }
+            $gambarBPath = $request->file('gambar_b')->store('ujian_soal', 'public');
+        }
+
+        $gambarCPath = $soal->gambar_c;
+        if ($request->hasFile('gambar_c')) {
+            if ($soal->gambar_c && Storage::disk('public')->exists($soal->gambar_c)) {
+                Storage::disk('public')->delete($soal->gambar_c);
+            }
+            $gambarCPath = $request->file('gambar_c')->store('ujian_soal', 'public');
+        }
+
+        $gambarDPath = $soal->gambar_d;
+        if ($request->hasFile('gambar_d')) {
+            if ($soal->gambar_d && Storage::disk('public')->exists($soal->gambar_d)) {
+                Storage::disk('public')->delete($soal->gambar_d);
+            }
+            $gambarDPath = $request->file('gambar_d')->store('ujian_soal', 'public');
+        }
+
         $soal->update([
             'pertanyaan' => $request->pertanyaan,
             'gambar' => $gambarPath,
             'opsi_a' => $request->opsi_a,
+            'gambar_a' => $gambarAPath,
             'opsi_b' => $request->opsi_b,
+            'gambar_b' => $gambarBPath,
             'opsi_c' => $request->opsi_c,
+            'gambar_c' => $gambarCPath,
             'opsi_d' => $request->opsi_d,
+            'gambar_d' => $gambarDPath,
             'kunci_jawaban' => strtoupper($request->kunci_jawaban),
             'bobot' => $request->filled('bobot') ? (float) $request->bobot : 1.0,
         ]);
@@ -395,8 +461,10 @@ class UjianController extends Controller
     {
         $this->checkUjianAccess($ujian);
 
-        if ($soal->gambar && Storage::disk('public')->exists($soal->gambar)) {
-            Storage::disk('public')->delete($soal->gambar);
+        foreach (['gambar', 'gambar_a', 'gambar_b', 'gambar_c', 'gambar_d'] as $imgField) {
+            if ($soal->$imgField && Storage::disk('public')->exists($soal->$imgField)) {
+                Storage::disk('public')->delete($soal->$imgField);
+            }
         }
 
         $soal->delete();

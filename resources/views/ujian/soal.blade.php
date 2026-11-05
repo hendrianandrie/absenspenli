@@ -144,15 +144,24 @@
 
                     <!-- Options Grid (A, B, C, D) -->
                     <div class="row g-2">
-                        @foreach(['A' => $soal->opsi_a, 'B' => $soal->opsi_b, 'C' => $soal->opsi_c, 'D' => $soal->opsi_d] as $optKey => $optVal)
+                        @foreach(['A' => [$soal->opsi_a, $soal->gambar_a], 'B' => [$soal->opsi_b, $soal->gambar_b], 'C' => [$soal->opsi_c, $soal->gambar_c], 'D' => [$soal->opsi_d, $soal->gambar_d]] as $optKey => [$optVal, $optImg])
                             <div class="col-md-6">
-                                <div class="p-2.5 px-3 rounded-3 border d-flex align-items-center gap-2 {{ $soal->kunci_jawaban === $optKey ? 'bg-success-subtle border-success text-success fw-bold' : 'bg-white text-slate-700' }}" style="font-size: 14px;">
-                                    <span class="badge {{ $soal->kunci_jawaban === $optKey ? 'bg-success text-white' : 'bg-light text-slate-800 border' }}" style="width: 24px; height: 24px; display:inline-flex; align-items:center; justify-content:center;">
-                                        {{ $optKey }}
-                                    </span>
-                                    <span class="flex-grow-1">{{ $optVal }}</span>
-                                    @if($soal->kunci_jawaban === $optKey)
-                                        <i class="fa-solid fa-circle-check text-success ms-auto" title="Kunci Jawaban"></i>
+                                <div class="p-3 rounded-3 border h-100 d-flex flex-column justify-content-between {{ $soal->kunci_jawaban === $optKey ? 'bg-success-subtle border-success text-success' : 'bg-white text-slate-700' }}" style="font-size: 14px;">
+                                    <div class="d-flex align-items-start gap-2 mb-1">
+                                        <span class="badge {{ $soal->kunci_jawaban === $optKey ? 'bg-success text-white' : 'bg-light text-slate-800 border' }} flex-shrink-0" style="width: 26px; height: 26px; display:inline-flex; align-items:center; justify-content:center; font-size: 13px;">
+                                            {{ $optKey }}
+                                        </span>
+                                        <div class="flex-grow-1 {{ $soal->kunci_jawaban === $optKey ? 'fw-bold' : '' }}">
+                                            {{ $optVal ?: ($optImg ? '(Pilihan Gambar)' : '-') }}
+                                        </div>
+                                        @if($soal->kunci_jawaban === $optKey)
+                                            <i class="fa-solid fa-circle-check text-success fs-5 ms-auto flex-shrink-0" title="Kunci Jawaban Benar"></i>
+                                        @endif
+                                    </div>
+                                    @if($optImg)
+                                        <div class="mt-2 text-center p-2 bg-white rounded border">
+                                            <img src="{{ asset('storage/' . $optImg) }}" alt="Gambar Opsi {{ $optKey }}" class="img-fluid rounded" style="max-height: 120px; object-fit: contain;">
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -183,23 +192,36 @@
                                             <div class="small text-muted mt-1">Saat ini: <a href="{{ asset('storage/' . $soal->gambar) }}" target="_blank">Lihat Gambar</a> (Unggah baru jika ingin mengganti)</div>
                                         @endif
                                     </div>
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold">Pilihan A <span class="text-danger">*</span></label>
-                                            <input type="text" name="opsi_a" value="{{ old('opsi_a', $soal->opsi_a) }}" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold">Pilihan B <span class="text-danger">*</span></label>
-                                            <input type="text" name="opsi_b" value="{{ old('opsi_b', $soal->opsi_b) }}" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold">Pilihan C <span class="text-danger">*</span></label>
-                                            <input type="text" name="opsi_c" value="{{ old('opsi_c', $soal->opsi_c) }}" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold">Pilihan D <span class="text-danger">*</span></label>
-                                            <input type="text" name="opsi_d" value="{{ old('opsi_d', $soal->opsi_d) }}" class="form-control" required>
-                                        </div>
+                                    <div class="row g-3 mb-3">
+                                        @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $optLower => $optUpper)
+                                            @php
+                                                $optText = $soal->{"opsi_{$optLower}"};
+                                                $optImg = $soal->{"gambar_{$optLower}"};
+                                            @endphp
+                                            <div class="col-md-6">
+                                                <div class="p-3 rounded-3 border bg-light h-100">
+                                                    <label class="form-label fw-bold text-slate-800 d-flex align-items-center justify-content-between mb-1.5">
+                                                        <span><span class="badge bg-primary me-1 px-2 py-0.5">Opsi {{ $optUpper }}</span> Teks Pilihan</span>
+                                                    </label>
+                                                    <input type="text" name="opsi_{{ $optLower }}" value="{{ old('opsi_' . $optLower, $optText) }}" class="form-control mb-2" placeholder="Teks jawaban {{ $optUpper }}...">
+                                                    
+                                                    @if($optImg)
+                                                        <div class="mb-2 p-1.5 bg-white border rounded d-flex align-items-center gap-2">
+                                                            <img src="{{ asset('storage/' . $optImg) }}" alt="Opsi {{ $optUpper }}" class="rounded" style="height: 44px; max-width: 70px; object-fit: contain;">
+                                                            <div class="small">
+                                                                <span class="text-success fw-semibold"><i class="fa-solid fa-check me-1"></i>Gambar Aktif</span>
+                                                                <div class="text-muted" style="font-size: 11px;">Unggah baru untuk mengganti</div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    <label class="form-label small text-muted mb-1 d-flex align-items-center gap-1">
+                                                        <i class="fa-regular fa-image text-primary"></i> {{ $optImg ? 'Ganti Gambar Opsi ' . $optUpper : 'Gambar Opsi ' . $optUpper }} (Opsional)
+                                                    </label>
+                                                    <input type="file" name="gambar_{{ $optLower }}" class="form-control form-control-sm" accept="image/*">
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                     <div class="row g-2">
                                         <div class="col-md-6">
@@ -256,23 +278,22 @@
                         <input type="file" name="gambar" class="form-control" accept="image/*">
                         <div class="form-text small">Maksimal 3MB (.jpg, .jpeg, .png).</div>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Pilihan Opsi A <span class="text-danger">*</span></label>
-                            <input type="text" name="opsi_a" class="form-control" placeholder="Jawaban A" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Pilihan Opsi B <span class="text-danger">*</span></label>
-                            <input type="text" name="opsi_b" class="form-control" placeholder="Jawaban B" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Pilihan Opsi C <span class="text-danger">*</span></label>
-                            <input type="text" name="opsi_c" class="form-control" placeholder="Jawaban C" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Pilihan Opsi D <span class="text-danger">*</span></label>
-                            <input type="text" name="opsi_d" class="form-control" placeholder="Jawaban D" required>
-                        </div>
+                    <div class="row g-3 mb-3">
+                        @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $optLower => $optUpper)
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 border bg-light h-100">
+                                    <label class="form-label fw-bold text-slate-800 d-flex align-items-center justify-content-between mb-1.5">
+                                        <span><span class="badge bg-primary me-1 px-2 py-0.5">Opsi {{ $optUpper }}</span> Teks Pilihan</span>
+                                    </label>
+                                    <input type="text" name="opsi_{{ $optLower }}" class="form-control mb-2" placeholder="Teks jawaban {{ $optUpper }}...">
+                                    <label class="form-label small text-muted mb-1 d-flex align-items-center gap-1">
+                                        <i class="fa-regular fa-image text-primary"></i> Gambar Opsi {{ $optUpper }} (Opsional)
+                                    </label>
+                                    <input type="file" name="gambar_{{ $optLower }}" class="form-control form-control-sm" accept="image/*">
+                                    <div class="form-text small" style="font-size: 11px;">Bisa teks saja, gambar saja, atau keduanya.</div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                     <div class="row g-2">
                         <div class="col-md-6">
