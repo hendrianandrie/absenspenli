@@ -505,7 +505,7 @@
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
                             <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
-                            <span>Asesmen CBT</span>
+                            <span>Asesmen</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
@@ -590,7 +590,7 @@
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
                             <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
-                            <span>Asesmen CBT</span>
+                            <span>Asesmen</span>
                         </a>
                     </div>
                     <div class="mosaic-nav-item">
