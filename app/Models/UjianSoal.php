@@ -12,6 +12,7 @@ class UjianSoal extends Model
     protected $fillable = [
         'ujian_id',
         'nomor_urut',
+        'tipe_soal',
         'pertanyaan',
         'gambar',
         'opsi_a',
@@ -23,13 +24,39 @@ class UjianSoal extends Model
         'opsi_d',
         'gambar_d',
         'kunci_jawaban',
+        'data_tambahan',
         'bobot',
     ];
 
     protected $casts = [
         'nomor_urut' => 'integer',
         'bobot' => 'float',
+        'data_tambahan' => 'array',
     ];
+
+    public function isPg(): bool
+    {
+        return empty($this->tipe_soal) || $this->tipe_soal === 'pg';
+    }
+
+    public function isMenjodohkan(): bool
+    {
+        return $this->tipe_soal === 'menjodohkan';
+    }
+
+    public function isEssay(): bool
+    {
+        return $this->tipe_soal === 'essay';
+    }
+
+    public function getTipeLabel(): string
+    {
+        return match($this->tipe_soal) {
+            'menjodohkan' => 'Menjodohkan',
+            'essay' => 'Essay / Uraian',
+            default => 'Pilihan Ganda',
+        };
+    }
 
     public function ujian()
     {

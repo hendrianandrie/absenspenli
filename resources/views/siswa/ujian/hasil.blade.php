@@ -15,6 +15,18 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
+                    @if($sesi->isPerluKoreksi())
+                        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 text-start">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="fa-solid fa-hourglass-half fs-4 text-warning"></i>
+                                <h6 class="fw-bold mb-0 text-slate-800">Menunggu Koreksi Soal Essay</h6>
+                            </div>
+                            <p class="small text-muted mb-0" style="line-height: 1.6;">
+                                Asesmen ini memuat butir soal essay / uraian. Jawaban pilihan ganda & menjodohkan Anda telah tersimpan dan dinilai. Skor akhir resmi akan otomatis diperbarui begitu guru mata pelajaran selesai memeriksa uraian jawaban Anda.
+                            </p>
+                        </div>
+                    @endif
+
                     @if($ujian->tampilkan_nilai)
                         @php
                             $kkm = optional($ujian->mataPelajaran)->kkm ?? 75;

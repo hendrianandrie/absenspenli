@@ -171,6 +171,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/{ujian}/reset-sesi/{siswa}', [UjianController::class, 'resetSesiSiswa'])->name('resetSesi');
             Route::post('/{ujian}/force-submit/{siswa}', [UjianController::class, 'forceSubmitSiswa'])->name('forceSubmit');
             Route::post('/{ujian}/sinkron-nilai', [UjianController::class, 'sinkronNilai'])->name('sinkronNilai');
+
+            // Koreksi Essay Manual
+            Route::get('/{ujian}/koreksi', [UjianController::class, 'koreksiIndex'])->name('koreksi.index');
+            Route::get('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'koreksiSiswa'])->name('koreksi.siswa');
+            Route::post('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'simpanKoreksi'])->name('koreksi.simpan');
         });
 
         // Wali Kelas (Pengaturan Admin, Monitoring Nilai & Rekap Kehadiran)

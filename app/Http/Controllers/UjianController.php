@@ -314,6 +314,74 @@ class UjianController extends Controller
     {
         $this->checkUjianAccess($ujian);
 
+        $tipeSoal = $request->input('tipe_soal', 'pg');
+        if (!in_array($tipeSoal, ['pg', 'menjodohkan', 'essay'])) {
+            $tipeSoal = 'pg';
+        }
+
+        $gambarPath = $request->hasFile('gambar') ? $request->file('gambar')->store('ujian_soal', 'public') : null;
+        $nomorUrut = ($ujian->soals()->max('nomor_urut') ?? 0) + 1;
+        $bobot = $request->filled('bobot') ? (float) $request->bobot : 1.0;
+
+        if ($tipeSoal === 'essay') {
+            $request->validate([
+                'pertanyaan' => 'required|string',
+                'bobot' => 'nullable|numeric|min:0.1',
+                'gambar' => 'nullable|image|max:3072',
+            ]);
+
+            UjianSoal::create([
+                'ujian_id' => $ujian->id,
+                'nomor_urut' => $nomorUrut,
+                'tipe_soal' => 'essay',
+                'pertanyaan' => $request->pertanyaan,
+                'gambar' => $gambarPath,
+                'kunci_jawaban' => $request->input('kunci_jawaban'), // Pedoman penskoran/rubrik
+                'bobot' => $bobot,
+            ]);
+
+            return back()->with('success', 'Butir soal Essay / Uraian berhasil ditambahkan!');
+        }
+
+        if ($tipeSoal === 'menjodohkan') {
+            $request->validate([
+                'pertanyaan' => 'required|string',
+                'bobot' => 'nullable|numeric|min:0.1',
+                'gambar' => 'nullable|image|max:3072',
+            ]);
+
+            $cleanPairs = [];
+            $pairId = 1;
+            foreach ($request->input('pairs', []) as $p) {
+                $kiri = trim((string) ($p['kiri'] ?? ''));
+                $kanan = trim((string) ($p['kanan'] ?? ''));
+                if ($kiri !== '' && $kanan !== '') {
+                    $cleanPairs[] = [
+                        'id' => $pairId++,
+                        'kiri' => $kiri,
+                        'kanan' => $kanan,
+                    ];
+                }
+            }
+
+            if (count($cleanPairs) < 2) {
+                return back()->withInput()->with('error', 'Soal menjodohkan memerlukan minimal 2 pasang pernyataan yang lengkap (Kiri & Kanan)!');
+            }
+
+            UjianSoal::create([
+                'ujian_id' => $ujian->id,
+                'nomor_urut' => $nomorUrut,
+                'tipe_soal' => 'menjodohkan',
+                'pertanyaan' => $request->pertanyaan,
+                'gambar' => $gambarPath,
+                'data_tambahan' => ['pairs' => $cleanPairs],
+                'bobot' => $bobot,
+            ]);
+
+            return back()->with('success', 'Butir soal Menjodohkan berhasil ditambahkan!');
+        }
+
+        // Tipe PG (Pilihan Ganda)
         $request->validate([
             'pertanyaan' => 'required|string',
             'opsi_a' => 'nullable|string',
@@ -329,24 +397,21 @@ class UjianController extends Controller
             'gambar_d' => 'nullable|image|max:3072',
         ]);
 
-        // Validasi: Setiap opsi wajib memiliki minimal teks ATAU gambar
         foreach (['a', 'b', 'c', 'd'] as $opt) {
             if (!$request->filled("opsi_{$opt}") && !$request->hasFile("gambar_{$opt}")) {
                 return back()->withInput()->with('error', "Pilihan Opsi " . strtoupper($opt) . " harus memiliki teks atau gambar!");
             }
         }
 
-        $gambarPath = $request->hasFile('gambar') ? $request->file('gambar')->store('ujian_soal', 'public') : null;
         $gambarAPath = $request->hasFile('gambar_a') ? $request->file('gambar_a')->store('ujian_soal', 'public') : null;
         $gambarBPath = $request->hasFile('gambar_b') ? $request->file('gambar_b')->store('ujian_soal', 'public') : null;
         $gambarCPath = $request->hasFile('gambar_c') ? $request->file('gambar_c')->store('ujian_soal', 'public') : null;
         $gambarDPath = $request->hasFile('gambar_d') ? $request->file('gambar_d')->store('ujian_soal', 'public') : null;
 
-        $nomorUrut = ($ujian->soals()->max('nomor_urut') ?? 0) + 1;
-
         UjianSoal::create([
             'ujian_id' => $ujian->id,
             'nomor_urut' => $nomorUrut,
+            'tipe_soal' => 'pg',
             'pertanyaan' => $request->pertanyaan,
             'gambar' => $gambarPath,
             'opsi_a' => $request->opsi_a,
@@ -358,10 +423,10 @@ class UjianController extends Controller
             'opsi_d' => $request->opsi_d,
             'gambar_d' => $gambarDPath,
             'kunci_jawaban' => strtoupper($request->kunci_jawaban),
-            'bobot' => $request->filled('bobot') ? (float) $request->bobot : 1.0,
+            'bobot' => $bobot,
         ]);
 
-        return back()->with('success', 'Butir soal berhasil ditambahkan!');
+        return back()->with('success', 'Butir soal Pilihan Ganda berhasil ditambahkan!');
     }
 
     /**
@@ -371,6 +436,72 @@ class UjianController extends Controller
     {
         $this->checkUjianAccess($ujian);
 
+        $tipeSoal = $request->input('tipe_soal', $soal->tipe_soal ?: 'pg');
+        $bobot = $request->filled('bobot') ? (float) $request->bobot : 1.0;
+
+        $gambarPath = $soal->gambar;
+        if ($request->hasFile('gambar')) {
+            if ($soal->gambar && Storage::disk('public')->exists($soal->gambar)) {
+                Storage::disk('public')->delete($soal->gambar);
+            }
+            $gambarPath = $request->file('gambar')->store('ujian_soal', 'public');
+        }
+
+        if ($tipeSoal === 'essay') {
+            $request->validate([
+                'pertanyaan' => 'required|string',
+                'bobot' => 'nullable|numeric|min:0.1',
+                'gambar' => 'nullable|image|max:3072',
+            ]);
+
+            $soal->update([
+                'tipe_soal' => 'essay',
+                'pertanyaan' => $request->pertanyaan,
+                'gambar' => $gambarPath,
+                'kunci_jawaban' => $request->input('kunci_jawaban'),
+                'bobot' => $bobot,
+            ]);
+
+            return back()->with('success', 'Soal Essay berhasil diperbarui!');
+        }
+
+        if ($tipeSoal === 'menjodohkan') {
+            $request->validate([
+                'pertanyaan' => 'required|string',
+                'bobot' => 'nullable|numeric|min:0.1',
+                'gambar' => 'nullable|image|max:3072',
+            ]);
+
+            $cleanPairs = [];
+            $pairId = 1;
+            foreach ($request->input('pairs', []) as $p) {
+                $kiri = trim((string) ($p['kiri'] ?? ''));
+                $kanan = trim((string) ($p['kanan'] ?? ''));
+                if ($kiri !== '' && $kanan !== '') {
+                    $cleanPairs[] = [
+                        'id' => $pairId++,
+                        'kiri' => $kiri,
+                        'kanan' => $kanan,
+                    ];
+                }
+            }
+
+            if (count($cleanPairs) < 2) {
+                return back()->withInput()->with('error', 'Soal menjodohkan memerlukan minimal 2 pasang pernyataan yang lengkap!');
+            }
+
+            $soal->update([
+                'tipe_soal' => 'menjodohkan',
+                'pertanyaan' => $request->pertanyaan,
+                'gambar' => $gambarPath,
+                'data_tambahan' => ['pairs' => $cleanPairs],
+                'bobot' => $bobot,
+            ]);
+
+            return back()->with('success', 'Soal Menjodohkan berhasil diperbarui!');
+        }
+
+        // Tipe PG (Pilihan Ganda)
         $request->validate([
             'pertanyaan' => 'required|string',
             'opsi_a' => 'nullable|string',
@@ -386,7 +517,6 @@ class UjianController extends Controller
             'gambar_d' => 'nullable|image|max:3072',
         ]);
 
-        // Cek kelengkapan opsi (bisa teks, gambar baru, atau gambar lama)
         foreach (['a', 'b', 'c', 'd'] as $opt) {
             $hasText = $request->filled("opsi_{$opt}");
             $hasNewImg = $request->hasFile("gambar_{$opt}");
@@ -394,14 +524,6 @@ class UjianController extends Controller
             if (!$hasText && !$hasNewImg && !$hasOldImg) {
                 return back()->withInput()->with('error', "Pilihan Opsi " . strtoupper($opt) . " harus memiliki teks atau gambar!");
             }
-        }
-
-        $gambarPath = $soal->gambar;
-        if ($request->hasFile('gambar')) {
-            if ($soal->gambar && Storage::disk('public')->exists($soal->gambar)) {
-                Storage::disk('public')->delete($soal->gambar);
-            }
-            $gambarPath = $request->file('gambar')->store('ujian_soal', 'public');
         }
 
         $gambarAPath = $soal->gambar_a;
@@ -437,6 +559,7 @@ class UjianController extends Controller
         }
 
         $soal->update([
+            'tipe_soal' => 'pg',
             'pertanyaan' => $request->pertanyaan,
             'gambar' => $gambarPath,
             'opsi_a' => $request->opsi_a,
@@ -448,10 +571,10 @@ class UjianController extends Controller
             'opsi_d' => $request->opsi_d,
             'gambar_d' => $gambarDPath,
             'kunci_jawaban' => strtoupper($request->kunci_jawaban),
-            'bobot' => $request->filled('bobot') ? (float) $request->bobot : 1.0,
+            'bobot' => $bobot,
         ]);
 
-        return back()->with('success', 'Butir soal berhasil diperbarui!');
+        return back()->with('success', 'Butir soal Pilihan Ganda berhasil diperbarui!');
     }
 
     /**
@@ -656,6 +779,80 @@ class UjianController extends Controller
 
         $daftarKelasTersinkron = implode(', ', $kegiatanNames);
         return back()->with('success', "Berhasil menyinkronkan {$totalSynced} nilai siswa ke modul Penilaian SI-KASEP untuk kelas: {$daftarKelasTersinkron}!");
+    }
+
+    /**
+     * Halaman Daftar Siswa untuk Koreksi Essay
+     */
+    public function koreksiIndex(Ujian $ujian)
+    {
+        $this->checkUjianAccess($ujian);
+
+        $essaySoals = $ujian->soals()->where('tipe_soal', 'essay')->get();
+        $sesis = $ujian->ujianSiswas()
+            ->with(['siswa', 'jawabans'])
+            ->whereIn('status', ['selesai'])
+            ->get();
+
+        return view('ujian.koreksi', compact('ujian', 'essaySoals', 'sesis'));
+    }
+
+    /**
+     * Form Koreksi Lembar Essay Siswa
+     */
+    public function koreksiSiswa(Ujian $ujian, UjianSiswa $ujianSiswa)
+    {
+        $this->checkUjianAccess($ujian);
+
+        if ($ujianSiswa->ujian_id !== $ujian->id) {
+            abort(404);
+        }
+
+        $essaySoals = $ujian->soals()->where('tipe_soal', 'essay')->orderBy('nomor_urut')->get();
+        $jawabans = $ujianSiswa->jawabans()->whereIn('soal_id', $essaySoals->pluck('id'))->get()->keyBy('soal_id');
+
+        return view('ujian.koreksi_detail', compact('ujian', 'ujianSiswa', 'essaySoals', 'jawabans'));
+    }
+
+    /**
+     * Simpan Hasil Koreksi Essay Siswa & Hitung Ulang Nilai
+     */
+    public function simpanKoreksi(Request $request, Ujian $ujian, UjianSiswa $ujianSiswa)
+    {
+        $this->checkUjianAccess($ujian);
+
+        if ($ujianSiswa->ujian_id !== $ujian->id) {
+            abort(404);
+        }
+
+        $essaySoals = $ujian->soals()->where('tipe_soal', 'essay')->get();
+        $skorInput = $request->input('skor', []);
+        $catatanInput = $request->input('catatan', []);
+
+        foreach ($essaySoals as $s) {
+            if (isset($skorInput[$s->id])) {
+                $skorVal = max(0, min((float) $s->bobot, (float) $skorInput[$s->id]));
+                $catatanVal = $catatanInput[$s->id] ?? null;
+
+                UjianJawaban::updateOrCreate(
+                    [
+                        'ujian_siswa_id' => $ujianSiswa->id,
+                        'soal_id' => $s->id,
+                    ],
+                    [
+                        'skor_diperoleh' => $skorVal,
+                        'catatan_koreksi' => $catatanVal,
+                        'is_benar' => ($skorVal >= ($s->bobot * 0.5)),
+                    ]
+                );
+            }
+        }
+
+        // Hitung ulang hasil nilai akhir siswa
+        $ujianSiswa->hitungHasil();
+
+        return redirect()->route('ujian.koreksi.index', $ujian->id)
+            ->with('success', "Koreksi essay untuk siswa {$ujianSiswa->siswa->nama} berhasil disimpan dan nilai akhir telah diperbarui!");
     }
 }
 

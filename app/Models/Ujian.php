@@ -116,5 +116,15 @@ class Ujian extends Model
 
         return in_array($kelas, $this->daftar_kelas, true);
     }
+
+    public function hasEssay(): bool
+    {
+        return $this->soals()->where('tipe_soal', 'essay')->exists();
+    }
+
+    public function countPerluKoreksi(): int
+    {
+        return $this->ujianSiswas()->where('status_koreksi', 'menunggu_koreksi')->count();
+    }
 }
 

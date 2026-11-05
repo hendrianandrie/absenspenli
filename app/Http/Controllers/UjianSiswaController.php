@@ -225,7 +225,7 @@ class UjianSiswaController extends Controller
 
         $request->validate([
             'soal_id' => 'required|exists:ujian_soals,id',
-            'jawaban' => 'nullable|in:A,B,C,D',
+            'jawaban' => 'nullable|string',
             'ragu_ragu' => 'nullable|boolean',
             'sisa_waktu' => 'nullable|numeric',
         ]);
@@ -237,13 +237,24 @@ class UjianSiswaController extends Controller
             ]);
         }
 
+        $soal = UjianSoal::find($request->soal_id);
+        $jawabanVal = null;
+        if ($request->filled('jawaban')) {
+            $rawJawaban = trim((string) $request->jawaban);
+            if ($soal && $soal->isPg()) {
+                $jawabanVal = strtoupper($rawJawaban);
+            } else {
+                $jawabanVal = $rawJawaban;
+            }
+        }
+
         $jawaban = UjianJawaban::updateOrCreate(
             [
                 'ujian_siswa_id' => $sesi->id,
                 'soal_id' => $request->soal_id,
             ],
             [
-                'jawaban' => $request->filled('jawaban') ? strtoupper($request->jawaban) : null,
+                'jawaban' => $jawabanVal,
                 'ragu_ragu' => $request->boolean('ragu_ragu', false),
             ]
         );

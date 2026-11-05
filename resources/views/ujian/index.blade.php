@@ -199,6 +199,13 @@
                                             </form>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
+                                        @if($u->hasEssay())
+                                            <li>
+                                                <a class="dropdown-item text-warning fw-semibold" href="{{ route('ujian.koreksi.index', $u->id) }}">
+                                                    <i class="fa-solid fa-clipboard-check me-2"></i>Koreksi Essay
+                                                </a>
+                                            </li>
+                                        @endif
                                         <li>
                                             <a class="dropdown-item" href="{{ route('ujian.edit', $u->id) }}">
                                                 <i class="fa-solid fa-pen-to-square text-warning me-2"></i>Edit Pengaturan

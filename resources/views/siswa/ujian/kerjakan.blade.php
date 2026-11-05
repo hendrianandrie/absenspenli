@@ -85,30 +85,105 @@
                             </div>
                         @endif
 
-                        <!-- Options Choices -->
-                        <div class="options-container d-flex flex-column gap-2.5 mb-4">
-                            @foreach(['A' => [$s->opsi_a, $s->gambar_a], 'B' => [$s->opsi_b, $s->gambar_b], 'C' => [$s->opsi_c, $s->gambar_c], 'D' => [$s->opsi_d, $s->gambar_d]] as $optKey => [$optVal, $optImg])
-                                <label class="option-card p-3 rounded-3 border d-flex align-items-start gap-3 cursor-pointer transition-all {{ $currentVal === $optKey ? 'selected-option' : '' }}" 
-                                       id="label_{{ $s->id }}_{{ $optKey }}"
-                                       onclick="selectOption({{ $idx }}, {{ $s->id }}, '{{ $optKey }}')">
-                                    <div class="option-badge rounded-circle border fw-bold d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5" 
-                                         style="width: 32px; height: 32px; font-size: 14px;">
-                                        {{ $optKey }}
-                                    </div>
-                                    <div class="flex-grow-1 text-slate-700 fw-medium" style="font-size: 15px;">
-                                        @if($optVal)
-                                            <div class="text-slate-800">{{ $optVal }}</div>
-                                        @endif
-                                        @if($optImg)
-                                            <div class="mt-2">
-                                                <img src="{{ asset('storage/' . $optImg) }}" alt="Pilihan {{ $optKey }}" class="img-fluid rounded border bg-white p-1 shadow-2xs" style="max-height: 200px; max-width: 100%; object-fit: contain;">
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <input type="radio" name="jawaban_{{ $s->id }}" value="{{ $optKey }}" class="d-none" {{ $currentVal === $optKey ? 'checked' : '' }}>
+                        @if($s->isEssay())
+                            <!-- Input Lembar Jawaban Essay / Uraian -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-slate-700 mb-2">
+                                    <i class="fa-solid fa-pen-nib text-primary me-1"></i> Tuliskan Jawaban Uraian Anda:
                                 </label>
-                            @endforeach
-                        </div>
+                                <textarea class="form-control rounded-3 p-3 text-slate-800" 
+                                          id="essay_{{ $s->id }}" 
+                                          rows="7" 
+                                          placeholder="Ketikkan uraian jawaban Anda di sini..."
+                                          oninput="onEssayChange({{ $idx }}, {{ $s->id }}, this.value)"
+                                          style="font-size: 15px; line-height: 1.7; resize: vertical;">{{ $currentVal }}</textarea>
+                                <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
+                                    <span id="essayWordCount_{{ $s->id }}">
+                                        {{ !empty($currentVal) ? count(array_filter(preg_split('/\s+/', trim($currentVal)))) : 0 }} kata
+                                    </span>
+                                    <span class="text-success small"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Otomatis tersimpan</span>
+                                </div>
+                            </div>
+                        @elseif($s->isMenjodohkan())
+                            <!-- Input Menjodohkan (Matching Pairs) -->
+                            @php
+                                $pairs = $s->data_tambahan['pairs'] ?? [];
+                                $userPairs = !empty($currentVal) ? (json_decode($currentVal, true) ?: []) : [];
+                                // Kumpulkan semua item pasangan kanan unik
+                                $rightOptions = collect($pairs)->pluck('kanan')->filter()->unique()->values()->all();
+                                if ($ujian->acak_opsi) {
+                                    shuffle($rightOptions);
+                                }
+                            @endphp
+                            <div class="mb-4">
+                                <div class="p-3 rounded-3 bg-slate-50 border border-slate-200 mb-3">
+                                    <div class="small fw-bold text-slate-800 mb-1">
+                                        <i class="fa-solid fa-arrows-split-up-and-left text-primary me-1"></i>Petunjuk Menjodohkan:
+                                    </div>
+                                    <div class="small text-slate-600">Pilihlah pasangan yang paling tepat pada kolom kanan untuk setiap pernyataan di sebelah kiri.</div>
+                                </div>
+
+                                <div class="d-flex flex-column gap-2.5" id="matchContainer_{{ $s->id }}">
+                                    @foreach($pairs as $pIdx => $p)
+                                        @php
+                                            $pid = (string) ($p['id'] ?? ($pIdx + 1));
+                                            $selectedKanan = $userPairs[$pid] ?? '';
+                                        @endphp
+                                        <div class="p-3 rounded-3 border bg-white shadow-2xs">
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+                                                            {{ $pIdx + 1 }}
+                                                        </span>
+                                                        <span class="fw-semibold text-slate-800" style="font-size: 15px;">
+                                                            {{ $p['kiri'] ?? '-' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <select class="form-select match-select-{{ $s->id }} border-2" 
+                                                            data-pid="{{ $pid }}" 
+                                                            onchange="onMatchChange({{ $idx }}, {{ $s->id }})">
+                                                        <option value="">-- Pilih Pasangan --</option>
+                                                        @foreach($rightOptions as $ro)
+                                                            <option value="{{ $ro }}" {{ $selectedKanan === $ro ? 'selected' : '' }}>
+                                                                {{ $ro }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <!-- Options Choices (Pilihan Ganda) -->
+                            <div class="options-container d-flex flex-column gap-2.5 mb-4">
+                                @foreach(['A' => [$s->opsi_a, $s->gambar_a], 'B' => [$s->opsi_b, $s->gambar_b], 'C' => [$s->opsi_c, $s->gambar_c], 'D' => [$s->opsi_d, $s->gambar_d]] as $optKey => [$optVal, $optImg])
+                                    <label class="option-card p-3 rounded-3 border d-flex align-items-start gap-3 cursor-pointer transition-all {{ $currentVal === $optKey ? 'selected-option' : '' }}" 
+                                           id="label_{{ $s->id }}_{{ $optKey }}"
+                                           onclick="selectOption({{ $idx }}, {{ $s->id }}, '{{ $optKey }}')">
+                                        <div class="option-badge rounded-circle border fw-bold d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5" 
+                                             style="width: 32px; height: 32px; font-size: 14px;">
+                                            {{ $optKey }}
+                                        </div>
+                                        <div class="flex-grow-1 text-slate-700 fw-medium" style="font-size: 15px;">
+                                            @if($optVal)
+                                                <div class="text-slate-800">{{ $optVal }}</div>
+                                            @endif
+                                            @if($optImg)
+                                                <div class="mt-2">
+                                                    <img src="{{ asset('storage/' . $optImg) }}" alt="Pilihan {{ $optKey }}" class="img-fluid rounded border bg-white p-1 shadow-2xs" style="max-height: 200px; max-width: 100%; object-fit: contain;">
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <input type="radio" name="jawaban_{{ $s->id }}" value="{{ $optKey }}" class="d-none" {{ $currentVal === $optKey ? 'checked' : '' }}>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <!-- Bottom Navigation Buttons -->
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
@@ -384,8 +459,9 @@
     @foreach($soals as $idx => $s)
         @php
             $ansObj = $jawabans->get($s->id);
+            $rawAns = $ansObj ? (string) $ansObj->jawaban : '';
         @endphp
-        userAnswers[{{ $s->id }}] = "{{ $ansObj ? $ansObj->jawaban : '' }}";
+        userAnswers[{{ $s->id }}] = {!! json_encode($rawAns) !!};
         userRagu[{{ $s->id }}] = {{ ($ansObj && $ansObj->ragu_ragu) ? 'true' : 'false' }};
     @endforeach
 
@@ -427,7 +503,7 @@
         showQuestion(index);
     }
 
-    // Pemilihan Opsi Jawaban & Auto-Save
+    // Pemilihan Opsi Jawaban (Pilihan Ganda) & Auto-Save
     function selectOption(index, soalId, optionKey) {
         userAnswers[soalId] = optionKey;
 
@@ -445,6 +521,49 @@
 
         updateNavButton(index, soalId);
         saveAnswerToServer(soalId, optionKey, userRagu[soalId] || false);
+    }
+
+    // Input Jawaban Essay / Uraian & Debounced Auto-Save
+    let essayDebounceTimer = null;
+    function onEssayChange(index, soalId, text) {
+        userAnswers[soalId] = text.trim();
+
+        // Update jumlah kata
+        const countSpan = document.getElementById(`essayWordCount_${soalId}`);
+        if (countSpan) {
+            const trimmed = text.trim();
+            const words = trimmed ? trimmed.split(/\s+/).length : 0;
+            countSpan.innerText = `${words} kata`;
+        }
+
+        updateNavButton(index, soalId);
+
+        clearTimeout(essayDebounceTimer);
+        essayDebounceTimer = setTimeout(function () {
+            saveAnswerToServer(soalId, text, userRagu[soalId] || false);
+        }, 800);
+    }
+
+    // Pilihan Pasangan Menjodohkan & Auto-Save
+    function onMatchChange(index, soalId) {
+        const selects = document.querySelectorAll(`.match-select-${soalId}`);
+        const pairsResult = {};
+        let anySelected = false;
+
+        selects.forEach(sel => {
+            const pid = sel.getAttribute('data-pid');
+            const val = sel.value;
+            if (val) {
+                pairsResult[pid] = val;
+                anySelected = true;
+            }
+        });
+
+        const jsonVal = anySelected ? JSON.stringify(pairsResult) : '';
+        userAnswers[soalId] = jsonVal;
+
+        updateNavButton(index, soalId);
+        saveAnswerToServer(soalId, jsonVal, userRagu[soalId] || false);
     }
 
     // Toggle Ragu-Ragu
@@ -469,7 +588,8 @@
     }
 
     function updateNavButton(index, soalId) {
-        const hasAns = userAnswers[soalId] && userAnswers[soalId] !== '';
+        const ans = userAnswers[soalId];
+        const hasAns = ans !== null && ans !== undefined && ans !== '';
         const isRagu = userRagu[soalId] || false;
 
         const dBtn = document.getElementById(`navBtn_${index}`);
@@ -493,7 +613,8 @@
     function updateStatsBadge() {
         let count = 0;
         Object.keys(userAnswers).forEach(sid => {
-            if (userAnswers[sid] && userAnswers[sid] !== '') count++;
+            const ans = userAnswers[sid];
+            if (ans !== null && ans !== undefined && ans !== '') count++;
         });
 
         const badge = document.getElementById('answeredCountBadge');
@@ -560,7 +681,8 @@
         let raguCount = 0;
 
         Object.keys(userAnswers).forEach(sid => {
-            if (userAnswers[sid] && userAnswers[sid] !== '') answered++;
+            const ans = userAnswers[sid];
+            if (ans !== null && ans !== undefined && ans !== '') answered++;
             if (userRagu[sid]) raguCount++;
         });
 

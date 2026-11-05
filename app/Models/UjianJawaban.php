@@ -15,11 +15,14 @@ class UjianJawaban extends Model
         'jawaban',
         'ragu_ragu',
         'is_benar',
+        'skor_diperoleh',
+        'catatan_koreksi',
     ];
 
     protected $casts = [
         'ragu_ragu' => 'boolean',
         'is_benar' => 'boolean',
+        'skor_diperoleh' => 'float',
     ];
 
     public function ujianSiswa()
