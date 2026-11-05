@@ -10,6 +10,7 @@ use App\Models\UjianSoal;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class UjianSiswaController extends Controller
 {
@@ -228,6 +229,8 @@ class UjianSiswaController extends Controller
             'jawaban' => 'nullable|string',
             'ragu_ragu' => 'nullable|boolean',
             'sisa_waktu' => 'nullable|numeric',
+            'gambar_jawaban' => 'nullable|image|max:5120', // Maksimal 5MB
+            'hapus_gambar' => 'nullable|boolean',
         ]);
 
         // Simpan pembaruan sisa waktu ujian jika dikirim
@@ -239,30 +242,48 @@ class UjianSiswaController extends Controller
 
         $soal = UjianSoal::find($request->soal_id);
         $jawabanVal = null;
-        if ($request->filled('jawaban')) {
+        if ($request->has('jawaban')) {
             $rawJawaban = trim((string) $request->jawaban);
             if ($soal && $soal->isPg()) {
-                $jawabanVal = strtoupper($rawJawaban);
+                $jawabanVal = !empty($rawJawaban) ? strtoupper($rawJawaban) : null;
             } else {
-                $jawabanVal = $rawJawaban;
+                $jawabanVal = !empty($rawJawaban) ? $rawJawaban : null;
             }
         }
 
-        $jawaban = UjianJawaban::updateOrCreate(
-            [
-                'ujian_siswa_id' => $sesi->id,
-                'soal_id' => $request->soal_id,
-            ],
-            [
-                'jawaban' => $jawabanVal,
-                'ragu_ragu' => $request->boolean('ragu_ragu', false),
-            ]
-        );
+        $jawaban = UjianJawaban::firstOrNew([
+            'ujian_siswa_id' => $sesi->id,
+            'soal_id' => $request->soal_id,
+        ]);
+
+        if ($request->has('jawaban')) {
+            $jawaban->jawaban = $jawabanVal;
+        }
+
+        if ($request->has('ragu_ragu')) {
+            $jawaban->ragu_ragu = $request->boolean('ragu_ragu', false);
+        }
+
+        // Tangani unggah foto jawaban essay
+        if ($request->hasFile('gambar_jawaban')) {
+            if ($jawaban->gambar_jawaban && Storage::disk('public')->exists($jawaban->gambar_jawaban)) {
+                Storage::disk('public')->delete($jawaban->gambar_jawaban);
+            }
+            $jawaban->gambar_jawaban = $request->file('gambar_jawaban')->store('jawaban_siswa', 'public');
+        } elseif ($request->boolean('hapus_gambar')) {
+            if ($jawaban->gambar_jawaban && Storage::disk('public')->exists($jawaban->gambar_jawaban)) {
+                Storage::disk('public')->delete($jawaban->gambar_jawaban);
+            }
+            $jawaban->gambar_jawaban = null;
+        }
+
+        $jawaban->save();
 
         return response()->json([
             'success' => true,
             'soal_id' => $jawaban->soal_id,
             'jawaban' => $jawaban->jawaban,
+            'gambar_url' => $jawaban->gambar_jawaban ? asset('storage/' . $jawaban->gambar_jawaban) : null,
             'ragu_ragu' => $jawaban->ragu_ragu,
             'sisa_waktu_detik' => $sesi->sisa_waktu_detik,
         ]);

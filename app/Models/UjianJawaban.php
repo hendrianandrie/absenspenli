@@ -13,6 +13,7 @@ class UjianJawaban extends Model
         'ujian_siswa_id',
         'soal_id',
         'jawaban',
+        'gambar_jawaban',
         'ragu_ragu',
         'is_benar',
         'skor_diperoleh',

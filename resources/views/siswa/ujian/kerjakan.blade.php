@@ -93,7 +93,7 @@
                                 </label>
                                 <textarea class="form-control rounded-3 p-3 text-slate-800" 
                                           id="essay_{{ $s->id }}" 
-                                          rows="7" 
+                                          rows="6" 
                                           placeholder="Ketikkan uraian jawaban Anda di sini..."
                                           oninput="onEssayChange({{ $idx }}, {{ $s->id }}, this.value)"
                                           style="font-size: 15px; line-height: 1.7; resize: vertical;">{{ $currentVal }}</textarea>
@@ -102,6 +102,60 @@
                                         {{ !empty($currentVal) ? count(array_filter(preg_split('/\s+/', trim($currentVal)))) : 0 }} kata
                                     </span>
                                     <span class="text-success small"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Otomatis tersimpan</span>
+                                </div>
+
+                                <!-- Fasilitas Upload Foto / Gambar Jawaban Essay -->
+                                <div class="mt-3 p-3 rounded-3 bg-white border border-slate-200">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label fw-bold text-slate-800 small mb-0">
+                                            <i class="fa-solid fa-camera text-primary me-1"></i> Lampirkan Foto Jawaban (Opsional):
+                                        </label>
+                                        <span class="text-muted" style="font-size: 12px;">Maksimal 5MB (.jpg, .png)</span>
+                                    </div>
+                                    <p class="small text-muted mb-3" style="font-size: 13px;">
+                                        Jika Anda mengerjakan rumus, hitungan, atau uraian tulisan tangan di lembar kertas, Anda dapat memfoto dan mengunggahnya di sini:
+                                    </p>
+
+                                    <!-- Preview Foto yang Sudah Ada -->
+                                    <div id="imgPreviewWrapper_{{ $s->id }}" class="mb-3 {{ $jawabanObj && $jawabanObj->gambar_jawaban ? '' : 'd-none' }}">
+                                        <div class="d-inline-flex flex-wrap align-items-center gap-3 p-2.5 border rounded-3 bg-slate-50">
+                                            <img id="imgPreview_{{ $s->id }}" 
+                                                 src="{{ $jawabanObj && $jawabanObj->gambar_jawaban ? asset('storage/' . $jawabanObj->gambar_jawaban) : '' }}" 
+                                                 alt="Foto Jawaban Soal #{{ $displayNum }}" 
+                                                 class="rounded border bg-white shadow-2xs" 
+                                                 style="max-height: 140px; max-width: 220px; object-fit: contain;">
+                                            <div class="d-flex flex-column gap-1.5">
+                                                <a id="imgLink_{{ $s->id }}" 
+                                                   href="{{ $jawabanObj && $jawabanObj->gambar_jawaban ? asset('storage/' . $jawabanObj->gambar_jawaban) : '#' }}" 
+                                                   target="_blank" 
+                                                   class="btn btn-sm btn-outline-primary py-1 px-2.5">
+                                                    <i class="fa-solid fa-magnifying-glass-plus me-1"></i> Lihat Foto Penuh
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-danger py-1 px-2.5" 
+                                                        onclick="hapusGambarJawaban({{ $idx }}, {{ $s->id }})">
+                                                    <i class="fa-solid fa-trash me-1"></i> Hapus Foto
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tombol Upload File / Ambil Foto -->
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <input type="file" 
+                                               id="essayImgInput_{{ $s->id }}" 
+                                               accept="image/*" 
+                                               class="d-none" 
+                                               onchange="uploadGambarJawaban({{ $idx }}, {{ $s->id }}, this)">
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm px-3 shadow-2xs" 
+                                                onclick="document.getElementById('essayImgInput_{{ $s->id }}').click()"
+                                                id="btnUploadImg_{{ $s->id }}">
+                                            <i class="fa-solid fa-camera me-1"></i>
+                                            <span>{{ $jawabanObj && $jawabanObj->gambar_jawaban ? 'Ganti Foto Jawaban' : 'Ambil Foto / Unggah Gambar' }}</span>
+                                        </button>
+                                        <span id="imgUploadStatus_{{ $s->id }}" class="small"></span>
+                                    </div>
                                 </div>
                             </div>
                         @elseif($s->isMenjodohkan())
@@ -454,14 +508,17 @@
 
     // Jawaban state lokal
     const userAnswers = {};
+    const userGambar = {};
     const userRagu = {};
 
     @foreach($soals as $idx => $s)
         @php
             $ansObj = $jawabans->get($s->id);
             $rawAns = $ansObj ? (string) $ansObj->jawaban : '';
+            $rawImg = $ansObj && $ansObj->gambar_jawaban ? asset('storage/' . $ansObj->gambar_jawaban) : '';
         @endphp
         userAnswers[{{ $s->id }}] = {!! json_encode($rawAns) !!};
+        userGambar[{{ $s->id }}] = {!! json_encode($rawImg) !!};
         userRagu[{{ $s->id }}] = {{ ($ansObj && $ansObj->ragu_ragu) ? 'true' : 'false' }};
     @endforeach
 
@@ -566,6 +623,102 @@
         saveAnswerToServer(soalId, jsonVal, userRagu[soalId] || false);
     }
 
+    // Upload Foto Jawaban Essay
+    function uploadGambarJawaban(index, soalId, input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran berkas gambar maksimal 5MB!');
+            input.value = '';
+            return;
+        }
+
+        const statusEl = document.getElementById(`imgUploadStatus_${soalId}`);
+        const btnUpload = document.getElementById(`btnUploadImg_${soalId}`);
+        if (statusEl) statusEl.innerHTML = '<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i>Mengunggah foto...</span>';
+        if (btnUpload) btnUpload.disabled = true;
+
+        const formData = new FormData();
+        formData.append('soal_id', soalId);
+        formData.append('gambar_jawaban', file);
+        formData.append('jawaban', userAnswers[soalId] || '');
+        formData.append('ragu_ragu', userRagu[soalId] ? 1 : 0);
+        formData.append('sisa_waktu', getRemainingSeconds());
+
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (btnUpload) btnUpload.disabled = false;
+            if (data.success && data.gambar_url) {
+                userGambar[soalId] = data.gambar_url;
+                const wrapper = document.getElementById(`imgPreviewWrapper_${soalId}`);
+                const preview = document.getElementById(`imgPreview_${soalId}`);
+                const link = document.getElementById(`imgLink_${soalId}`);
+                if (preview) preview.src = data.gambar_url;
+                if (link) link.href = data.gambar_url;
+                if (wrapper) wrapper.classList.remove('d-none');
+                if (btnUpload) btnUpload.querySelector('span').innerText = 'Ganti Foto Jawaban';
+                if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold"><i class="fa-solid fa-check me-1"></i>Foto berhasil diunggah</span>';
+                setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 3000);
+                updateNavButton(index, soalId);
+            } else {
+                if (statusEl) statusEl.innerHTML = '<span class="text-danger">Gagal mengunggah foto.</span>';
+            }
+        })
+        .catch(err => {
+            if (btnUpload) btnUpload.disabled = false;
+            if (statusEl) statusEl.innerHTML = '<span class="text-danger">Koneksi terputus saat mengunggah.</span>';
+        });
+    }
+
+    // Hapus Foto Jawaban Essay
+    function hapusGambarJawaban(index, soalId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus foto lampiran ini?')) return;
+
+        const statusEl = document.getElementById(`imgUploadStatus_${soalId}`);
+        if (statusEl) statusEl.innerHTML = '<span class="text-muted"><i class="fa-solid fa-spinner fa-spin me-1"></i>Menghapus...</span>';
+
+        const formData = new FormData();
+        formData.append('soal_id', soalId);
+        formData.append('hapus_gambar', 1);
+        formData.append('jawaban', userAnswers[soalId] || '');
+        formData.append('ragu_ragu', userRagu[soalId] ? 1 : 0);
+        formData.append('sisa_waktu', getRemainingSeconds());
+
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            userGambar[soalId] = '';
+            const wrapper = document.getElementById(`imgPreviewWrapper_${soalId}`);
+            if (wrapper) wrapper.classList.add('d-none');
+            const fileInput = document.getElementById(`essayImgInput_${soalId}`);
+            if (fileInput) fileInput.value = '';
+            const btnUpload = document.getElementById(`btnUploadImg_${soalId}`);
+            if (btnUpload) btnUpload.querySelector('span').innerText = 'Ambil Foto / Unggah Gambar';
+            if (statusEl) statusEl.innerHTML = '<span class="text-muted">Foto dihapus</span>';
+            setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 2000);
+            updateNavButton(index, soalId);
+        })
+        .catch(() => {
+            if (statusEl) statusEl.innerHTML = '<span class="text-danger">Gagal menghapus foto.</span>';
+        });
+    }
+
     // Toggle Ragu-Ragu
     function toggleRagu(index, soalId) {
         const isCurrentlyRagu = userRagu[soalId] || false;
@@ -589,7 +742,8 @@
 
     function updateNavButton(index, soalId) {
         const ans = userAnswers[soalId];
-        const hasAns = ans !== null && ans !== undefined && ans !== '';
+        const img = userGambar[soalId];
+        const hasAns = (ans !== null && ans !== undefined && ans !== '') || (img !== null && img !== undefined && img !== '');
         const isRagu = userRagu[soalId] || false;
 
         const dBtn = document.getElementById(`navBtn_${index}`);
@@ -614,7 +768,8 @@
         let count = 0;
         Object.keys(userAnswers).forEach(sid => {
             const ans = userAnswers[sid];
-            if (ans !== null && ans !== undefined && ans !== '') count++;
+            const img = userGambar[sid];
+            if ((ans !== null && ans !== undefined && ans !== '') || (img !== null && img !== undefined && img !== '')) count++;
         });
 
         const badge = document.getElementById('answeredCountBadge');
@@ -682,7 +837,8 @@
 
         Object.keys(userAnswers).forEach(sid => {
             const ans = userAnswers[sid];
-            if (ans !== null && ans !== undefined && ans !== '') answered++;
+            const img = userGambar[sid];
+            if ((ans !== null && ans !== undefined && ans !== '') || (img !== null && img !== undefined && img !== '')) answered++;
             if (userRagu[sid]) raguCount++;
         });
 

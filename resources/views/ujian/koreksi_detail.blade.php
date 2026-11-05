@@ -94,15 +94,34 @@
                             <!-- Jawaban Siswa -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-slate-700 d-flex align-items-center gap-2">
-                                    <i class="fa-solid fa-comment-dots text-primary"></i>Jawaban Siswa:
+                                    <i class="fa-solid fa-comment-dots text-primary"></i>Jawaban Siswa (Teks):
                                 </label>
-                                <div class="p-3.5 rounded-3 bg-slate-50 border border-slate-200 text-slate-800" style="min-height: 90px; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
+                                <div class="p-3.5 rounded-3 bg-slate-50 border border-slate-200 text-slate-800 mb-3" style="min-height: 70px; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
                                     @if(!empty($studentAnswer))
                                         {{ $studentAnswer }}
                                     @else
-                                        <em class="text-muted">(Siswa tidak mengisi jawaban pada butir soal ini)</em>
+                                        <em class="text-muted">(Siswa tidak mengisi jawaban teks pada butir ini)</em>
                                     @endif
                                 </div>
+
+                                @if($jawabanObj && $jawabanObj->gambar_jawaban)
+                                    <div class="p-3 rounded-3 bg-white border border-slate-200">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-slate-800 small">
+                                                <i class="fa-solid fa-camera text-primary me-1"></i>Lampiran Foto / Gambar Jawaban Siswa:
+                                            </span>
+                                            <a href="{{ asset('storage/' . $jawabanObj->gambar_jawaban) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2.5">
+                                                <i class="fa-solid fa-up-right-from-square me-1"></i>Buka Ukuran Asli
+                                            </a>
+                                        </div>
+                                        <div class="text-center p-2 bg-slate-50 rounded border">
+                                            <a href="{{ asset('storage/' . $jawabanObj->gambar_jawaban) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $jawabanObj->gambar_jawaban) }}" alt="Lampiran Jawaban Siswa" class="img-fluid rounded border shadow-sm" style="max-height: 420px; object-fit: contain;">
+                                            </a>
+                                            <div class="form-text small mt-1">Klik gambar untuk melihat dalam resolusi penuh di tab baru.</div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Input Nilai & Catatan Guru -->
@@ -165,3 +184,4 @@
     </form>
 </div>
 @endsection
+
