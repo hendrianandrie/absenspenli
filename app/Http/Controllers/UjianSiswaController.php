@@ -168,15 +168,15 @@ class UjianSiswaController extends Controller
         }
 
         // Cek kedaluwarsa waktu
-        $maxSeconds = $ujian->durasi_menit * 60;
-        $elapsed = now()->diffInSeconds($sesi->waktu_mulai);
+        $maxSeconds = (int) ($ujian->durasi_menit * 60);
+        $elapsed = (int) floor(now()->diffInSeconds($sesi->waktu_mulai));
 
         if ($elapsed >= $maxSeconds) {
             $sesi->hitungHasil();
             return redirect()->route('siswa.ujian.hasil', $ujian->id)->with('info', 'Waktu ujian telah habis.');
         }
 
-        $sisaDetik = max(0, $maxSeconds - $elapsed);
+        $sisaDetik = (int) max(0, $maxSeconds - $elapsed);
 
         // Ambil soal sesuai urutan
         $urutanSoalIds = $sesi->urutan_soal ?: $ujian->soals()->pluck('id')->toArray();

@@ -21,7 +21,19 @@
                 <!-- Timer Box -->
                 <div class="d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill border bg-slate-50 shadow-sm" id="timerBox">
                     <i class="fa-regular fa-clock text-primary fs-5" id="timerIcon"></i>
-                    <span id="timerDisplay" class="fw-bold font-monospace fs-5 text-slate-800">--:--</span>
+                    <span id="timerDisplay" class="fw-bold font-monospace fs-5 text-slate-800">
+                        @php
+                            $sTotal = (int) $sisaDetik;
+                            $initH = floor($sTotal / 3600);
+                            $initM = floor(($sTotal % 3600) / 60);
+                            $initS = $sTotal % 60;
+                            if ($initH > 0) {
+                                echo sprintf('%02d:%02d:%02d', $initH, $initM, $initS);
+                            } else {
+                                echo sprintf('%02d:%02d', $initM, $initS);
+                            }
+                        @endphp
+                    </span>
                 </div>
 
                 <!-- Number Grid Drawer Trigger (Mobile) -->
@@ -356,7 +368,7 @@
     const SAVE_URL = "{{ route('siswa.ujian.simpanJawaban', $ujian->id) }}";
     const CSRF_TOKEN = "{{ csrf_token() }}";
     let currentIndex = 0;
-    let sisaDetik = {{ $sisaDetik }};
+    let sisaDetik = Math.max(0, Math.floor({{ (int) $sisaDetik }}));
 
     // Jawaban state lokal
     const userAnswers = {};
@@ -534,32 +546,57 @@
         modal.show();
     }
 
-    // Countdown Timer
+    // Format durasi detik menjadi MM:SS atau HH:MM:SS tanpa angka desimal
+    function formatTime(totalSec) {
+        const sec = Math.max(0, Math.floor(totalSec));
+        const hours = Math.floor(sec / 3600);
+        const minutes = Math.floor((sec % 3600) / 60);
+        const seconds = Math.floor(sec % 60);
+
+        const pad = (n) => String(n).padStart(2, '0');
+
+        if (hours > 0) {
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+        return `${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    // Countdown Timer berbasis target timestamp (kebal terhadap throttling tab background)
     function startTimer() {
         const display = document.getElementById('timerDisplay');
         const box = document.getElementById('timerBox');
+        const icon = document.getElementById('timerIcon');
 
-        const interval = setInterval(function () {
-            if (sisaDetik <= 0) {
+        const endTime = Date.now() + (sisaDetik * 1000);
+
+        function updateTick() {
+            const now = Date.now();
+            const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+
+            display.innerText = formatTime(remaining);
+
+            // Peringatan jika waktu tersisa <= 5 menit (300 detik)
+            if (remaining <= 300) {
+                box.classList.add('bg-danger-subtle', 'border-danger');
+                display.classList.add('text-danger');
+                if (icon) {
+                    icon.classList.remove('text-primary');
+                    icon.classList.add('text-danger');
+                }
+            }
+
+            if (remaining <= 0) {
                 clearInterval(interval);
                 display.innerText = '00:00';
                 alert('Waktu ujian telah berakhir! Lembar jawaban Anda akan otomatis dikumpulkan.');
                 document.getElementById('finishExamForm').submit();
-                return;
             }
+        }
 
-            sisaDetik--;
+        // Jalankan segera update pertama
+        updateTick();
 
-            const m = Math.floor(sisaDetik / 60);
-            const s = sisaDetik % 60;
-            display.innerText = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-
-            // Peringatan di bawah 5 menit
-            if (sisaDetik <= 300) {
-                box.classList.add('bg-danger-subtle', 'border-danger');
-                display.classList.add('text-danger');
-            }
-        }, 1000);
+        const interval = setInterval(updateTick, 1000);
     }
 
     // Deteksi Anti-Curang (Pindah Tab / Minimize Layar)
