@@ -16,7 +16,7 @@
                 <span>•</span>
                 <span>{{ optional($ujian->mataPelajaran)->nama_mapel }}</span>
                 <span>•</span>
-                <span>Target: <strong>Kelas {{ $ujian->kelas }}</strong></span>
+                <span>Target: <strong>{{ $ujian->kelas === 'Semua' ? 'Semua Kelas' : 'Kelas ' . $ujian->kelas }}</strong></span>
                 <span>•</span>
                 <span>Token: <code class="bg-light px-2 py-0.5 rounded border fw-bold">{{ $ujian->token }}</code></span>
                 <span>•</span>
@@ -220,3 +220,4 @@
     });
 </script>
 @endsection
+

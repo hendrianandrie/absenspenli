@@ -38,10 +38,10 @@
                     <div class="col-md-4">
                         <label class="form-label fw-semibold text-slate-700">Kategori / Jenis Penilaian <span class="text-danger">*</span></label>
                         <select name="jenis" class="form-select" required>
-                            <option value="UH" {{ old('jenis') == 'UH' ? 'selected' : '' }}>Ulangan Harian (UH)</option>
-                            <option value="UTS" {{ old('jenis') == 'UTS' ? 'selected' : '' }}>Penilaian Tengah Semester (UTS / STS)</option>
-                            <option value="UAS" {{ old('jenis') == 'UAS' ? 'selected' : '' }}>Penilaian Akhir Semester (UAS / SAS)</option>
-                            <option value="Sumatif" {{ old('jenis') == 'Sumatif' ? 'selected' : '' }}>Asesmen Sumatif Umum</option>
+                            <option value="Ulangan Harian" {{ old('jenis', 'Ulangan Harian') == 'Ulangan Harian' ? 'selected' : '' }}>Ulangan Harian</option>
+                            <option value="Sumatif Tengah Semester" {{ old('jenis') == 'Sumatif Tengah Semester' ? 'selected' : '' }}>Sumatif Tengah Semester</option>
+                            <option value="Sumatif Akhir Semester" {{ old('jenis') == 'Sumatif Akhir Semester' ? 'selected' : '' }}>Sumatif Akhir Semester</option>
+                            <option value="Try Out" {{ old('jenis') == 'Try Out' ? 'selected' : '' }}>Try Out</option>
                         </select>
                     </div>
 
@@ -58,17 +58,6 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold text-slate-700">Kelas Target <span class="text-danger">*</span></label>
-                        <select name="kelas" class="form-select" required>
-                            <option value="Semua" {{ old('kelas') == 'Semua' ? 'selected' : '' }}>Semua Kelas (Angkatan)</option>
-                            @foreach($daftarKelas as $kls)
-                                <option value="{{ $kls }}" {{ old('kelas') == $kls ? 'selected' : '' }}>Kelas {{ $kls }}</option>
-                            @endforeach
-                        </select>
-                        <div class="form-text small">Pilih kelas spesifik atau 'Semua Kelas' jika ujian diadakan serentak.</div>
-                    </div>
-
-                    <div class="col-md-4">
                         <label class="form-label fw-semibold text-slate-700">Durasi Pengerjaan (Menit) <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="number" name="durasi_menit" value="{{ old('durasi_menit', 60) }}" class="form-control" min="5" max="300" required>
@@ -76,13 +65,84 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <!-- Kelas Target (Multiple Kelas) -->
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <div>
+                                <label class="form-label fw-semibold text-slate-700 mb-0">
+                                    <i class="fa-solid fa-users text-primary me-1"></i>Kelas Target <span class="text-danger">*</span>
+                                </label>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-2" id="kelasCounterBadge">
+                                    0 Kelas Dipilih
+                                </span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0.5 px-2" id="btnPilihSemuaKelas">
+                                    <i class="fa-solid fa-check-double me-1"></i>Pilih Semua Kelas
+                                </button>
+                                @foreach($groupedKelas as $tingkat => $items)
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2 btn-tingkat-quick" data-tingkat="{{ $tingkat }}">
+                                        Kelas {{ $tingkat }}
+                                    </button>
+                                @endforeach
+                                <button type="button" class="btn btn-sm btn-outline-danger py-0.5 px-2" id="btnResetKelas">
+                                    <i class="fa-solid fa-rotate-left me-1"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card border bg-light-subtle rounded-3 p-3 mb-1">
+                            <div class="row g-3">
+                                @foreach($groupedKelas as $tingkat => $kelasList)
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-white rounded-3 border h-100 shadow-2xs">
+                                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                <span class="small fw-bold text-slate-700">
+                                                    <i class="fa-solid fa-graduation-cap text-primary me-1"></i>Tingkat {{ $tingkat }}
+                                                </span>
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold btn-toggle-group" data-tingkat="{{ $tingkat }}" style="font-size: 11px;">
+                                                    Pilih Tingkat
+                                                </button>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-1.5">
+                                                @foreach($kelasList as $kls)
+                                                    @php
+                                                        $isChecked = is_array(old('kelas')) && in_array($kls, old('kelas'));
+                                                        $inputSlug = 'kls_' . \Illuminate\Support\Str::slug($kls);
+                                                    @endphp
+                                                    <div class="me-1 mb-1">
+                                                        <input type="checkbox"
+                                                               class="btn-check kls-checkbox"
+                                                               data-tingkat="{{ $tingkat }}"
+                                                               name="kelas[]"
+                                                               id="{{ $inputSlug }}"
+                                                               value="{{ $kls }}"
+                                                               autocomplete="off"
+                                                               {{ $isChecked ? 'checked' : '' }}>
+                                                        <label class="btn btn-sm btn-outline-secondary rounded-2 py-1 px-2.5 fw-semibold kls-pill"
+                                                               for="{{ $inputSlug }}">
+                                                            {{ $kls }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="form-text small text-muted">
+                            <i class="fa-solid fa-circle-info me-1"></i>Pilih satu atau beberapa kelas target. Anda dapat mencentang kelas tertentu atau memilih seluruh angkatan menggunakan tombol cepat di atas.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold text-slate-700">Waktu Buka Ujian (Opsional)</label>
                         <input type="datetime-local" name="waktu_mulai" value="{{ old('waktu_mulai') }}" class="form-control">
                         <div class="form-text small">Kosongkan jika ingin dibuka secara manual kapan saja.</div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold text-slate-700">Waktu Tutup Ujian (Opsional)</label>
                         <input type="datetime-local" name="waktu_selesai" value="{{ old('waktu_selesai') }}" class="form-control">
                         <div class="form-text small">Batas akhir siswa dapat membuka ujian.</div>
@@ -131,4 +191,96 @@
         </div>
     </div>
 </div>
+
+<style>
+.kls-pill {
+    font-size: 13px;
+    border-color: #cbd5e1;
+    color: #475569;
+    background-color: #f8fafc;
+    transition: all 0.15s ease-in-out;
+}
+.kls-pill:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+.btn-check:checked + .kls-pill {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+}
+.btn-check:focus + .kls-pill {
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.kls-checkbox');
+    const badge = document.getElementById('kelasCounterBadge');
+    const btnPilihSemua = document.getElementById('btnPilihSemuaKelas');
+    const btnReset = document.getElementById('btnResetKelas');
+    const btnTingkatList = document.querySelectorAll('.btn-tingkat-quick, .btn-toggle-group');
+
+    function updateCounter() {
+        const checked = document.querySelectorAll('.kls-checkbox:checked');
+        const count = checked.length;
+        const total = checkboxes.length;
+        if (count === 0) {
+            badge.textContent = '0 Kelas Dipilih';
+            badge.className = 'badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-2';
+        } else if (count === total) {
+            badge.textContent = `Semua Kelas Dipilih (${count})`;
+            badge.className = 'badge bg-success-subtle text-success border border-success-subtle ms-2';
+        } else {
+            badge.textContent = `${count} Kelas Dipilih`;
+            badge.className = 'badge bg-primary-subtle text-primary border border-primary-subtle ms-2';
+        }
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateCounter);
+    });
+
+    if (btnPilihSemua) {
+        btnPilihSemua.addEventListener('click', function() {
+            checkboxes.forEach(cb => cb.checked = true);
+            updateCounter();
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', function() {
+            checkboxes.forEach(cb => cb.checked = false);
+            updateCounter();
+        });
+    }
+
+    btnTingkatList.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tingkat = this.getAttribute('data-tingkat');
+            const targetCheckboxes = document.querySelectorAll(`.kls-checkbox[data-tingkat="${tingkat}"]`);
+            const allChecked = Array.from(targetCheckboxes).every(cb => cb.checked);
+            targetCheckboxes.forEach(cb => cb.checked = !allChecked);
+            updateCounter();
+        });
+    });
+
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checked = document.querySelectorAll('.kls-checkbox:checked');
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert('Silakan pilih minimal 1 kelas target asesmen.');
+                badge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+
+    updateCounter();
+});
+</script>
 @endsection

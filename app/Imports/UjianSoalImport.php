@@ -77,3 +77,4 @@ class UjianSoalImport implements ToCollection, WithHeadingRow
         return $this->skippedCount;
     }
 }
+

@@ -32,3 +32,4 @@ class UjianJawaban extends Model
         return $this->belongsTo(UjianSoal::class, 'soal_id');
     }
 }
+

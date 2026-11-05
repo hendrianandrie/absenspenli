@@ -47,3 +47,4 @@ class UjianSoal extends Model
         ];
     }
 }
+

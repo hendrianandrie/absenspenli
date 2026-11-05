@@ -90,3 +90,4 @@ class UjianSiswa extends Model
         ]);
     }
 }
+

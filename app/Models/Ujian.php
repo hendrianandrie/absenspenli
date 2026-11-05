@@ -88,4 +88,33 @@ class Ujian extends Model
 
         return true;
     }
+
+    /**
+     * Mendapatkan daftar kelas target sebagai array
+     */
+    public function getDaftarKelasAttribute(): array
+    {
+        if (empty($this->kelas) || $this->kelas === 'Semua') {
+            return ['Semua'];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $this->kelas))));
+    }
+
+    /**
+     * Cek apakah kelas siswa cocok dengan target ujian ini
+     */
+    public function matchesKelas(?string $kelas): bool
+    {
+        if (!$kelas) {
+            return false;
+        }
+
+        if (empty($this->kelas) || $this->kelas === 'Semua') {
+            return true;
+        }
+
+        return in_array($kelas, $this->daftar_kelas, true);
+    }
 }
+

@@ -44,13 +44,18 @@ class UjianSiswaController extends Controller
         // Ambil ujian aktif untuk kelas siswa atau untuk Semua
         $ujians = Ujian::where('status', 'aktif')
             ->where(function ($q) use ($siswa) {
-                $q->where('kelas', $siswa->kelas)
-                  ->orWhere('kelas', 'Semua');
+                $q->where('kelas', 'Semua')
+                  ->orWhere('kelas', $siswa->kelas)
+                  ->orWhere('kelas', 'LIKE', '%' . $siswa->kelas . '%');
             })
             ->with(['mataPelajaran', 'user'])
             ->withCount('soals')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->filter(function ($u) use ($siswa) {
+                return $u->matchesKelas($siswa->kelas);
+            })
+            ->values();
 
         // Ambil riwayat sesi pengerjaan siswa ini
         $sesiMap = UjianSiswa::where('siswa_id', $siswa->id)
@@ -71,7 +76,7 @@ class UjianSiswaController extends Controller
             abort(403, 'Akses tidak sah.');
         }
 
-        if ($ujian->kelas !== 'Semua' && $ujian->kelas !== $siswa->kelas) {
+        if (!$ujian->matchesKelas($siswa->kelas)) {
             abort(403, 'Ujian ini tidak dialokasikan untuk kelas Anda.');
         }
 
@@ -97,6 +102,10 @@ class UjianSiswaController extends Controller
         $siswa = $this->getSiswa();
         if (!$siswa) {
             abort(403, 'Akses tidak sah.');
+        }
+
+        if (!$ujian->matchesKelas($siswa->kelas)) {
+            abort(403, 'Ujian ini tidak dialokasikan untuk kelas Anda.');
         }
 
         if (!$ujian->isAktif()) {
@@ -261,3 +270,4 @@ class UjianSiswaController extends Controller
         return view('siswa.ujian.hasil', compact('siswa', 'ujian', 'sesi', 'totalSoal'));
     }
 }
+

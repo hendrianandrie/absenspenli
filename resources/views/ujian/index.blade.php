@@ -109,9 +109,15 @@
                             </td>
                             <td class="py-3 px-3">
                                 <div class="fw-semibold text-slate-700">{{ optional($u->mataPelajaran)->nama_mapel ?? '-' }}</div>
-                                <span class="badge bg-secondary-subtle text-secondary small">
-                                    <i class="fa-solid fa-users me-1"></i>Kelas {{ $u->kelas }}
-                                </span>
+                                @if($u->kelas === 'Semua')
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
+                                        <i class="fa-solid fa-users me-1"></i>Semua Kelas
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary-subtle text-secondary border small" title="{{ $u->kelas }}">
+                                        <i class="fa-solid fa-users me-1"></i>Kelas {{ \Illuminate\Support\Str::limit($u->kelas, 22) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-3 px-3 text-center">
                                 <div class="small fw-semibold text-slate-700 mb-1">
@@ -230,3 +236,4 @@
     </div>
 </div>
 @endsection
+

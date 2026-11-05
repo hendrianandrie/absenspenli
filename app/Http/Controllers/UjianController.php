@@ -70,7 +70,12 @@ class UjianController extends Controller
         }
 
         if ($request->filled('kelas') && $request->kelas !== 'Semua') {
-            $query->where('kelas', $request->kelas);
+            $targetKelas = $request->kelas;
+            $query->where(function ($q) use ($targetKelas) {
+                $q->where('kelas', 'Semua')
+                  ->orWhere('kelas', $targetKelas)
+                  ->orWhere('kelas', 'LIKE', '%' . $targetKelas . '%');
+            });
         }
 
         if ($request->filled('status')) {
@@ -103,8 +108,12 @@ class UjianController extends Controller
         }
 
         $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        $groupedKelas = $daftarKelas->groupBy(function ($k) {
+            $parts = explode(' ', trim($k));
+            return $parts[0] ?? 'Lainnya';
+        });
 
-        return view('ujian.create', compact('mapels', 'daftarKelas'));
+        return view('ujian.create', compact('mapels', 'daftarKelas', 'groupedKelas'));
     }
 
     /**
@@ -115,15 +124,29 @@ class UjianController extends Controller
         $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
             'judul' => 'required|string|max:200',
-            'jenis' => 'required|in:UH,UTS,UAS,Sumatif',
-            'kelas' => 'required|string',
+            'jenis' => 'required|in:Ulangan Harian,Sumatif Tengah Semester,Sumatif Akhir Semester,Try Out,UH,UTS,UAS,Sumatif',
+            'kelas' => 'required|array|min:1',
+            'kelas.*' => 'required|string',
             'durasi_menit' => 'required|integer|min:5|max:300',
             'waktu_mulai' => 'nullable|date',
             'waktu_selesai' => 'nullable|date|after_or_equal:waktu_mulai',
             'acak_soal' => 'nullable|boolean',
             'acak_opsi' => 'nullable|boolean',
             'tampilkan_nilai' => 'nullable|boolean',
+        ], [
+            'kelas.required' => 'Pilih minimal satu kelas target ujian.',
+            'kelas.min' => 'Pilih minimal satu kelas target ujian.',
         ]);
+
+        $allClasses = Siswa::select('kelas')->distinct()->pluck('kelas')->toArray();
+        $selectedKelas = array_values(array_filter($request->input('kelas', [])));
+
+        if (in_array('Semua', $selectedKelas, true) || (count($allClasses) > 0 && count($selectedKelas) >= count($allClasses))) {
+            $kelasValue = 'Semua';
+        } else {
+            sort($selectedKelas, SORT_NATURAL);
+            $kelasValue = implode(', ', $selectedKelas);
+        }
 
         $semester = Kegiatan::determineSemester($request->waktu_mulai ?? now());
         $tahunAjaran = Kegiatan::determineTahunAjaran($request->waktu_mulai ?? now());
@@ -134,7 +157,7 @@ class UjianController extends Controller
             'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
             'jenis' => $request->jenis,
-            'kelas' => $request->kelas,
+            'kelas' => $kelasValue,
             'semester' => $semester,
             'tahun_ajaran' => $tahunAjaran,
             'durasi_menit' => $request->durasi_menit,
@@ -171,8 +194,12 @@ class UjianController extends Controller
         }
 
         $daftarKelas = Siswa::select('kelas')->distinct()->orderBy('kelas')->pluck('kelas');
+        $groupedKelas = $daftarKelas->groupBy(function ($k) {
+            $parts = explode(' ', trim($k));
+            return $parts[0] ?? 'Lainnya';
+        });
 
-        return view('ujian.edit', compact('ujian', 'mapels', 'daftarKelas'));
+        return view('ujian.edit', compact('ujian', 'mapels', 'daftarKelas', 'groupedKelas'));
     }
 
     /**
@@ -185,19 +212,33 @@ class UjianController extends Controller
         $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
             'judul' => 'required|string|max:200',
-            'jenis' => 'required|in:UH,UTS,UAS,Sumatif',
-            'kelas' => 'required|string',
+            'jenis' => 'required|in:Ulangan Harian,Sumatif Tengah Semester,Sumatif Akhir Semester,Try Out,UH,UTS,UAS,Sumatif',
+            'kelas' => 'required|array|min:1',
+            'kelas.*' => 'required|string',
             'durasi_menit' => 'required|integer|min:5|max:300',
             'waktu_mulai' => 'nullable|date',
             'waktu_selesai' => 'nullable|date|after_or_equal:waktu_mulai',
+        ], [
+            'kelas.required' => 'Pilih minimal satu kelas target ujian.',
+            'kelas.min' => 'Pilih minimal satu kelas target ujian.',
         ]);
+
+        $allClasses = Siswa::select('kelas')->distinct()->pluck('kelas')->toArray();
+        $selectedKelas = array_values(array_filter($request->input('kelas', [])));
+
+        if (in_array('Semua', $selectedKelas, true) || (count($allClasses) > 0 && count($selectedKelas) >= count($allClasses))) {
+            $kelasValue = 'Semua';
+        } else {
+            sort($selectedKelas, SORT_NATURAL);
+            $kelasValue = implode(', ', $selectedKelas);
+        }
 
         $ujian->update([
             'mata_pelajaran_id' => $request->mata_pelajaran_id,
             'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
             'jenis' => $request->jenis,
-            'kelas' => $request->kelas,
+            'kelas' => $kelasValue,
             'durasi_menit' => $request->durasi_menit,
             'waktu_mulai' => $request->waktu_mulai,
             'waktu_selesai' => $request->waktu_selesai,
@@ -412,9 +453,9 @@ class UjianController extends Controller
         // Ambil seluruh siswa pada kelas target
         $querySiswa = Siswa::query();
         if ($ujian->kelas !== 'Semua') {
-            $querySiswa->where('kelas', $ujian->kelas);
+            $querySiswa->whereIn('kelas', $ujian->daftar_kelas);
         }
-        $siswas = $querySiswa->orderBy('nama')->get();
+        $siswas = $querySiswa->orderBy('kelas')->orderBy('nama')->get();
 
         // Ambil sesi ujian siswa yang sudah ada
         $sesiList = UjianSiswa::where('ujian_id', $ujian->id)
@@ -481,45 +522,72 @@ class UjianController extends Controller
     {
         $this->checkUjianAccess($ujian);
 
-        // Cari atau buat record Kegiatan
-        $kegiatan = null;
-        if ($ujian->kegiatan_id) {
-            $kegiatan = Kegiatan::find($ujian->kegiatan_id);
-        }
-
-        if (!$kegiatan) {
-            $kegiatan = Kegiatan::create([
-                'mata_pelajaran_id' => $ujian->mata_pelajaran_id,
-                'kelas' => $ujian->kelas,
-                'nama_kegiatan' => 'CBT: ' . $ujian->judul,
-                'jenis' => in_array($ujian->jenis, ['Tugas', 'UH', 'UTS', 'UAS']) ? $ujian->jenis : 'UH',
-                'semester' => $ujian->semester,
-                'tahun_ajaran' => $ujian->tahun_ajaran ?: '2026/2027',
-                'tanggal' => now()->toDateString(),
-            ]);
-
-            $ujian->update(['kegiatan_id' => $kegiatan->id]);
-        }
-
-        // Ambil seluruh siswa yang sudah menyelesaikan ujian
+        // Ambil seluruh siswa yang sudah menyelesaikan ujian beserta relasi siswa
         $sesiSelesai = UjianSiswa::where('ujian_id', $ujian->id)
             ->where('status', 'selesai')
+            ->with('siswa')
             ->get();
 
-        $countSynced = 0;
-        foreach ($sesiSelesai as $sesi) {
-            Nilai::updateOrCreate(
-                [
-                    'kegiatan_id' => $kegiatan->id,
-                    'siswa_id' => $sesi->siswa_id,
-                ],
-                [
-                    'nilai' => $sesi->nilai_akhir,
-                ]
-            );
-            $countSynced++;
+        if ($sesiSelesai->isEmpty()) {
+            return back()->with('error', 'Belum ada siswa yang menyelesaikan ujian ini untuk disinkronkan.');
         }
 
-        return back()->with('success', "Berhasil menyinkronkan {$countSynced} nilai siswa ke modul Penilaian SI-KASEP (Kegiatan: {$kegiatan->nama_kegiatan})!");
+        // Map jenis ujian ke enum jenis kegiatan (Tugas, UH, UTS, UAS)
+        $jenisKegiatan = match($ujian->jenis) {
+            'Ulangan Harian', 'UH' => 'UH',
+            'Sumatif Tengah Semester', 'UTS' => 'UTS',
+            'Sumatif Akhir Semester', 'UAS' => 'UAS',
+            'Try Out' => 'UH',
+            default => 'UH'
+        };
+
+        // Kelompokkan siswa berdasarkan kelas untuk sinkronisasi ke buku nilai per kelas
+        $groupedByKelas = $sesiSelesai->groupBy(function ($sesi) {
+            return $sesi->siswa->kelas ?? 'Umum';
+        });
+
+        $totalSynced = 0;
+        $kegiatanNames = [];
+
+        foreach ($groupedByKelas as $kls => $sesis) {
+            // Cari atau buat Kegiatan untuk mapel & kelas ini
+            $kegiatan = Kegiatan::firstOrCreate(
+                [
+                    'mata_pelajaran_id' => $ujian->mata_pelajaran_id,
+                    'kelas' => $kls,
+                    'nama_kegiatan' => 'CBT: ' . $ujian->judul,
+                ],
+                [
+                    'jenis' => $jenisKegiatan,
+                    'semester' => $ujian->semester,
+                    'tahun_ajaran' => $ujian->tahun_ajaran ?: '2026/2027',
+                    'tanggal' => now()->toDateString(),
+                ]
+            );
+
+            // Simpan referensi kegiatan pertama jika ujian belum punya kegiatan_id
+            if (!$ujian->kegiatan_id) {
+                $ujian->update(['kegiatan_id' => $kegiatan->id]);
+            }
+
+            foreach ($sesis as $sesi) {
+                Nilai::updateOrCreate(
+                    [
+                        'kegiatan_id' => $kegiatan->id,
+                        'siswa_id' => $sesi->siswa_id,
+                    ],
+                    [
+                        'nilai' => $sesi->nilai_akhir,
+                    ]
+                );
+                $totalSynced++;
+            }
+
+            $kegiatanNames[] = $kls;
+        }
+
+        $daftarKelasTersinkron = implode(', ', $kegiatanNames);
+        return back()->with('success', "Berhasil menyinkronkan {$totalSynced} nilai siswa ke modul Penilaian SI-KASEP untuk kelas: {$daftarKelasTersinkron}!");
     }
 }
+
