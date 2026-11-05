@@ -77,8 +77,8 @@
     </div>
 
     <!-- Table Paket Ujian -->
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="table-responsive">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="table-responsive" style="min-height: 320px;">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light text-slate-700">
                     <tr class="text-uppercase small fw-semibold" style="font-size: 11px; letter-spacing: 0.5px;">
@@ -166,10 +166,10 @@
                                     <a href="{{ route('ujian.monitoring', $u->id) }}" class="btn btn-outline-info" title="Live Monitor Pengawas">
                                         <i class="fa-solid fa-display me-1"></i> Monitor
                                     </a>
-                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
                                         <span class="visually-hidden">Toggle Dropdown</span>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border rounded-3 py-2" style="z-index: 1060; min-width: 210px;">
                                         <li><h6 class="dropdown-header">Ubah Status Ujian</h6></li>
                                         <li>
                                             <form method="POST" action="{{ route('ujian.toggleStatus', $u->id) }}">
@@ -235,5 +235,15 @@
         @endif
     </div>
 </div>
+
+<style>
+/* Pastikan dropdown menu aksi tidak terpotong oleh overflow tabel */
+.table-responsive {
+    min-height: 320px;
+}
+.btn-group .dropdown-menu {
+    z-index: 1060 !important;
+}
+</style>
 @endsection
 
