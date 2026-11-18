@@ -493,6 +493,21 @@ class WaliKelasController extends Controller
                 $bUts = $mapel->bobot_uts ?? 25;
                 $bUas = $mapel->bobot_uas ?? 25;
 
+                $totalKegiatan = $mapelKegs->count();
+                $classKegiatanCounts = [
+                    'Tugas' => $mapelKegs->where('jenis', 'Tugas')->count(),
+                    'UH'    => $mapelKegs->where('jenis', 'UH')->count(),
+                    'UTS'   => $mapelKegs->where('jenis', 'UTS')->count(),
+                    'UAS'   => $mapelKegs->where('jenis', 'UAS')->count(),
+                ];
+                $activeClassWeights = [
+                    'Tugas' => $classKegiatanCounts['Tugas'] > 0 ? $bTugas : 0,
+                    'UH'    => $classKegiatanCounts['UH'] > 0 ? $bUh : 0,
+                    'UTS'   => $classKegiatanCounts['UTS'] > 0 ? $bUts : 0,
+                    'UAS'   => $classKegiatanCounts['UAS'] > 0 ? $bUas : 0,
+                ];
+                $totalActiveWeight = array_sum($activeClassWeights);
+
                 $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
                 $allRawScores = [];
 
@@ -511,19 +526,19 @@ class WaliKelasController extends Controller
                     continue;
                 }
 
-                $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
-                $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
-                $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
-                $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+                $avgTugas = $classKegiatanCounts['Tugas'] > 0 ? array_sum($scoresByJenis['Tugas']) / $classKegiatanCounts['Tugas'] : 0;
+                $avgUh    = $classKegiatanCounts['UH'] > 0 ? array_sum($scoresByJenis['UH']) / $classKegiatanCounts['UH'] : 0;
+                $avgUts   = $classKegiatanCounts['UTS'] > 0 ? array_sum($scoresByJenis['UTS']) / $classKegiatanCounts['UTS'] : 0;
+                $avgUas   = $classKegiatanCounts['UAS'] > 0 ? array_sum($scoresByJenis['UAS']) / $classKegiatanCounts['UAS'] : 0;
 
-                $weightedSum = 0;
-                $weightTotal = 0;
-                if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
-                if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
-                if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
-                if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+                $weightedSum = ($avgTugas * $activeClassWeights['Tugas'])
+                             + ($avgUh * $activeClassWeights['UH'])
+                             + ($avgUts * $activeClassWeights['UTS'])
+                             + ($avgUas * $activeClassWeights['UAS']);
 
-                $final = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : round(array_sum($allRawScores) / count($allRawScores), 1);
+                $final = $totalActiveWeight > 0
+                    ? round($weightedSum / $totalActiveWeight, 1)
+                    : round(array_sum($allRawScores) / $totalKegiatan, 1);
                 $mapelScores[$mapel->id] = $final;
                 $validFinalScores[] = $final;
                 $totalAssessedMapel++;

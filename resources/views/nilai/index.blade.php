@@ -138,7 +138,7 @@
                 <span class="badge bg-primary fs-6 ms-2">KKM: {{ $selectedMapel->kkm }}</span>
             </h5>
             <small class="text-muted">
-                Bobot Mapel: Tugas ({{ $selectedMapel->bobot_tugas ?? 20 }}%), UH ({{ $selectedMapel->bobot_uh ?? 30 }}%), UTS ({{ $selectedMapel->bobot_uts ?? 25 }}%), UAS ({{ $selectedMapel->bobot_uas ?? 25 }}%).
+                Bobot Mapel: Tugas ({{ $selectedMapel->bobot_tugas ?? 20 }}%), UH ({{ $selectedMapel->bobot_uh ?? 30 }}%), UTS ({{ $selectedMapel->bobot_uts ?? 25 }}%), UAS ({{ $selectedMapel->bobot_uas ?? 25 }}%). &bull; <em>Kegiatan belum dikerjakan dihitung 0 terhadap total kegiatan.</em>
             </small>
         </div>
         <div class="d-flex flex-wrap gap-2">

@@ -359,7 +359,7 @@ class SiswaApiController extends Controller
                 ];
             }
 
-            $avgScore = count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : null;
+            $avgScore = (count($scores) > 0 && count($kegiatans) > 0) ? round(array_sum($scores) / count($kegiatans), 1) : null;
 
             $rekapPerMapel[] = [
                 'mapel_id' => $mapel->id,

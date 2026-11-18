@@ -97,6 +97,21 @@ class NilaiController extends Controller
             $bUts = $selectedMapel->bobot_uts ?? 25;
             $bUas = $selectedMapel->bobot_uas ?? 25;
 
+            $totalKegiatan = $kegiatans->count();
+            $classKegiatanCounts = [
+                'Tugas' => $kegiatans->where('jenis', 'Tugas')->count(),
+                'UH'    => $kegiatans->where('jenis', 'UH')->count(),
+                'UTS'   => $kegiatans->where('jenis', 'UTS')->count(),
+                'UAS'   => $kegiatans->where('jenis', 'UAS')->count(),
+            ];
+            $activeClassWeights = [
+                'Tugas' => $classKegiatanCounts['Tugas'] > 0 ? $bTugas : 0,
+                'UH'    => $classKegiatanCounts['UH'] > 0 ? $bUh : 0,
+                'UTS'   => $classKegiatanCounts['UTS'] > 0 ? $bUts : 0,
+                'UAS'   => $classKegiatanCounts['UAS'] > 0 ? $bUas : 0,
+            ];
+            $totalActiveWeight = array_sum($activeClassWeights);
+
             $allFinalScores = [];
             $tuntasCount = 0;
             $belumTuntasCount = 0;
@@ -118,23 +133,28 @@ class NilaiController extends Controller
                 }
 
                 $validScores = array_filter($scores, fn ($n) => $n !== null);
-                $rataRataMurni = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 1) : null;
+                $hasAnyScore = count($validScores) > 0;
 
-                // Hitung Rata-Rata per Kategori untuk Bobot Penilaian
-                $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
-                $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
-                $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
-                $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+                if ($hasAnyScore) {
+                    // Solusi A: Nilai kegiatan yang belum dikerjakan dianggap 0 terhadap total kegiatan di kelas
+                    $rataRataMurni = $totalKegiatan > 0 ? round(array_sum($validScores) / $totalKegiatan, 1) : null;
 
-                $weightedSum = 0;
-                $weightTotal = 0;
+                    // Hitung Rata-Rata per Kategori berdasarkan jumlah kegiatan kategori tersebut di kelas
+                    $avgTugas = $classKegiatanCounts['Tugas'] > 0 ? array_sum($scoresByJenis['Tugas']) / $classKegiatanCounts['Tugas'] : 0;
+                    $avgUh    = $classKegiatanCounts['UH'] > 0 ? array_sum($scoresByJenis['UH']) / $classKegiatanCounts['UH'] : 0;
+                    $avgUts   = $classKegiatanCounts['UTS'] > 0 ? array_sum($scoresByJenis['UTS']) / $classKegiatanCounts['UTS'] : 0;
+                    $avgUas   = $classKegiatanCounts['UAS'] > 0 ? array_sum($scoresByJenis['UAS']) / $classKegiatanCounts['UAS'] : 0;
 
-                if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
-                if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
-                if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
-                if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+                    $weightedSum = ($avgTugas * $activeClassWeights['Tugas'])
+                                 + ($avgUh * $activeClassWeights['UH'])
+                                 + ($avgUts * $activeClassWeights['UTS'])
+                                 + ($avgUas * $activeClassWeights['UAS']);
 
-                $nilaiAkhirBerbobot = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : $rataRataMurni;
+                    $nilaiAkhirBerbobot = $totalActiveWeight > 0 ? round($weightedSum / $totalActiveWeight, 1) : $rataRataMurni;
+                } else {
+                    $rataRataMurni = null;
+                    $nilaiAkhirBerbobot = null;
+                }
 
                 $predikat = '-';
                 $statusKetuntasan = '-';
@@ -478,6 +498,7 @@ class NilaiController extends Controller
             ->get();
 
         $rekap = [];
+        $totalKegiatan = $kegiatans->count();
         foreach ($siswas as $siswa) {
             $scores = [];
             foreach ($kegiatans as $kegiatan) {
@@ -485,7 +506,7 @@ class NilaiController extends Controller
                 $scores[$kegiatan->id] = $n ? $n->nilai : null;
             }
             $valid = array_filter($scores, fn ($v) => $v !== null);
-            $avg = count($valid) > 0 ? round(array_sum($valid) / count($valid), 1) : null;
+            $avg = (count($valid) > 0 && $totalKegiatan > 0) ? round(array_sum($valid) / $totalKegiatan, 1) : null;
             $rekap[$siswa->id] = [
                 'scores' => $scores,
                 'rata_rata' => $avg,
@@ -860,6 +881,21 @@ class NilaiController extends Controller
             $bUts = $mapel->bobot_uts ?? 25;
             $bUas = $mapel->bobot_uas ?? 25;
 
+            $totalKegiatan = $kegiatans->count();
+            $classKegiatanCounts = [
+                'Tugas' => $kegiatans->where('jenis', 'Tugas')->count(),
+                'UH'    => $kegiatans->where('jenis', 'UH')->count(),
+                'UTS'   => $kegiatans->where('jenis', 'UTS')->count(),
+                'UAS'   => $kegiatans->where('jenis', 'UAS')->count(),
+            ];
+            $activeClassWeights = [
+                'Tugas' => $classKegiatanCounts['Tugas'] > 0 ? $bTugas : 0,
+                'UH'    => $classKegiatanCounts['UH'] > 0 ? $bUh : 0,
+                'UTS'   => $classKegiatanCounts['UTS'] > 0 ? $bUts : 0,
+                'UAS'   => $classKegiatanCounts['UAS'] > 0 ? $bUas : 0,
+            ];
+            $totalActiveWeight = array_sum($activeClassWeights);
+
             $scores = [];
             $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
 
@@ -876,23 +912,28 @@ class NilaiController extends Controller
             }
 
             $validScores = array_filter($scores, fn ($n) => $n !== null);
-            $rataRataMurni = count($validScores) > 0 ? round(array_sum($validScores) / count($validScores), 1) : null;
+            $hasAnyScore = count($validScores) > 0;
 
-            // Hitung Rata-Rata per Kategori untuk Bobot Penilaian
-            $avgTugas = count($scoresByJenis['Tugas']) > 0 ? array_sum($scoresByJenis['Tugas']) / count($scoresByJenis['Tugas']) : null;
-            $avgUh = count($scoresByJenis['UH']) > 0 ? array_sum($scoresByJenis['UH']) / count($scoresByJenis['UH']) : null;
-            $avgUts = count($scoresByJenis['UTS']) > 0 ? array_sum($scoresByJenis['UTS']) / count($scoresByJenis['UTS']) : null;
-            $avgUas = count($scoresByJenis['UAS']) > 0 ? array_sum($scoresByJenis['UAS']) / count($scoresByJenis['UAS']) : null;
+            if ($hasAnyScore) {
+                // Solusi A: Nilai kegiatan yang belum dikerjakan dihitung 0 terhadap total kegiatan di kelas
+                $rataRataMurni = $totalKegiatan > 0 ? round(array_sum($validScores) / $totalKegiatan, 1) : null;
 
-            $weightedSum = 0;
-            $weightTotal = 0;
+                // Hitung Rata-Rata per Kategori berdasarkan jumlah kegiatan kategori tersebut di kelas
+                $avgTugas = $classKegiatanCounts['Tugas'] > 0 ? array_sum($scoresByJenis['Tugas']) / $classKegiatanCounts['Tugas'] : 0;
+                $avgUh    = $classKegiatanCounts['UH'] > 0 ? array_sum($scoresByJenis['UH']) / $classKegiatanCounts['UH'] : 0;
+                $avgUts   = $classKegiatanCounts['UTS'] > 0 ? array_sum($scoresByJenis['UTS']) / $classKegiatanCounts['UTS'] : 0;
+                $avgUas   = $classKegiatanCounts['UAS'] > 0 ? array_sum($scoresByJenis['UAS']) / $classKegiatanCounts['UAS'] : 0;
 
-            if ($avgTugas !== null) { $weightedSum += ($avgTugas * $bTugas); $weightTotal += $bTugas; }
-            if ($avgUh !== null) { $weightedSum += ($avgUh * $bUh); $weightTotal += $bUh; }
-            if ($avgUts !== null) { $weightedSum += ($avgUts * $bUts); $weightTotal += $bUts; }
-            if ($avgUas !== null) { $weightedSum += ($avgUas * $bUas); $weightTotal += $bUas; }
+                $weightedSum = ($avgTugas * $activeClassWeights['Tugas'])
+                             + ($avgUh * $activeClassWeights['UH'])
+                             + ($avgUts * $activeClassWeights['UTS'])
+                             + ($avgUas * $activeClassWeights['UAS']);
 
-            $nilaiAkhir = $weightTotal > 0 ? round($weightedSum / $weightTotal, 1) : $rataRataMurni;
+                $nilaiAkhir = $totalActiveWeight > 0 ? round($weightedSum / $totalActiveWeight, 1) : $rataRataMurni;
+            } else {
+                $rataRataMurni = null;
+                $nilaiAkhir = null;
+            }
             $kkm = $mapel->kkm ?? 75;
 
             $predikat = '-';

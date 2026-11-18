@@ -195,7 +195,7 @@ class SiswaPortalController extends Controller
                 'dinilai' => count($scores),
                 'tuntas' => $tuntasCount,
                 'remedial' => $remedialCount,
-                'avg' => count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : null,
+                'avg' => (count($scores) > 0 && count($kegiatanList) > 0) ? round(array_sum($scores) / count($kegiatanList), 1) : null,
             ];
         }
 

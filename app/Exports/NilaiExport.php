@@ -40,6 +40,7 @@ class NilaiExport implements FromView, ShouldAutoSize
             ->get();
 
         $rekap = [];
+        $totalKegiatan = $kegiatans->count();
         foreach ($siswas as $siswa) {
             $scores = [];
             foreach ($kegiatans as $kegiatan) {
@@ -47,7 +48,7 @@ class NilaiExport implements FromView, ShouldAutoSize
                 $scores[$kegiatan->id] = $n ? $n->nilai : null;
             }
             $valid = array_filter($scores, fn ($v) => $v !== null);
-            $avg = count($valid) > 0 ? round(array_sum($valid) / count($valid), 1) : null;
+            $avg = (count($valid) > 0 && $totalKegiatan > 0) ? round(array_sum($valid) / $totalKegiatan, 1) : null;
 
             $kkm = $mapel->kkm;
             $predikat = '-';

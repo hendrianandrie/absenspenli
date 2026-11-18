@@ -79,6 +79,7 @@ class WaliKelasApiController extends Controller
 
             foreach ($mapels as $mapel) {
                 $mapelKegs = $kegiatanMapelMap->get($mapel->id, collect());
+                $totalKegiatan = $mapelKegs->count();
                 $scores = [];
                 foreach ($mapelKegs as $keg) {
                     if ($siswaNilais->has($keg->id)) {
@@ -86,7 +87,7 @@ class WaliKelasApiController extends Controller
                     }
                 }
 
-                $avg = count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : null;
+                $avg = (count($scores) > 0 && $totalKegiatan > 0) ? round(array_sum($scores) / $totalKegiatan, 1) : null;
                 if ($avg !== null) {
                     $allScores[] = $avg;
                 }
