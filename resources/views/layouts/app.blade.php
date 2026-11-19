@@ -436,13 +436,16 @@
                             <span>Rekap Absen</span>
                         </a>
                     </div>
+                    @if(config('features.asesmen'))
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.ujian.*') ? 'active' : '' }}" href="{{ route('siswa.ujian.index') }}">
                             <i class="fa-solid fa-file-pen" style="color: #a855f7;"></i>
                             <span>Asesmen Online</span>
                         </a>
                     </div>
+                    @endif
 
+                    @if(config('features.perpustakaan'))
                     <div class="mosaic-nav-section">Perpustakaan & Literasi</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('siswa.perpus.katalog') ? 'active' : '' }}" href="{{ route('siswa.perpus.katalog') }}">
@@ -462,6 +465,7 @@
                             <span>Papan Peringkat</span>
                         </a>
                     </div>
+                    @endif
 
                 @elseif(Auth::check() && Auth::user()->role === 'piket')
                     <!-- MENU PIKET -->
@@ -499,7 +503,7 @@
                         </a>
                     </div>
 
-                @elseif(Auth::check() && Auth::user()->role === 'petugas_perpus')
+                @elseif(Auth::check() && Auth::user()->role === 'petugas_perpus' && config('features.perpustakaan'))
                     <!-- MENU PETUGAS PERPUSTAKAAN -->
                     <div class="mosaic-nav-section">Layanan Perpustakaan</div>
                     <div class="mosaic-nav-item">
@@ -562,12 +566,14 @@
                             <span>Input Nilai Baru</span>
                         </a>
                     </div>
+                    @if(config('features.asesmen'))
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
                             <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
                             <span>Asesmen</span>
                         </a>
                     </div>
+                    @endif
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('mapel.*') ? 'active' : '' }}" href="{{ route('mapel.index') }}">
                             <i class="fa-solid fa-book-open" style="color: #ec4899;"></i>
@@ -598,6 +604,7 @@
                         </div>
                     @endif
 
+                    @if(config('features.perpustakaan'))
                     <div class="mosaic-nav-section">Literasi Sekolah</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('perpus.leaderboard.*') ? 'active' : '' }}" href="{{ route('perpus.leaderboard.index') }}">
@@ -605,6 +612,7 @@
                             <span>Leaderboard Literasi</span>
                         </a>
                     </div>
+                    @endif
 
                 @else
                     <!-- MENU ADMINISTRATOR -->
@@ -655,12 +663,14 @@
                             <span>Penilaian Siswa</span>
                         </a>
                     </div>
+                    @if(config('features.asesmen'))
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('ujian.*') ? 'active' : '' }}" href="{{ route('ujian.index') }}">
                             <i class="fa-solid fa-file-signature" style="color: #a855f7;"></i>
                             <span>Asesmen</span>
                         </a>
                     </div>
+                    @endif
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('walikelas.*') && !request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.index') }}">
                             <i class="fa-solid fa-user-tie" style="color: #f59e0b;"></i>
@@ -674,6 +684,7 @@
                         </a>
                     </div>
 
+                    @if(config('features.perpustakaan'))
                     <div class="mosaic-nav-section">Perpustakaan & Literasi</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('perpus.sirkulasi.create') ? 'active' : '' }}" href="{{ route('perpus.sirkulasi.create') }}">
@@ -705,6 +716,7 @@
                             <span>Leaderboard Literasi</span>
                         </a>
                     </div>
+                    @endif
 
                     <div class="mosaic-nav-section">Pengaturan Sistem</div>
                     <div class="mosaic-nav-item">

@@ -66,24 +66,28 @@ Route::middleware('auth')->group(function () {
         Route::get('/absen', [SiswaPortalController::class, 'rekapAbsen'])->name('siswa.absen');
 
         // Asesmen Online Siswa (CBT)
-        Route::prefix('asesmen')->name('siswa.ujian.')->group(function () {
-            Route::get('/', [UjianSiswaController::class, 'index'])->name('index');
-            Route::get('/{ujian}/konfirmasi', [UjianSiswaController::class, 'konfirmasi'])->name('konfirmasi');
-            Route::post('/{ujian}/mulai', [UjianSiswaController::class, 'mulai'])->name('mulai');
-            Route::get('/{ujian}/kerjakan', [UjianSiswaController::class, 'kerjakan'])->name('kerjakan');
-            Route::post('/{ujian}/simpan-jawaban', [UjianSiswaController::class, 'simpanJawaban'])->name('simpanJawaban');
-            Route::post('/{ujian}/sync-waktu', [UjianSiswaController::class, 'syncWaktu'])->name('syncWaktu');
-            Route::post('/{ujian}/selesai', [UjianSiswaController::class, 'selesai'])->name('selesai');
-            Route::get('/{ujian}/hasil', [UjianSiswaController::class, 'hasil'])->name('hasil');
-        });
+        if (config('features.asesmen')) {
+            Route::prefix('asesmen')->name('siswa.ujian.')->group(function () {
+                Route::get('/', [UjianSiswaController::class, 'index'])->name('index');
+                Route::get('/{ujian}/konfirmasi', [UjianSiswaController::class, 'konfirmasi'])->name('konfirmasi');
+                Route::post('/{ujian}/mulai', [UjianSiswaController::class, 'mulai'])->name('mulai');
+                Route::get('/{ujian}/kerjakan', [UjianSiswaController::class, 'kerjakan'])->name('kerjakan');
+                Route::post('/{ujian}/simpan-jawaban', [UjianSiswaController::class, 'simpanJawaban'])->name('simpanJawaban');
+                Route::post('/{ujian}/sync-waktu', [UjianSiswaController::class, 'syncWaktu'])->name('syncWaktu');
+                Route::post('/{ujian}/selesai', [UjianSiswaController::class, 'selesai'])->name('selesai');
+                Route::get('/{ujian}/hasil', [UjianSiswaController::class, 'hasil'])->name('hasil');
+            });
+        }
 
         // Perpustakaan & Literasi Siswa
-        Route::prefix('perpustakaan')->name('siswa.perpus.')->group(function () {
-            Route::get('/katalog', [SiswaPortalController::class, 'perpusKatalog'])->name('katalog');
-            Route::get('/pinjaman', [SiswaPortalController::class, 'perpusPinjaman'])->name('pinjaman');
-            Route::post('/resume', [SiswaPortalController::class, 'perpusStoreResume'])->name('resume.store');
-            Route::get('/leaderboard', [SiswaPortalController::class, 'perpusLeaderboard'])->name('leaderboard');
-        });
+        if (config('features.perpustakaan')) {
+            Route::prefix('perpustakaan')->name('siswa.perpus.')->group(function () {
+                Route::get('/katalog', [SiswaPortalController::class, 'perpusKatalog'])->name('katalog');
+                Route::get('/pinjaman', [SiswaPortalController::class, 'perpusPinjaman'])->name('pinjaman');
+                Route::post('/resume', [SiswaPortalController::class, 'perpusStoreResume'])->name('resume.store');
+                Route::get('/leaderboard', [SiswaPortalController::class, 'perpusLeaderboard'])->name('leaderboard');
+            });
+        }
     });
 
     // ==========================================
@@ -156,35 +160,37 @@ Route::middleware('auth')->group(function () {
         Route::get('/nilai/rapor-siswa/{id}', [NilaiController::class, 'raporSiswaPdf'])->name('nilai.raporSiswaPdf');
 
         // Asesmen CBT (Ujian Online) - Khusus Guru & Admin
-        Route::prefix('ujian')->name('ujian.')->group(function () {
-            Route::get('/', [UjianController::class, 'index'])->name('index');
-            Route::get('/create', [UjianController::class, 'create'])->name('create');
-            Route::post('/store', [UjianController::class, 'store'])->name('store');
-            Route::get('/{ujian}/edit', [UjianController::class, 'edit'])->name('edit');
-            Route::put('/{ujian}', [UjianController::class, 'update'])->name('update');
-            Route::delete('/{ujian}', [UjianController::class, 'destroy'])->name('destroy');
-            Route::post('/{ujian}/toggle-status', [UjianController::class, 'toggleStatus'])->name('toggleStatus');
-            Route::post('/{ujian}/generate-token', [UjianController::class, 'generateToken'])->name('generateToken');
+        if (config('features.asesmen')) {
+            Route::prefix('ujian')->name('ujian.')->group(function () {
+                Route::get('/', [UjianController::class, 'index'])->name('index');
+                Route::get('/create', [UjianController::class, 'create'])->name('create');
+                Route::post('/store', [UjianController::class, 'store'])->name('store');
+                Route::get('/{ujian}/edit', [UjianController::class, 'edit'])->name('edit');
+                Route::put('/{ujian}', [UjianController::class, 'update'])->name('update');
+                Route::delete('/{ujian}', [UjianController::class, 'destroy'])->name('destroy');
+                Route::post('/{ujian}/toggle-status', [UjianController::class, 'toggleStatus'])->name('toggleStatus');
+                Route::post('/{ujian}/generate-token', [UjianController::class, 'generateToken'])->name('generateToken');
 
-            // Soal
-            Route::get('/{ujian}/soal', [UjianController::class, 'kelolaSoal'])->name('soal');
-            Route::post('/{ujian}/soal', [UjianController::class, 'storeSoal'])->name('soal.store');
-            Route::put('/{ujian}/soal/{soal}', [UjianController::class, 'updateSoal'])->name('soal.update');
-            Route::delete('/{ujian}/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
-            Route::get('/{ujian}/download-template', [UjianController::class, 'downloadTemplate'])->name('downloadTemplate');
-            Route::post('/{ujian}/import-soal', [UjianController::class, 'importSoal'])->name('importSoal');
+                // Soal
+                Route::get('/{ujian}/soal', [UjianController::class, 'kelolaSoal'])->name('soal');
+                Route::post('/{ujian}/soal', [UjianController::class, 'storeSoal'])->name('soal.store');
+                Route::put('/{ujian}/soal/{soal}', [UjianController::class, 'updateSoal'])->name('soal.update');
+                Route::delete('/{ujian}/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
+                Route::get('/{ujian}/download-template', [UjianController::class, 'downloadTemplate'])->name('downloadTemplate');
+                Route::post('/{ujian}/import-soal', [UjianController::class, 'importSoal'])->name('importSoal');
 
-            // Monitoring & Sinkronisasi
-            Route::get('/{ujian}/monitoring', [UjianController::class, 'monitoring'])->name('monitoring');
-            Route::post('/{ujian}/reset-sesi/{siswa}', [UjianController::class, 'resetSesiSiswa'])->name('resetSesi');
-            Route::post('/{ujian}/force-submit/{siswa}', [UjianController::class, 'forceSubmitSiswa'])->name('forceSubmit');
-            Route::post('/{ujian}/sinkron-nilai', [UjianController::class, 'sinkronNilai'])->name('sinkronNilai');
+                // Monitoring & Sinkronisasi
+                Route::get('/{ujian}/monitoring', [UjianController::class, 'monitoring'])->name('monitoring');
+                Route::post('/{ujian}/reset-sesi/{siswa}', [UjianController::class, 'resetSesiSiswa'])->name('resetSesi');
+                Route::post('/{ujian}/force-submit/{siswa}', [UjianController::class, 'forceSubmitSiswa'])->name('forceSubmit');
+                Route::post('/{ujian}/sinkron-nilai', [UjianController::class, 'sinkronNilai'])->name('sinkronNilai');
 
-            // Koreksi Essay Manual
-            Route::get('/{ujian}/koreksi', [UjianController::class, 'koreksiIndex'])->name('koreksi.index');
-            Route::get('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'koreksiSiswa'])->name('koreksi.siswa');
-            Route::post('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'simpanKoreksi'])->name('koreksi.simpan');
-        });
+                // Koreksi Essay Manual
+                Route::get('/{ujian}/koreksi', [UjianController::class, 'koreksiIndex'])->name('koreksi.index');
+                Route::get('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'koreksiSiswa'])->name('koreksi.siswa');
+                Route::post('/{ujian}/koreksi/{ujianSiswa}', [UjianController::class, 'simpanKoreksi'])->name('koreksi.simpan');
+            });
+        }
 
         // Wali Kelas (Pengaturan Admin, Monitoring Nilai & Rekap Kehadiran)
         Route::get('/walikelas', [WaliKelasController::class, 'index'])->name('walikelas.index');
@@ -195,44 +201,46 @@ Route::middleware('auth')->group(function () {
         // ==========================================
         // PERPUSTAKAAN & LITERASI (Petugas Perpus, Admin, Guru, Wali Kelas)
         // ==========================================
-        Route::prefix('perpustakaan')->name('perpus.')->group(function () {
-            // Leaderboard Literasi Siswa & Kelas
-            Route::get('/leaderboard', [\App\Http\Controllers\Perpus\LeaderboardController::class, 'index'])->name('leaderboard.index');
+        if (config('features.perpustakaan')) {
+            Route::prefix('perpustakaan')->name('perpus.')->group(function () {
+                // Leaderboard Literasi Siswa & Kelas
+                Route::get('/leaderboard', [\App\Http\Controllers\Perpus\LeaderboardController::class, 'index'])->name('leaderboard.index');
 
-            // Sirkulasi Peminjaman & Pengembalian Kilat Tanpa Kartu
-            Route::prefix('sirkulasi')->name('sirkulasi.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'index'])->name('index');
-                Route::get('/create', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'create'])->name('create');
-                Route::post('/store', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'store'])->name('store');
-                Route::post('/{peminjaman}/kembalikan', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'kembalikan'])->name('kembalikan');
-                Route::post('/{peminjaman}/perpanjang', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'perpanjang'])->name('perpanjang');
-                Route::get('/search-siswa', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchSiswa'])->name('searchSiswa');
-                Route::get('/search-buku', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchBuku'])->name('searchBuku');
-            });
+                // Sirkulasi Peminjaman & Pengembalian Kilat Tanpa Kartu
+                Route::prefix('sirkulasi')->name('sirkulasi.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'index'])->name('index');
+                    Route::get('/create', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'create'])->name('create');
+                    Route::post('/store', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'store'])->name('store');
+                    Route::post('/{peminjaman}/kembalikan', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'kembalikan'])->name('kembalikan');
+                    Route::post('/{peminjaman}/perpanjang', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'perpanjang'])->name('perpanjang');
+                    Route::get('/search-siswa', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchSiswa'])->name('searchSiswa');
+                    Route::get('/search-buku', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchBuku'])->name('searchBuku');
+                });
 
-            // Data Master & Katalog Buku
-            Route::prefix('buku')->name('buku.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'index'])->name('index');
-                Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'store'])->name('store');
-                Route::put('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'update'])->name('update');
-                Route::delete('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'destroy'])->name('destroy');
-            });
+                // Data Master & Katalog Buku
+                Route::prefix('buku')->name('buku.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'index'])->name('index');
+                    Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'store'])->name('store');
+                    Route::put('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'update'])->name('update');
+                    Route::delete('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'destroy'])->name('destroy');
+                });
 
-            // Kategori Buku
-            Route::prefix('kategori')->name('kategori.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriIndex'])->name('index');
-                Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriStore'])->name('store');
-                Route::put('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriUpdate'])->name('update');
-                Route::delete('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriDestroy'])->name('destroy');
-            });
+                // Kategori Buku
+                Route::prefix('kategori')->name('kategori.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriIndex'])->name('index');
+                    Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriStore'])->name('store');
+                    Route::put('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriUpdate'])->name('update');
+                    Route::delete('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriDestroy'])->name('destroy');
+                });
 
-            // Verifikasi Resume Bacaan Siswa
-            Route::prefix('resume')->name('resume.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Perpus\ResumeController::class, 'index'])->name('index');
-                Route::post('/{resume}/approve', [\App\Http\Controllers\Perpus\ResumeController::class, 'approve'])->name('approve');
-                Route::post('/{resume}/reject', [\App\Http\Controllers\Perpus\ResumeController::class, 'reject'])->name('reject');
+                // Verifikasi Resume Bacaan Siswa
+                Route::prefix('resume')->name('resume.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Perpus\ResumeController::class, 'index'])->name('index');
+                    Route::post('/{resume}/approve', [\App\Http\Controllers\Perpus\ResumeController::class, 'approve'])->name('approve');
+                    Route::post('/{resume}/reject', [\App\Http\Controllers\Perpus\ResumeController::class, 'reject'])->name('reject');
+                });
             });
-        });
+        }
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {
