@@ -443,6 +443,26 @@
                         </a>
                     </div>
 
+                    <div class="mosaic-nav-section">Perpustakaan & Literasi</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.perpus.katalog') ? 'active' : '' }}" href="{{ route('siswa.perpus.katalog') }}">
+                            <i class="fa-solid fa-book" style="color: #60a5fa;"></i>
+                            <span>Katalog Buku</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.perpus.pinjaman') ? 'active' : '' }}" href="{{ route('siswa.perpus.pinjaman') }}">
+                            <i class="fa-solid fa-book-reader" style="color: #34d399;"></i>
+                            <span>Pinjaman & Resume</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('siswa.perpus.leaderboard') ? 'active' : '' }}" href="{{ route('siswa.perpus.leaderboard') }}">
+                            <i class="fa-solid fa-trophy" style="color: #fbbf24;"></i>
+                            <span>Papan Peringkat</span>
+                        </a>
+                    </div>
+
                 @elseif(Auth::check() && Auth::user()->role === 'piket')
                     <!-- MENU PIKET -->
                     <div class="mosaic-nav-section">Menu Utama</div>
@@ -476,6 +496,46 @@
                         <a class="mosaic-nav-link {{ request()->routeIs('walikelas.kehadiran*') ? 'active' : '' }}" href="{{ route('walikelas.kehadiran', ['kelas' => 'Semua']) }}">
                             <i class="fa-solid fa-calendar-days" style="color: #60a5fa;"></i>
                             <span>Rekap Bulanan</span>
+                        </a>
+                    </div>
+
+                @elseif(Auth::check() && Auth::user()->role === 'petugas_perpus')
+                    <!-- MENU PETUGAS PERPUSTAKAAN -->
+                    <div class="mosaic-nav-section">Layanan Perpustakaan</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.sirkulasi.create') ? 'active' : '' }}" href="{{ route('perpus.sirkulasi.create') }}">
+                            <i class="fa-solid fa-bolt" style="color: #fbbf24;"></i>
+                            <span>Sirkulasi Kilat</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.sirkulasi.index') ? 'active' : '' }}" href="{{ route('perpus.sirkulasi.index') }}">
+                            <i class="fa-solid fa-repeat" style="color: #38bdf8;"></i>
+                            <span>Data Peminjaman</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.buku.*') ? 'active' : '' }}" href="{{ route('perpus.buku.index') }}">
+                            <i class="fa-solid fa-book" style="color: #818cf8;"></i>
+                            <span>Katalog Buku</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.kategori.*') ? 'active' : '' }}" href="{{ route('perpus.kategori.index') }}">
+                            <i class="fa-solid fa-tags" style="color: #ec4899;"></i>
+                            <span>Kategori Buku</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.resume.*') ? 'active' : '' }}" href="{{ route('perpus.resume.index') }}">
+                            <i class="fa-solid fa-feather-pointed" style="color: #34d399;"></i>
+                            <span>Verifikasi Resume</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.leaderboard.*') ? 'active' : '' }}" href="{{ route('perpus.leaderboard.index') }}">
+                            <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i>
+                            <span>Leaderboard Literasi</span>
                         </a>
                     </div>
 
@@ -537,6 +597,14 @@
                             </a>
                         </div>
                     @endif
+
+                    <div class="mosaic-nav-section">Literasi Sekolah</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.leaderboard.*') ? 'active' : '' }}" href="{{ route('perpus.leaderboard.index') }}">
+                            <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i>
+                            <span>Leaderboard Literasi</span>
+                        </a>
+                    </div>
 
                 @else
                     <!-- MENU ADMINISTRATOR -->
@@ -606,6 +674,38 @@
                         </a>
                     </div>
 
+                    <div class="mosaic-nav-section">Perpustakaan & Literasi</div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.sirkulasi.create') ? 'active' : '' }}" href="{{ route('perpus.sirkulasi.create') }}">
+                            <i class="fa-solid fa-bolt" style="color: #fbbf24;"></i>
+                            <span>Sirkulasi Kilat</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.sirkulasi.index') ? 'active' : '' }}" href="{{ route('perpus.sirkulasi.index') }}">
+                            <i class="fa-solid fa-repeat" style="color: #38bdf8;"></i>
+                            <span>Peminjaman & Kembali</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.buku.*') ? 'active' : '' }}" href="{{ route('perpus.buku.index') }}">
+                            <i class="fa-solid fa-book" style="color: #818cf8;"></i>
+                            <span>Katalog Buku</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.resume.*') ? 'active' : '' }}" href="{{ route('perpus.resume.index') }}">
+                            <i class="fa-solid fa-feather-pointed" style="color: #34d399;"></i>
+                            <span>Verifikasi Resume</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('perpus.leaderboard.*') ? 'active' : '' }}" href="{{ route('perpus.leaderboard.index') }}">
+                            <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i>
+                            <span>Leaderboard Literasi</span>
+                        </a>
+                    </div>
+
                     <div class="mosaic-nav-section">Pengaturan Sistem</div>
                     <div class="mosaic-nav-item">
                         <a class="mosaic-nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
@@ -634,6 +734,8 @@
                                         <span style="color: #a5b4fc;"><i class="fa-solid fa-shield-halved me-1"></i> Admin</span>
                                     @elseif(Auth::user()->role === 'walikelas')
                                         <span style="color: #c7d2fe;"><i class="fa-solid fa-user-tie me-1"></i> Wali Kelas</span>
+                                    @elseif(Auth::user()->role === 'petugas_perpus')
+                                        <span style="color: #d8b4fe;"><i class="fa-solid fa-book-bookmark me-1"></i> Petugas Perpus</span>
                                     @elseif(Auth::user()->role === 'guru')
                                         <span style="color: #6ee7b7;"><i class="fa-solid fa-chalkboard-user me-1"></i> Guru Mapel</span>
                                     @elseif(Auth::user()->role === 'siswa')
@@ -699,8 +801,8 @@
                                 </div>
                                 <span class="d-none d-sm-inline fw-semibold text-slate-800 small">{{ Auth::user()->name }}</span>
                                 <span class="badge rounded-pill ms-1 d-none d-md-inline" 
-                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (in_array(Auth::user()->role, ['guru', 'walikelas']) ? 'background:#e0e7ff; color:#3730a3;' : (Auth::user()->role === 'siswa' ? 'background:#e0f2fe; color:#0369a1;' : 'background:#fef3c7; color:#92400e;')) }} font-size: 10px;">
-                                    {{ Auth::user()->role === 'walikelas' ? 'Wali Kelas' : ucfirst(Auth::user()->role) }}
+                                      style="{{ Auth::user()->role === 'admin' ? 'background:#fee2e2; color:#b91c1c;' : (Auth::user()->role === 'petugas_perpus' ? 'background:#f3e8ff; color:#7e22ce;' : (in_array(Auth::user()->role, ['guru', 'walikelas']) ? 'background:#e0e7ff; color:#3730a3;' : (Auth::user()->role === 'siswa' ? 'background:#e0f2fe; color:#0369a1;' : 'background:#fef3c7; color:#92400e;'))) }} font-size: 10px;">
+                                    {{ Auth::user()->role === 'walikelas' ? 'Wali Kelas' : (Auth::user()->role === 'petugas_perpus' ? 'Petugas Perpus' : ucfirst(Auth::user()->role)) }}
                                 </span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2" style="min-width: 230px;">

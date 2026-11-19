@@ -26,6 +26,7 @@ class UserController extends Controller
             'admin' => User::where('role', 'admin')->count(),
             'guru' => User::where('role', 'guru')->count(),
             'walikelas' => User::where('role', 'walikelas')->count(),
+            'petugas_perpus' => User::where('role', 'petugas_perpus')->count(),
             'piket' => User::where('role', 'piket')->count(),
             'siswa' => User::where('role', 'siswa')->count(),
         ];
@@ -45,14 +46,15 @@ class UserController extends Controller
             });
         }
 
-        // Urutkan akun prioritas: Admin -> Guru -> Wali Kelas -> Piket -> Siswa, lalu Nama
+        // Urutkan akun prioritas: Admin -> Guru -> Wali Kelas -> Petugas Perpus -> Piket -> Siswa, lalu Nama
         $users = $query->orderByRaw("CASE 
                 WHEN role = 'admin' THEN 1 
                 WHEN role = 'guru' THEN 2 
                 WHEN role = 'walikelas' THEN 3 
-                WHEN role = 'piket' THEN 4 
-                WHEN role = 'siswa' THEN 5 
-                ELSE 6 
+                WHEN role = 'petugas_perpus' THEN 4
+                WHEN role = 'piket' THEN 5 
+                WHEN role = 'siswa' THEN 6 
+                ELSE 7 
             END")
             ->orderBy('name')
             ->paginate($perPage === 'all' ? 1000 : (int)$perPage)
@@ -87,7 +89,7 @@ class UserController extends Controller
             'nip' => 'nullable|string|max:35',
             'email' => 'required|email|max:150|unique:users,email,'.$userId,
             'password' => $userId ? 'nullable|string|min:6' : 'required|string|min:6',
-            'role' => 'required|in:admin,piket,guru,walikelas,siswa',
+            'role' => 'required|in:admin,piket,guru,walikelas,siswa,petugas_perpus',
             'mata_pelajaran_ids' => 'nullable|array',
             'mata_pelajaran_ids.*' => 'exists:mata_pelajarans,id',
             'mata_pelajaran_id' => 'nullable|exists:mata_pelajarans,id',

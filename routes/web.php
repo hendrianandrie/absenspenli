@@ -76,6 +76,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/{ujian}/selesai', [UjianSiswaController::class, 'selesai'])->name('selesai');
             Route::get('/{ujian}/hasil', [UjianSiswaController::class, 'hasil'])->name('hasil');
         });
+
+        // Perpustakaan & Literasi Siswa
+        Route::prefix('perpustakaan')->name('siswa.perpus.')->group(function () {
+            Route::get('/katalog', [SiswaPortalController::class, 'perpusKatalog'])->name('katalog');
+            Route::get('/pinjaman', [SiswaPortalController::class, 'perpusPinjaman'])->name('pinjaman');
+            Route::post('/resume', [SiswaPortalController::class, 'perpusStoreResume'])->name('resume.store');
+            Route::get('/leaderboard', [SiswaPortalController::class, 'perpusLeaderboard'])->name('leaderboard');
+        });
     });
 
     // ==========================================
@@ -183,6 +191,48 @@ Route::middleware('auth')->group(function () {
         Route::post('/walikelas/assign', [WaliKelasController::class, 'assign'])->name('walikelas.assign');
         Route::get('/wali-kelas/binaan', [WaliKelasController::class, 'myClass'])->name('walikelas.myClass');
         Route::get('/wali-kelas/export-excel', [WaliKelasController::class, 'exportExcel'])->name('walikelas.exportExcel');
+
+        // ==========================================
+        // PERPUSTAKAAN & LITERASI (Petugas Perpus, Admin, Guru, Wali Kelas)
+        // ==========================================
+        Route::prefix('perpustakaan')->name('perpus.')->group(function () {
+            // Leaderboard Literasi Siswa & Kelas
+            Route::get('/leaderboard', [\App\Http\Controllers\Perpus\LeaderboardController::class, 'index'])->name('leaderboard.index');
+
+            // Sirkulasi Peminjaman & Pengembalian Kilat Tanpa Kartu
+            Route::prefix('sirkulasi')->name('sirkulasi.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'create'])->name('create');
+                Route::post('/store', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'store'])->name('store');
+                Route::post('/{peminjaman}/kembalikan', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'kembalikan'])->name('kembalikan');
+                Route::post('/{peminjaman}/perpanjang', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'perpanjang'])->name('perpanjang');
+                Route::get('/search-siswa', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchSiswa'])->name('searchSiswa');
+                Route::get('/search-buku', [\App\Http\Controllers\Perpus\SirkulasiController::class, 'searchBuku'])->name('searchBuku');
+            });
+
+            // Data Master & Katalog Buku
+            Route::prefix('buku')->name('buku.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'index'])->name('index');
+                Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'store'])->name('store');
+                Route::put('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'update'])->name('update');
+                Route::delete('/{buku}', [\App\Http\Controllers\Perpus\BukuController::class, 'destroy'])->name('destroy');
+            });
+
+            // Kategori Buku
+            Route::prefix('kategori')->name('kategori.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriIndex'])->name('index');
+                Route::post('/store', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriStore'])->name('store');
+                Route::put('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriUpdate'])->name('update');
+                Route::delete('/{kategori}', [\App\Http\Controllers\Perpus\BukuController::class, 'kategoriDestroy'])->name('destroy');
+            });
+
+            // Verifikasi Resume Bacaan Siswa
+            Route::prefix('resume')->name('resume.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Perpus\ResumeController::class, 'index'])->name('index');
+                Route::post('/{resume}/approve', [\App\Http\Controllers\Perpus\ResumeController::class, 'approve'])->name('approve');
+                Route::post('/{resume}/reject', [\App\Http\Controllers\Perpus\ResumeController::class, 'reject'])->name('reject');
+            });
+        });
 
         // Utilitas Migrasi Database via Browser (Khusus Admin / Hosting cPanel / Hostinger)
         Route::get('/run-migrate', function () {

@@ -26,3 +26,5 @@ mgmp/
 *.zip
 *.code-workspace
 /storage/app/public/faces/
+database/backups/
+*.sql
