@@ -223,79 +223,6 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            <!-- Modal Edit Buku -->
-                            <div class="modal fade" id="modalEditBuku{{ $b->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow-lg rounded-4">
-                                        <form action="{{ route('perpus.buku.update', $b->id) }}" method="POST" enctype="multipart/form-data">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Data Buku</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <div class="row g-3">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label fw-semibold fs-7">Kode Buku <span class="text-danger">*</span></label>
-                                                        <input type="text" name="kode_buku" value="{{ $b->kode_buku }}" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-md-8">
-                                                        <label class="form-label fw-semibold fs-7">Judul Buku <span class="text-danger">*</span></label>
-                                                        <input type="text" name="judul" value="{{ $b->judul }}" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold fs-7">Kategori Buku</label>
-                                                        <select name="kategori_id" class="form-select">
-                                                            <option value="">(Pilih Kategori)</option>
-                                                            @foreach($kategoris as $k)
-                                                                <option value="{{ $k->id }}" {{ $b->kategori_id == $k->id ? 'selected' : '' }}>{{ $k->nama_kategori }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold fs-7">Pengarang / Penulis</label>
-                                                        <input type="text" name="pengarang" value="{{ $b->pengarang }}" class="form-control">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold fs-7">Penerbit</label>
-                                                        <input type="text" name="penerbit" value="{{ $b->penerbit }}" class="form-control">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label fw-semibold fs-7">Tahun Terbit</label>
-                                                        <input type="text" name="tahun_terbit" value="{{ $b->tahun_terbit }}" class="form-control">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label fw-semibold fs-7">ISBN</label>
-                                                        <input type="text" name="isbn" value="{{ $b->isbn }}" class="form-control">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold fs-7">Nomor / Posisi Rak</label>
-                                                        <input type="text" name="nomor_rak" value="{{ $b->nomor_rak }}" class="form-control">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold fs-7">Jumlah Stok Fisik <span class="text-danger">*</span></label>
-                                                        <input type="number" name="stok_total" value="{{ $b->stok_total }}" min="1" class="form-control" required>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <label class="form-label fw-semibold fs-7">Sinopsis / Deskripsi Buku</label>
-                                                        <textarea name="deskripsi" rows="3" class="form-control">{{ $b->deskripsi }}</textarea>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <label class="form-label fw-semibold fs-7">Ganti Gambar Cover (Opsional)</label>
-                                                        <input type="file" name="cover_image" class="form-control" accept="image/*">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-primary-custom rounded-3 px-4">Simpan Perubahan</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         @endforeach
                     </tbody>
                 </table>
@@ -307,6 +234,83 @@
         @endif
     </div>
 </div>
+
+<!-- ================= MODAL EDIT BUKU (Di luar tabel & card agar stabil) ================= -->
+@if(!$bukus->isEmpty())
+    @foreach($bukus as $b)
+        <div class="modal fade" id="modalEditBuku{{ $b->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <form action="{{ route('perpus.buku.update', $b->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-header border-0 pb-0 pt-4 px-4">
+                            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Data Buku</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold fs-7">Kode Buku <span class="text-danger">*</span></label>
+                                    <input type="text" name="kode_buku" value="{{ $b->kode_buku }}" class="form-control" required>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label fw-semibold fs-7">Judul Buku <span class="text-danger">*</span></label>
+                                    <input type="text" name="judul" value="{{ $b->judul }}" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-7">Kategori Buku</label>
+                                    <select name="kategori_id" class="form-select">
+                                        <option value="">(Pilih Kategori)</option>
+                                        @foreach($kategoris as $k)
+                                            <option value="{{ $k->id }}" {{ $b->kategori_id == $k->id ? 'selected' : '' }}>{{ $k->nama_kategori }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-7">Pengarang / Penulis</label>
+                                    <input type="text" name="pengarang" value="{{ $b->pengarang }}" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-7">Penerbit</label>
+                                    <input type="text" name="penerbit" value="{{ $b->penerbit }}" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold fs-7">Tahun Terbit</label>
+                                    <input type="text" name="tahun_terbit" value="{{ $b->tahun_terbit }}" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold fs-7">ISBN</label>
+                                    <input type="text" name="isbn" value="{{ $b->isbn }}" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-7">Nomor / Posisi Rak</label>
+                                    <input type="text" name="nomor_rak" value="{{ $b->nomor_rak }}" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-7">Jumlah Stok Fisik <span class="text-danger">*</span></label>
+                                    <input type="number" name="stok_total" value="{{ $b->stok_total }}" min="1" class="form-control" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold fs-7">Sinopsis / Deskripsi Buku</label>
+                                    <textarea name="deskripsi" rows="3" class="form-control">{{ $b->deskripsi }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold fs-7">Ganti Gambar Cover (Opsional)</label>
+                                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary-custom rounded-3 px-4">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endif
 
 <!-- Modal Tambah Buku Baru -->
 <div class="modal fade" id="modalTambahBuku" tabindex="-1" aria-hidden="true">

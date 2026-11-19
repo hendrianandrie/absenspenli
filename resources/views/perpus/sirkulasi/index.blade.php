@@ -231,64 +231,6 @@
                                                 </button>
                                             </form>
                                         </div>
-
-                                        <!-- Modal Konfirmasi Pengembalian Buku -->
-                                        <div class="modal fade" id="modalKembalikan{{ $p->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow-lg rounded-4 text-start">
-                                                    <form action="{{ route('perpus.sirkulasi.kembalikan', $p->id) }}" method="POST">
-                                                        @csrf
-                                                        <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                                            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-box-archive text-success me-2"></i>Konfirmasi Pengembalian Buku</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body p-4">
-                                                            <div class="p-3 bg-light rounded-3 mb-3 border">
-                                                                <div class="fw-bold text-dark fs-6">{{ $p->buku->judul }}</div>
-                                                                <div class="small text-muted font-monospace">{{ $p->buku->kode_buku }} &bull; Peminjam: <strong>{{ $p->siswa->nama }}</strong> ({{ $p->siswa->kelas }})</div>
-                                                                <div class="small mt-1 text-secondary">Jatuh Tempo: {{ $p->tanggal_jatuh_tempo->translatedFormat('d F Y') }}</div>
-                                                            </div>
-
-                                                            @if($isTerlambat)
-                                                                <div class="alert alert-danger py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2 rounded-3">
-                                                                    <i class="fa-solid fa-triangle-exclamation fs-5"></i>
-                                                                    <div>
-                                                                        <strong>Perhatian:</strong> Buku terlambat {{ $hariTerlambat }} hari dari tenggat waktu. Siswa dikenakan penalti poin literasi (-5 poin).
-                                                                    </div>
-                                                                </div>
-                                                            @else
-                                                                <div class="alert alert-success py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2 rounded-3">
-                                                                    <i class="fa-solid fa-circle-check fs-5"></i>
-                                                                    <div>
-                                                                        <strong>Tepat Waktu:</strong> Siswa mengembalikan buku sebelum/pada batas waktu. Siswa otomatis mendapatkan <strong>+10 Poin Literasi</strong>!
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label fw-semibold fs-7">Denda Biaya / Ganti Rugi (Jika Ada)</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text bg-light">Rp</span>
-                                                                    <input type="number" name="denda" value="0" min="0" step="500" class="form-control">
-                                                                </div>
-                                                                <small class="text-muted" style="font-size: 11px;">Isi 0 jika tidak ada denda keterlambatan / kerusakan fisik.</small>
-                                                            </div>
-
-                                                            <div class="mb-2">
-                                                                <label class="form-label fw-semibold fs-7">Catatan Pengembalian (Opsional)</label>
-                                                                <input type="text" name="catatan" class="form-control" placeholder="Kondisi buku baik, halaman lengkap...">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-success rounded-3 px-4">
-                                                                <i class="fa-solid fa-circle-check me-1"></i> Proses Pengembalian
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @else
                                         <span class="text-muted fs-8">-</span>
                                     @endif
@@ -305,4 +247,73 @@
         @endif
     </div>
 </div>
+
+<!-- ================= MODALS (Ditempatkan di luar tabel dan card agar stabil) ================= -->
+@if(!$peminjamans->isEmpty())
+    @foreach($peminjamans as $p)
+        @if($p->status === 'dipinjam')
+            @php
+                $isTerlambat = $p->is_terlambat;
+                $hariTerlambat = $p->hari_terlambat;
+            @endphp
+            <!-- Modal Konfirmasi Pengembalian Buku -->
+            <div class="modal fade" id="modalKembalikan{{ $p->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                        <form action="{{ route('perpus.sirkulasi.kembalikan', $p->id) }}" method="POST">
+                            @csrf
+                            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-box-archive text-success me-2"></i>Konfirmasi Pengembalian Buku</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="p-3 bg-light rounded-3 mb-3 border">
+                                    <div class="fw-bold text-dark fs-6">{{ $p->buku->judul }}</div>
+                                    <div class="small text-muted font-monospace">{{ $p->buku->kode_buku }} &bull; Peminjam: <strong>{{ $p->siswa->nama }}</strong> ({{ $p->siswa->kelas }})</div>
+                                    <div class="small mt-1 text-secondary">Jatuh Tempo: {{ $p->tanggal_jatuh_tempo->translatedFormat('d F Y') }}</div>
+                                </div>
+
+                                @if($isTerlambat)
+                                    <div class="alert alert-danger py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2 rounded-3">
+                                        <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                                        <div>
+                                            <strong>Perhatian:</strong> Buku terlambat {{ $hariTerlambat }} hari dari tenggat waktu. Siswa dikenakan penalti poin literasi (-5 poin).
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="alert alert-success py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2 rounded-3">
+                                        <i class="fa-solid fa-circle-check fs-5"></i>
+                                        <div>
+                                            <strong>Tepat Waktu:</strong> Siswa mengembalikan buku sebelum/pada batas waktu. Siswa otomatis mendapatkan <strong>+10 Poin Literasi</strong>!
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-7">Denda Biaya / Ganti Rugi (Jika Ada)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">Rp</span>
+                                        <input type="number" name="denda" value="0" min="0" step="500" class="form-control">
+                                    </div>
+                                    <small class="text-muted" style="font-size: 11px;">Isi 0 jika tidak ada denda keterlambatan / kerusakan fisik.</small>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold fs-7">Catatan Pengembalian (Opsional)</label>
+                                    <input type="text" name="catatan" class="form-control" placeholder="Kondisi buku baik, halaman lengkap...">
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success rounded-3 px-4">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Proses Pengembalian
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endforeach
+@endif
 @endsection

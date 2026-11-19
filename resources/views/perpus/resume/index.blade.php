@@ -236,130 +236,6 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            <!-- Modal Detail Lengkap Resume -->
-                            <div class="modal fade" id="modalDetailResume{{ $r->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
-                                        <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-book-open text-primary me-2"></i>Karya Ulasan Bacaan Siswa</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <div class="p-3 rounded-3 bg-light border mb-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <h5 class="fw-bold text-dark mb-0">{{ $r->judul_buku }}</h5>
-                                                    <div>
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            <i class="fa-solid fa-star {{ $i <= $r->rating ? 'text-warning' : 'text-slate-300' }}"></i>
-                                                        @endfor
-                                                    </div>
-                                                </div>
-                                                <div class="small text-muted font-monospace">
-                                                    Ditulis oleh: <strong>{{ $r->siswa->nama }}</strong> &bull; Kelas: {{ $r->siswa->kelas }} &bull; NIS: {{ $r->siswa->nis }}
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <h6 class="fw-bold text-dark fs-7"><i class="fa-solid fa-align-left text-primary me-1"></i> Intisari & Rangkuman Buku:</h6>
-                                                <div class="p-3 bg-white border rounded-3 text-slate-800" style="line-height: 1.6; white-space: pre-line;">
-                                                    {{ $r->ringkasan }}
-                                                </div>
-                                            </div>
-
-                                            @if($r->pesan_moral)
-                                                <div class="mb-3">
-                                                    <h6 class="fw-bold text-dark fs-7"><i class="fa-solid fa-heart text-danger me-1"></i> Pesan Moral / Hal yang Dipelajari:</h6>
-                                                    <div class="p-3 bg-white border rounded-3 fst-italic text-secondary">
-                                                        "{{ $r->pesan_moral }}"
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            @if($r->status === 'disetujui')
-                                                <div class="alert alert-success py-2 px-3 small border-0 d-flex align-items-center gap-2 rounded-3 mb-0">
-                                                    <i class="fa-solid fa-circle-check fs-5"></i>
-                                                    <div>
-                                                        Telah disetujui oleh <strong>{{ optional($r->verifikator)->name ?? 'Petugas Perpustakaan' }}</strong> pada {{ optional($r->tanggal_verifikasi)->translatedFormat('d F Y, H:i') }} (+{{ $r->poin_diberikan }} Poin Literasi).
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Modal Approve Resume -->
-                            <div class="modal fade" id="modalApproveResume{{ $r->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
-                                        <form action="{{ route('perpus.resume.approve', $r->id) }}" method="POST">
-                                            @csrf
-                                            <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-circle-check text-success me-2"></i>Setujui Resume & Berikan Poin</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <p class="small text-muted mb-3">
-                                                    Ulasan dari <strong>{{ $r->siswa->nama }}</strong> untuk buku <em>{{ $r->judul_buku }}</em> akan disetujui dan poin literasi akan otomatis dicatat ke akun siswa.
-                                                </p>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold fs-7">Jumlah Poin Literasi yang Diberikan</label>
-                                                    <select name="poin" class="form-select">
-                                                        <option value="15" selected>15 Poin (Standar Ulasan Lengkap & Baik)</option>
-                                                        <option value="20">20 Poin (Ulasan Sangat Baik / Kritis)</option>
-                                                        <option value="25">25 Poin (Karya Istimewa / Sangat Mendalam)</option>
-                                                        <option value="10">10 Poin (Ulasan Singkat Cukup)</option>
-                                                    </select>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-semibold fs-7">Catatan Apresiasi Petugas (Opsional)</label>
-                                                    <input type="text" name="catatan" value="Ulasan buku disetujui. Sangat baik!" class="form-control">
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-success rounded-3 px-4">
-                                                    <i class="fa-solid fa-award me-1"></i> Setujui & Berikan Poin
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Modal Reject Resume -->
-                            <div class="modal fade" id="modalRejectResume{{ $r->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
-                                        <form action="{{ route('perpus.resume.reject', $r->id) }}" method="POST">
-                                            @csrf
-                                            <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Minta Perbaikan Resume</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <p class="small text-muted mb-3">
-                                                    Tuliskan catatan perbaikan agar siswa <strong>{{ $r->siswa->nama }}</strong> mengetahui bagian apa yang perlu disempurnakan.
-                                                </p>
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-semibold fs-7">Catatan Alasan / Permintaan Revisi <span class="text-danger">*</span></label>
-                                                    <textarea name="catatan" rows="3" class="form-control" placeholder="Contoh: Mohon tuliskan ringkasan cerita minimal 1 paragraf, jangan hanya satu kalimat..." required></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                                <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-danger rounded-3 px-4">
-                                                    <i class="fa-solid fa-rotate-left me-1"></i> Kembalikan untuk Revisi
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         @endforeach
                     </tbody>
                 </table>
@@ -371,4 +247,133 @@
         @endif
     </div>
 </div>
+
+<!-- ================= MODALS (Ditempatkan di luar tabel dan card agar stabil dan tidak kelap-kelip) ================= -->
+@if(!$resumes->isEmpty())
+    @foreach($resumes as $r)
+        <!-- Modal Detail Lengkap Resume -->
+        <div class="modal fade" id="modalDetailResume{{ $r->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-book-open text-primary me-2"></i>Karya Ulasan Bacaan Siswa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="p-3 rounded-3 bg-light border mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h5 class="fw-bold text-dark mb-0">{{ $r->judul_buku }}</h5>
+                                <div>
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fa-solid fa-star {{ $i <= $r->rating ? 'text-warning' : 'text-slate-300' }}"></i>
+                                    @endfor
+                                </div>
+                            </div>
+                            <div class="small text-muted font-monospace">
+                                Ditulis oleh: <strong>{{ $r->siswa->nama }}</strong> &bull; Kelas: {{ $r->siswa->kelas }} &bull; NIS: {{ $r->siswa->nis }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-dark fs-7"><i class="fa-solid fa-align-left text-primary me-1"></i> Intisari & Rangkuman Buku:</h6>
+                            <div class="p-3 bg-white border rounded-3 text-slate-800" style="line-height: 1.6; white-space: pre-line;">
+                                {{ $r->ringkasan }}
+                            </div>
+                        </div>
+
+                        @if($r->pesan_moral)
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-dark fs-7"><i class="fa-solid fa-heart text-danger me-1"></i> Pesan Moral / Hal yang Dipelajari:</h6>
+                                <div class="p-3 bg-white border rounded-3 fst-italic text-secondary">
+                                    "{{ $r->pesan_moral }}"
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($r->status === 'disetujui')
+                            <div class="alert alert-success py-2 px-3 small border-0 d-flex align-items-center gap-2 rounded-3 mb-0">
+                                <i class="fa-solid fa-circle-check fs-5"></i>
+                                <div>
+                                    Telah disetujui oleh <strong>{{ optional($r->verifikator)->name ?? 'Petugas Perpustakaan' }}</strong> pada {{ optional($r->tanggal_verifikasi)->translatedFormat('d F Y, H:i') }} (+{{ $r->poin_diberikan }} Poin Literasi).
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Approve Resume -->
+        <div class="modal fade" id="modalApproveResume{{ $r->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                    <form action="{{ route('perpus.resume.approve', $r->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-header border-0 pb-0 pt-4 px-4">
+                            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-circle-check text-success me-2"></i>Setujui Resume & Berikan Poin</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <p class="small text-muted mb-3">
+                                Ulasan dari <strong>{{ $r->siswa->nama }}</strong> untuk buku <em>{{ $r->judul_buku }}</em> akan disetujui dan poin literasi akan otomatis dicatat ke akun siswa.
+                            </p>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold fs-7">Jumlah Poin Literasi yang Diberikan</label>
+                                <select name="poin" class="form-select">
+                                    <option value="15" selected>15 Poin (Standar Ulasan Lengkap & Baik)</option>
+                                    <option value="20">20 Poin (Ulasan Sangat Baik / Kritis)</option>
+                                    <option value="25">25 Poin (Karya Istimewa / Sangat Mendalam)</option>
+                                    <option value="10">10 Poin (Ulasan Singkat Cukup)</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold fs-7">Catatan Apresiasi Petugas (Opsional)</label>
+                                <input type="text" name="catatan" value="Ulasan buku disetujui. Sangat baik!" class="form-control">
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success rounded-3 px-4">
+                                <i class="fa-solid fa-award me-1"></i> Setujui & Berikan Poin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Reject Resume -->
+        <div class="modal fade" id="modalRejectResume{{ $r->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                    <form action="{{ route('perpus.resume.reject', $r->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-header border-0 pb-0 pt-4 px-4">
+                            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Minta Perbaikan Resume</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <p class="small text-muted mb-3">
+                                Tuliskan catatan perbaikan agar siswa <strong>{{ $r->siswa->nama }}</strong> mengetahui bagian apa yang perlu disempurnakan.
+                            </p>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold fs-7">Catatan Alasan / Permintaan Revisi <span class="text-danger">*</span></label>
+                                <textarea name="catatan" rows="3" class="form-control" placeholder="Contoh: Mohon tuliskan ringkasan cerita minimal 1 paragraf, jangan hanya satu kalimat..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger rounded-3 px-4">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Kembalikan untuk Revisi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endif
 @endsection

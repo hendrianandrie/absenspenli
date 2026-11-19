@@ -118,40 +118,6 @@
                                         </div>
                                     </td>
                                 </tr>
-
-                                <!-- Modal Edit Kategori -->
-                                <div class="modal fade" id="modalEditKat{{ $k->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content border-0 shadow-lg rounded-4">
-                                            <form action="{{ route('perpus.kategori.update', $k->id) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <div class="modal-header border-0 pb-0 pt-4 px-4">
-                                                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Kategori</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body p-4">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold fs-7">Nama Kategori <span class="text-danger">*</span></label>
-                                                        <input type="text" name="nama_kategori" value="{{ $k->nama_kategori }}" class="form-control" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold fs-7">Kode Singkat (Opsional)</label>
-                                                        <input type="text" name="kode_kategori" value="{{ $k->kode_kategori }}" class="form-control text-uppercase font-monospace">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold fs-7">Deskripsi Kategori</label>
-                                                        <textarea name="deskripsi" rows="3" class="form-control">{{ $k->deskripsi }}</textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                                                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-primary-custom rounded-3 px-4">Simpan Perubahan</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
                             @empty
                                 <tr>
                                     <td colspan="5" class="text-center py-4 text-muted">Belum ada kategori yang dibuat.</td>
@@ -164,4 +130,40 @@
         </div>
     </div>
 </div>
+
+<!-- ================= MODAL EDIT KATEGORI (Di luar tabel & card agar stabil) ================= -->
+@foreach($kategoris as $k)
+    <div class="modal fade" id="modalEditKat{{ $k->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <form action="{{ route('perpus.kategori.update', $k->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Edit Kategori</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7">Nama Kategori <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_kategori" value="{{ $k->nama_kategori }}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7">Kode Singkat (Opsional)</label>
+                            <input type="text" name="kode_kategori" value="{{ $k->kode_kategori }}" class="form-control text-uppercase font-monospace">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold fs-7">Deskripsi Kategori</label>
+                            <textarea name="deskripsi" rows="3" class="form-control">{{ $k->deskripsi }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary-custom rounded-3 px-4">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
 @endsection
