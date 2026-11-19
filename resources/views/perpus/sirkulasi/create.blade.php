@@ -222,7 +222,10 @@
 
         debounceTimerSiswa = setTimeout(() => {
             fetch(`${searchSiswaUrl}?q=${encodeURIComponent(q)}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
                 .then(data => {
                     dropdown.innerHTML = '';
                     if (data.length === 0) {
@@ -248,6 +251,11 @@
                         });
                     }
                     dropdown.classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.error('Error search siswa:', err);
+                    dropdown.innerHTML = '<div class="list-group-item text-danger small p-3 text-center">Gagal memuat data siswa. Silakan coba lagi.</div>';
+                    dropdown.classList.remove('d-none');
                 });
         }, 250);
     });
@@ -257,7 +265,14 @@
         document.getElementById('namaSiswaDisplay').innerText = s.nama;
         document.getElementById('nisSiswaDisplay').innerText = s.nis;
         document.getElementById('kelasSiswaDisplay').innerText = s.kelas;
-        document.getElementById('avatarSiswa').innerText = s.nama.charAt(0).toUpperCase();
+        
+        const avatarEl = document.getElementById('avatarSiswa');
+        if (s.foto_wajah) {
+            avatarEl.innerHTML = `<img src="${s.foto_wajah}" class="w-100 h-100 rounded-circle object-fit-cover">`;
+        } else {
+            avatarEl.innerText = s.nama.charAt(0).toUpperCase();
+        }
+
         document.getElementById('poinSiswaDisplay').innerText = s.total_poin;
         document.getElementById('pinjamSiswaDisplay').innerText = s.active_loans;
 
@@ -298,7 +313,10 @@
 
         debounceTimerBuku = setTimeout(() => {
             fetch(`${searchBukuUrl}?q=${encodeURIComponent(q)}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
                 .then(data => {
                     dropdown.innerHTML = '';
                     if (data.length === 0) {
@@ -325,6 +343,11 @@
                             dropdown.appendChild(item);
                         });
                     }
+                    dropdown.classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.error('Error search buku:', err);
+                    dropdown.innerHTML = '<div class="list-group-item text-danger small p-3 text-center">Gagal memuat data buku. Silakan coba lagi.</div>';
                     dropdown.classList.remove('d-none');
                 });
         }, 250);
@@ -378,5 +401,17 @@
 
     // Inisialisasi hitung jatuh tempo saat load
     hitungJatuhTempo();
+
+    // Tutup dropdown saat klik di luar area input
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#inputCariSiswa') && !e.target.closest('#dropdownHasilSiswa')) {
+            const el = document.getElementById('dropdownHasilSiswa');
+            if (el) el.classList.add('d-none');
+        }
+        if (!e.target.closest('#inputCariBuku') && !e.target.closest('#dropdownHasilBuku')) {
+            const el = document.getElementById('dropdownHasilBuku');
+            if (el) el.classList.add('d-none');
+        }
+    });
 </script>
 @endsection

@@ -94,7 +94,7 @@ class SirkulasiController extends Controller
         $siswas = Siswa::where(function ($q) use ($query) {
             $q->where('nama', 'like', "%{$query}%")
               ->orWhere('nis', 'like', "%{$query}%")
-              ->orWhere('nisn', 'like', "%{$query}%");
+              ->orWhere('kelas', 'like', "%{$query}%");
         })
         ->orderBy('nama')
         ->limit(10)
@@ -114,6 +114,7 @@ class SirkulasiController extends Controller
                 'nama' => $s->nama,
                 'nis' => $s->nis,
                 'kelas' => $s->kelas,
+                'foto_wajah' => $s->foto_wajah ? asset('storage/' . $s->foto_wajah) : null,
                 'active_loans' => $activeLoans,
                 'overdue_loans' => $overdueLoans,
                 'total_poin' => (int) $totalPoin,
