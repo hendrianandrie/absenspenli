@@ -225,13 +225,45 @@ class LeaderboardController extends Controller
     public static function getBadgeByPoin(int $poin): array
     {
         if ($poin >= 300) {
-            return ['nama' => 'Duta Baca Emas', 'class' => 'bg-warning-subtle text-warning border-warning', 'icon' => 'fa-crown'];
+            return [
+                'nama' => 'Duta Baca Emas',
+                'label' => 'Duta Baca Emas',
+                'class' => 'bg-warning-subtle text-warning-emphasis border-warning',
+                'icon' => 'fa-crown',
+                'color' => '#f59e0b',
+                'bg' => '#fef3c7',
+                'text_color' => '#b45309',
+            ];
         } elseif ($poin >= 150) {
-            return ['nama' => 'Sahabat Literasi', 'class' => 'bg-primary-subtle text-primary border-primary', 'icon' => 'fa-medal'];
+            return [
+                'nama' => 'Sahabat Literasi',
+                'label' => 'Sahabat Literasi',
+                'class' => 'bg-primary-subtle text-primary border-primary',
+                'icon' => 'fa-medal',
+                'color' => '#4f46e5',
+                'bg' => '#e0e7ff',
+                'text_color' => '#4338ca',
+            ];
         } elseif ($poin >= 50) {
-            return ['nama' => 'Kutu Buku Aktif', 'class' => 'bg-info-subtle text-info border-info', 'icon' => 'fa-book-open-reader'];
+            return [
+                'nama' => 'Kutu Buku Aktif',
+                'label' => 'Kutu Buku Aktif',
+                'class' => 'bg-info-subtle text-info-emphasis border-info',
+                'icon' => 'fa-book-open-reader',
+                'color' => '#0ea5e9',
+                'bg' => '#e0f2fe',
+                'text_color' => '#0369a1',
+            ];
         } else {
-            return ['nama' => 'Pembaca Pemula', 'class' => 'bg-secondary-subtle text-secondary border-secondary', 'icon' => 'fa-seedling'];
+            return [
+                'nama' => 'Pembaca Pemula',
+                'label' => 'Pembaca Pemula',
+                'class' => 'bg-secondary-subtle text-secondary border-secondary',
+                'icon' => 'fa-seedling',
+                'color' => '#64748b',
+                'bg' => '#f1f5f9',
+                'text_color' => '#475569',
+            ];
         }
     }
 }

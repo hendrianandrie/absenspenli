@@ -40,7 +40,7 @@
         </div>
     @endif
 
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
         <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
             <i class="fa-solid fa-circle-exclamation me-2"></i> <strong>Mohon periksa kembali:</strong>
             <ul class="mb-0 mt-1 small">

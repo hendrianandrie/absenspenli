@@ -181,9 +181,9 @@
                                 <div class="text-muted small mb-2">Kelas {{ $top['kelas'] }}</div>
 
                                 <div class="mb-2">
-                                    <span class="badge rounded-pill px-3 py-1 fs-8"
-                                          style="background: {{ $top['badge']['bg'] }}; color: {{ $top['badge']['color'] }}; font-weight: 600;">
-                                        <i class="fa-solid {{ $top['badge']['icon'] }} me-1"></i> {{ $top['badge']['label'] }}
+                                    <span class="badge rounded-pill px-3 py-1 fs-8 {{ $top['badge']['class'] ?? '' }}"
+                                          style="background: {{ $top['badge']['bg'] ?? '#f1f5f9' }}; color: {{ $top['badge']['text_color'] ?? $top['badge']['color'] ?? '#475569' }}; font-weight: 600;">
+                                        <i class="fa-solid {{ $top['badge']['icon'] ?? 'fa-award' }} me-1"></i> {{ $top['badge']['label'] ?? $top['badge']['nama'] ?? 'Pembaca' }}
                                     </span>
                                 </div>
 
@@ -233,9 +233,9 @@
                                         </td>
                                         <td><span class="badge bg-light text-dark border">{{ $s['kelas'] }}</span></td>
                                         <td>
-                                            <span class="badge rounded-pill px-2 py-1"
-                                                  style="background: {{ $s['badge']['bg'] }}; color: {{ $s['badge']['color'] }};">
-                                                <i class="fa-solid {{ $s['badge']['icon'] }} me-1"></i> {{ $s['badge']['label'] }}
+                                            <span class="badge rounded-pill px-2 py-1 {{ $s['badge']['class'] ?? '' }}"
+                                                  style="background: {{ $s['badge']['bg'] ?? '#f1f5f9' }}; color: {{ $s['badge']['text_color'] ?? $s['badge']['color'] ?? '#475569' }};">
+                                                <i class="fa-solid {{ $s['badge']['icon'] ?? 'fa-award' }} me-1"></i> {{ $s['badge']['label'] ?? $s['badge']['nama'] ?? 'Pembaca' }}
                                             </span>
                                         </td>
                                         <td class="text-end pe-4">
