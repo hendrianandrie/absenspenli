@@ -212,95 +212,23 @@
                                     @endif
                                 </div>
 
-                                <button type="button" class="btn btn-sm {{ $resume && $resume->status === 'disetujui' ? 'btn-outline-success' : 'btn-primary-custom' }} rounded-pill px-3"
-                                        data-bs-toggle="modal" data-bs-target="#modalResume{{ $loan->id }}">
+                                <button type="button" 
+                                        class="btn btn-sm {{ $resume && $resume->status === 'disetujui' ? 'btn-outline-success' : 'btn-primary-custom' }} rounded-pill px-3 btn-buka-resume"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalResumeBuku"
+                                        data-loan-id="{{ $loan->id }}"
+                                        data-judul="{{ $loan->buku->judul }}"
+                                        data-pengarang="{{ $loan->buku->pengarang ?? 'Anonim' }}"
+                                        data-rating="{{ $resume ? $resume->rating : 5 }}"
+                                        data-ringkasan="{{ $resume ? $resume->ringkasan : '' }}"
+                                        data-pesan="{{ $resume ? ($resume->pesan_moral ?? '') : '' }}"
+                                        data-status="{{ $resume ? $resume->status : '' }}"
+                                        data-catatan="{{ $resume ? ($resume->catatan_petugas ?? '') : '' }}"
+                                        data-poin="{{ $resume ? $resume->poin_diberikan : 15 }}"
+                                        data-is-approved="{{ $resume && $resume->status === 'disetujui' ? '1' : '0' }}">
                                     <i class="fa-solid {{ $resume ? 'fa-eye' : 'fa-feather-pointed' }} me-1"></i>
                                     {{ $resume ? 'Lihat / Edit Ulasan' : 'Tulis Ulasan & Resume' }}
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal Tulis Resume -->
-                    <div class="modal fade" id="modalResume{{ $loan->id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                            <div class="modal-content rounded-4 border-0 shadow">
-                                <div class="modal-header border-bottom-0 pb-0">
-                                    <div>
-                                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fs-8 mb-1">
-                                            <i class="fa-solid fa-feather me-1"></i> Ulasan & Resume Literasi
-                                        </span>
-                                        <h5 class="modal-title fw-bold text-dark">{{ $loan->buku->judul }}</h5>
-                                        <p class="text-muted small mb-0">Oleh {{ $loan->buku->pengarang ?? 'Anonim' }}</p>
-                                    </div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form action="{{ route('siswa.perpus.resume.store') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="peminjaman_id" value="{{ $loan->id }}">
-                                    <div class="modal-body py-3">
-                                        @if($resume && $resume->status === 'ditolak')
-                                            <div class="alert alert-danger border-0 rounded-3 p-3 mb-3 small">
-                                                <strong><i class="fa-solid fa-circle-exclamation me-1"></i> Catatan Revisi dari Petugas:</strong>
-                                                <p class="mb-0 mt-1">{{ $resume->catatan_petugas ?? 'Mohon perbaiki rangkuman agar lebih mendalam dan mencerminkan isi buku.' }}</p>
-                                            </div>
-                                        @elseif($resume && $resume->status === 'disetujui')
-                                            <div class="alert alert-success border-0 rounded-3 p-3 mb-3 small">
-                                                <strong><i class="fa-solid fa-circle-check me-1"></i> Ulasan Ini Telah Disetujui!</strong>
-                                                <p class="mb-0 mt-1">Kamu telah mendapatkan <strong>+{{ $resume->poin_diberikan }} poin literasi</strong> untuk ulasan ini. Hebat!</p>
-                                                @if($resume->catatan_petugas)
-                                                    <div class="mt-2 text-secondary fst-italic">"{{ $resume->catatan_petugas }}"</div>
-                                                @endif
-                                            </div>
-                                        @endif
-
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold text-dark small mb-1">
-                                                Berapa bintang untuk buku ini? (Rating 1 - 5) <span class="text-danger">*</span>
-                                            </label>
-                                            <div class="d-flex align-items-center gap-3">
-                                                @for($star = 1; $star <= 5; $star++)
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="rating" id="rating_{{ $loan->id }}_{{ $star }}" 
-                                                               value="{{ $star }}" {{ ($resume->rating ?? 5) == $star ? 'checked' : '' }}
-                                                               {{ $resume && $resume->status === 'disetujui' ? 'disabled' : '' }}>
-                                                        <label class="form-check-label text-warning fw-bold" for="rating_{{ $loan->id }}_{{ $star }}">
-                                                            {{ $star }} <i class="fa-solid fa-star"></i>
-                                                        </label>
-                                                    </div>
-                                                @endfor
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold text-dark small mb-1">
-                                                Rangkuman / Inti Cerita Buku <span class="text-danger">*</span>
-                                            </label>
-                                            <textarea name="ringkasan" class="form-control" rows="4" 
-                                                      placeholder="Ceritakan dengan bahasamu sendiri apa isi buku ini, tokoh utama, jalan cerita, atau topik yang dibahas (minimal 30 karakter)..." 
-                                                      required {{ $resume && $resume->status === 'disetujui' ? 'readonly' : '' }}>{{ old('ringkasan', $resume->ringkasan ?? '') }}</textarea>
-                                            <div class="form-text fs-8 text-muted">Minimal 30 karakter agar dapat dinilai oleh Petugas Perpustakaan.</div>
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label fw-semibold text-dark small mb-1">
-                                                Pelajaran / Pesan Moral yang Didapat <span class="text-muted fw-normal">(Opsional)</span>
-                                            </label>
-                                            <input type="text" name="pesan_moral" class="form-control" 
-                                                   value="{{ old('pesan_moral', $resume->pesan_moral ?? '') }}" 
-                                                   placeholder="Contoh: Kejujuran dan pantang menyerah selalu membuahkan hasil..."
-                                                   {{ $resume && $resume->status === 'disetujui' ? 'readonly' : '' }}>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer border-top-0 pt-0">
-                                        <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
-                                        @if(!$resume || $resume->status !== 'disetujui')
-                                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4">
-                                                <i class="fa-solid fa-paper-plane me-1"></i> Kirimkan Ulasan
-                                            </button>
-                                        @endif
-                                    </div>
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -375,72 +303,24 @@
                                     @endif
                                 </td>
                                 <td class="text-end pe-3">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fs-8"
-                                            data-bs-toggle="modal" data-bs-target="#modalPastResume{{ $past->id }}">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fs-8 btn-buka-resume"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalResumeBuku"
+                                            data-loan-id="{{ $past->id }}"
+                                            data-judul="{{ $past->buku->judul }}"
+                                            data-pengarang="{{ $past->buku->pengarang ?? 'Anonim' }}"
+                                            data-rating="{{ $pastResume ? $pastResume->rating : 5 }}"
+                                            data-ringkasan="{{ $pastResume ? $pastResume->ringkasan : '' }}"
+                                            data-pesan="{{ $pastResume ? ($pastResume->pesan_moral ?? '') : '' }}"
+                                            data-status="{{ $pastResume ? $pastResume->status : '' }}"
+                                            data-catatan="{{ $pastResume ? ($pastResume->catatan_petugas ?? '') : '' }}"
+                                            data-poin="{{ $pastResume ? $pastResume->poin_diberikan : 15 }}"
+                                            data-is-approved="{{ $pastResume && $pastResume->status === 'disetujui' ? '1' : '0' }}">
                                         <i class="fa-solid fa-feather me-1"></i> {{ $pastResume ? 'Detail Ulasan' : 'Tulis Ulasan' }}
                                     </button>
                                 </td>
                             </tr>
-
-                            <!-- Modal Resume Past Loan -->
-                            <div class="modal fade" id="modalPastResume{{ $past->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                    <div class="modal-content rounded-4 border-0 shadow">
-                                        <div class="modal-header border-bottom-0 pb-0">
-                                            <div>
-                                                <h5 class="modal-title fw-bold text-dark">{{ $past->buku->judul }}</h5>
-                                                <p class="text-muted small mb-0">{{ $past->buku->pengarang ?? 'Anonim' }}</p>
-                                            </div>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form action="{{ route('siswa.perpus.resume.store') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="peminjaman_id" value="{{ $past->id }}">
-                                            <div class="modal-body py-3">
-                                                @if($pastResume && $pastResume->status === 'disetujui')
-                                                    <div class="alert alert-success border-0 rounded-3 p-3 mb-3 small">
-                                                        <i class="fa-solid fa-circle-check me-1"></i> Disetujui! Kamu meraih <strong>+{{ $pastResume->poin_diberikan }} poin</strong> untuk ulasan ini.
-                                                    </div>
-                                                @endif
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-dark small mb-1">Rating</label>
-                                                    <div class="d-flex align-items-center gap-3">
-                                                        @for($star = 1; $star <= 5; $star++)
-                                                            <div class="form-check form-check-inline">
-                                                                <input class="form-check-input" type="radio" name="rating" id="past_rating_{{ $past->id }}_{{ $star }}" 
-                                                                       value="{{ $star }}" {{ ($pastResume->rating ?? 5) == $star ? 'checked' : '' }}
-                                                                       {{ $pastResume && $pastResume->status === 'disetujui' ? 'disabled' : '' }}>
-                                                                <label class="form-check-label text-warning fw-bold" for="past_rating_{{ $past->id }}_{{ $star }}">
-                                                                    {{ $star }} <i class="fa-solid fa-star"></i>
-                                                                </label>
-                                                            </div>
-                                                        @endfor
-                                                    </div>
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-dark small mb-1">Rangkuman / Inti Cerita</label>
-                                                    <textarea name="ringkasan" class="form-control" rows="4" required {{ $pastResume && $pastResume->status === 'disetujui' ? 'readonly' : '' }}>{{ old('ringkasan', $pastResume->ringkasan ?? '') }}</textarea>
-                                                </div>
-
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-semibold text-dark small mb-1">Pesan Moral</label>
-                                                    <input type="text" name="pesan_moral" class="form-control" 
-                                                           value="{{ old('pesan_moral', $pastResume->pesan_moral ?? '') }}" 
-                                                           {{ $pastResume && $pastResume->status === 'disetujui' ? 'readonly' : '' }}>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-top-0 pt-0">
-                                                <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
-                                                @if(!$pastResume || $pastResume->status !== 'disetujui')
-                                                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Simpan Ulasan</button>
-                                                @endif
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         @endforeach
                     </tbody>
                 </table>
@@ -509,6 +389,86 @@
     </div>
 </div>
 
+<!-- SINGLE DYNAMIC MODAL: Tulis / Lihat Ulasan & Resume Buku (Ditempatkan di luar tabel dan card agar tidak berkedip) -->
+<div class="modal fade" id="modalResumeBuku" tabindex="-1" aria-labelledby="modalResumeBukuLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <div>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fs-8 mb-1">
+                        <i class="fa-solid fa-feather me-1"></i> Ulasan & Resume Literasi
+                    </span>
+                    <h5 class="modal-title fw-bold text-dark" id="modalJudulBuku">-</h5>
+                    <p class="text-muted small mb-0" id="modalPengarangBuku">-</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('siswa.perpus.resume.store') }}" method="POST" id="formResumeBuku">
+                @csrf
+                <input type="hidden" name="peminjaman_id" id="inputPeminjamanId" value="">
+                
+                <div class="modal-body py-3">
+                    <!-- Alert Status Ditolak / Perlu Revisi -->
+                    <div id="modalAlertDitolak" class="alert alert-danger border-0 rounded-3 p-3 mb-3 small d-none">
+                        <strong><i class="fa-solid fa-circle-exclamation me-1"></i> Catatan Revisi dari Petugas:</strong>
+                        <p class="mb-0 mt-1" id="modalCatatanPetugas"></p>
+                    </div>
+
+                    <!-- Alert Status Disetujui -->
+                    <div id="modalAlertDisetujui" class="alert alert-success border-0 rounded-3 p-3 mb-3 small d-none">
+                        <strong><i class="fa-solid fa-circle-check me-1"></i> Ulasan Ini Telah Disetujui!</strong>
+                        <p class="mb-0 mt-1">Kamu telah mendapatkan <strong>+<span id="modalPoinDiberikan">15</span> poin literasi</strong> untuk ulasan ini. Hebat!</p>
+                    </div>
+
+                    <!-- Rating Radio Stars -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small mb-1">
+                            Berapa bintang untuk buku ini? (Rating 1 - 5) <span class="text-danger">*</span>
+                        </label>
+                        <div class="d-flex align-items-center gap-3">
+                            @for($star = 1; $star <= 5; $star++)
+                                <div class="form-check form-check-inline mb-0">
+                                    <input class="form-check-input input-rating-star" type="radio" name="rating" id="modal_rating_{{ $star }}" value="{{ $star }}" {{ $star == 5 ? 'checked' : '' }}>
+                                    <label class="form-check-label text-warning fw-bold" for="modal_rating_{{ $star }}">
+                                        {{ $star }} <i class="fa-solid fa-star"></i>
+                                    </label>
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <!-- Textarea Ringkasan -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small mb-1">
+                            Rangkuman / Inti Cerita Buku <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="ringkasan" id="inputRingkasan" class="form-control" rows="4" 
+                                  placeholder="Ceritakan dengan bahasamu sendiri apa isi buku ini, tokoh utama, jalan cerita, atau topik yang dibahas (minimal 30 karakter)..." 
+                                  required></textarea>
+                        <div class="form-text fs-8 text-muted">Minimal 30 karakter agar dapat dinilai oleh Petugas Perpustakaan.</div>
+                    </div>
+
+                    <!-- Input Pesan Moral -->
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold text-dark small mb-1">
+                            Pelajaran / Pesan Moral yang Didapat <span class="text-muted fw-normal">(Opsional)</span>
+                        </label>
+                        <input type="text" name="pesan_moral" id="inputPesanMoral" class="form-control" 
+                               placeholder="Contoh: Kejujuran dan pantang menyerah selalu membuahkan hasil...">
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+                    <button type="submit" id="modalBtnSubmitResume" class="btn btn-primary-custom rounded-pill px-4">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Kirimkan Ulasan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
 .fs-7 { font-size: 0.875rem !important; }
 .fs-8 { font-size: 0.775rem !important; }
@@ -527,4 +487,71 @@
     color: white;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalResumeEl = document.getElementById('modalResumeBuku');
+    if (modalResumeEl) {
+        modalResumeEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const loanId = button.getAttribute('data-loan-id') || '';
+            const judul = button.getAttribute('data-judul') || '-';
+            const pengarang = button.getAttribute('data-pengarang') || '-';
+            const rating = parseInt(button.getAttribute('data-rating')) || 5;
+            const ringkasan = button.getAttribute('data-ringkasan') || '';
+            const pesan = button.getAttribute('data-pesan') || '';
+            const status = button.getAttribute('data-status') || '';
+            const catatan = button.getAttribute('data-catatan') || '';
+            const poin = button.getAttribute('data-poin') || '15';
+            const isApproved = button.getAttribute('data-is-approved') === '1';
+
+            // Set Data
+            document.getElementById('inputPeminjamanId').value = loanId;
+            document.getElementById('modalJudulBuku').innerText = judul;
+            document.getElementById('modalPengarangBuku').innerText = 'Oleh ' + pengarang;
+            document.getElementById('inputRingkasan').value = ringkasan;
+            document.getElementById('inputPesanMoral').value = pesan;
+
+            // Rating Star Radio
+            const targetRadio = document.getElementById('modal_rating_' + rating);
+            if (targetRadio) {
+                targetRadio.checked = true;
+            }
+
+            // Status Alerts & Controls
+            const alertDitolak = document.getElementById('modalAlertDitolak');
+            const alertDisetujui = document.getElementById('modalAlertDisetujui');
+            const alertCatatanPetugas = document.getElementById('modalCatatanPetugas');
+            const btnSubmit = document.getElementById('modalBtnSubmitResume');
+            const textareaRingkasan = document.getElementById('inputRingkasan');
+            const inputPesan = document.getElementById('inputPesanMoral');
+            const starInputs = document.querySelectorAll('.input-rating-star');
+
+            if (status === 'ditolak') {
+                alertDitolak.classList.remove('d-none');
+                alertCatatanPetugas.innerText = catatan || 'Mohon perbaiki rangkuman agar lebih mendalam dan mencerminkan isi buku.';
+            } else {
+                alertDitolak.classList.add('d-none');
+            }
+
+            if (isApproved) {
+                alertDisetujui.classList.remove('d-none');
+                document.getElementById('modalPoinDiberikan').innerText = poin;
+                btnSubmit.classList.add('d-none');
+                textareaRingkasan.setAttribute('readonly', 'readonly');
+                inputPesan.setAttribute('readonly', 'readonly');
+                starInputs.forEach(r => r.disabled = true);
+            } else {
+                alertDisetujui.classList.add('d-none');
+                btnSubmit.classList.remove('d-none');
+                textareaRingkasan.removeAttribute('readonly');
+                inputPesan.removeAttribute('readonly');
+                starInputs.forEach(r => r.disabled = false);
+            }
+        });
+    }
+});
+</script>
 @endsection
