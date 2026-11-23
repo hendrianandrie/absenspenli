@@ -40,8 +40,8 @@
         <tr>
             <td><strong>KKM</strong></td>
             <td>: {{ $mapel->kkm }}</td>
-            <td><strong>Metode Nilai</strong></td>
-            <td>: Rata-Rata Murni</td>
+            <td><strong>Bobot Penilaian</strong></td>
+            <td>: Tugas ({{ $mapel->bobot_tugas ?? 20 }}%), UH ({{ $mapel->bobot_uh ?? 30 }}%), UTS ({{ $mapel->bobot_uts ?? 25 }}%), UAS ({{ $mapel->bobot_uas ?? 25 }}%)</td>
         </tr>
     </table>
 
@@ -50,23 +50,27 @@
             <tr>
                 <th width="4%">No</th>
                 <th width="10%">NIS</th>
-                <th class="text-start" width="25%">Nama Siswa</th>
+                <th class="text-start" width="22%">Nama Siswa</th>
                 @foreach($kegiatans as $k)
                     <th>
                         {{ $k->nama_kegiatan }}<br>
                         <small style="font-weight: normal; font-size: 9px;">({{ $k->jenis }})</small>
                     </th>
                 @endforeach
-                <th width="12%">Rata-Rata Murni</th>
-                <th width="15%">Status Ketuntasan</th>
+                <th width="10%">Rata-Rata Murni</th>
+                <th width="11%" style="background-color: #dbeafe;">Nilai Akhir Rapor</th>
+                <th width="10%">Predikat</th>
+                <th width="13%">Status Ketuntasan</th>
             </tr>
         </thead>
         <tbody>
             @foreach($siswas as $idx => $siswa)
                 @php
-                    $info = $rekap[$siswa->id] ?? ['scores' => [], 'rata_rata' => null];
+                    $info = $rekap[$siswa->id] ?? ['scores' => [], 'rata_rata' => null, 'nilai_akhir' => null, 'predikat' => '-', 'status_ketuntasan' => '-'];
                     $avg = $info['rata_rata'];
-                    $kkm = $mapel->kkm;
+                    $nilaiAkhir = $info['nilai_akhir'];
+                    $kkm = $mapel->kkm ?? 75;
+                    $finalScore = $nilaiAkhir ?? $avg;
                 @endphp
                 <tr>
                     <td>{{ $idx + 1 }}</td>
@@ -77,12 +81,16 @@
                         <td>{{ $v !== null ? $v : '-' }}</td>
                     @endforeach
                     <td style="font-weight: bold;">{{ $avg !== null ? $avg : '-' }}</td>
+                    <td style="font-weight: bold; background-color: #f1f5f9; color: {{ ($finalScore !== null && $finalScore < $kkm) ? '#b91c1c' : '#1e40af' }};">
+                        {{ $nilaiAkhir !== null ? $nilaiAkhir : '-' }}
+                    </td>
+                    <td>{{ $info['predikat'] }}</td>
                     <td>
-                        @if($avg !== null)
-                            @if($avg >= $kkm)
-                                <strong>TUNTAS</strong>
+                        @if($finalScore !== null)
+                            @if($finalScore >= $kkm)
+                                <strong style="color: #15803d;">TUNTAS</strong>
                             @else
-                                <span style="color: red;">BELUM TUNTAS</span>
+                                <span style="color: #b91c1c; font-weight: bold;">BELUM TUNTAS</span>
                             @endif
                         @else
                             -

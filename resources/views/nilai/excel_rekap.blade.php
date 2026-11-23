@@ -1,13 +1,13 @@
 <table>
     <thead>
         <tr>
-            <th colspan="{{ 5 + count($kegiatans) }}" style="font-weight: bold; font-size: 14px; text-align: center;">
+            <th colspan="{{ 7 + count($kegiatans) }}" style="font-weight: bold; font-size: 14px; text-align: center;">
                 REKAPITULASI NILAI {{ strtoupper($mapel->nama_mapel) }} KELAS {{ $kelas }}
             </th>
         </tr>
         <tr>
-            <th colspan="{{ 5 + count($kegiatans) }}" style="text-align: center;">
-                Kode Mapel: {{ $mapel->kode_mapel }} | KKM: {{ $mapel->kkm }} | Semester: {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }}) | TA: {{ $tahunAjaran ?? '2026/2027' }}
+            <th colspan="{{ 7 + count($kegiatans) }}" style="text-align: center;">
+                Kode Mapel: {{ $mapel->kode_mapel }} | KKM: {{ $mapel->kkm }} | Bobot Penilaian: Tugas ({{ $mapel->bobot_tugas ?? 20 }}%), UH ({{ $mapel->bobot_uh ?? 30 }}%), UTS ({{ $mapel->bobot_uts ?? 25 }}%), UAS ({{ $mapel->bobot_uas ?? 25 }}%) | Semester: {{ $semester ?? 1 }} ({{ ($semester ?? 1) == 1 ? 'Ganjil' : 'Genap' }}) | TA: {{ $tahunAjaran ?? '2026/2027' }}
             </th>
         </tr>
         <tr></tr>
@@ -21,6 +21,7 @@
                 </th>
             @endforeach
             <th style="font-weight: bold; background-color: #bfdbfe; border: 1px solid #000000; text-align: center;">Rata-Rata Murni</th>
+            <th style="font-weight: bold; background-color: #93c5fd; color: #1e3a8a; border: 1px solid #000000; text-align: center;">Nilai Akhir Rapor</th>
             <th style="font-weight: bold; background-color: #dbeafe; border: 1px solid #000000; text-align: center;">Predikat</th>
             <th style="font-weight: bold; background-color: #dbeafe; border: 1px solid #000000; text-align: center;">Ketuntasan KKM</th>
         </tr>
@@ -28,9 +29,11 @@
     <tbody>
         @foreach($siswas as $idx => $siswa)
             @php
-                $info = $rekap[$siswa->id] ?? ['scores' => [], 'rata_rata' => null, 'predikat' => '-'];
+                $info = $rekap[$siswa->id] ?? ['scores' => [], 'rata_rata' => null, 'nilai_akhir' => null, 'predikat' => '-', 'status_ketuntasan' => '-'];
                 $avg = $info['rata_rata'];
-                $kkm = $mapel->kkm;
+                $nilaiAkhir = $info['nilai_akhir'];
+                $kkm = $mapel->kkm ?? 75;
+                $finalScore = $nilaiAkhir ?? $avg;
             @endphp
             <tr>
                 <td style="border: 1px solid #000000; text-align: center;">{{ $idx + 1 }}</td>
@@ -40,13 +43,16 @@
                     @php $v = $info['scores'][$k->id] ?? null; @endphp
                     <td style="border: 1px solid #000000; text-align: center;">{{ $v !== null ? $v : '-' }}</td>
                 @endforeach
-                <td style="border: 1px solid #000000; font-weight: bold; text-align: center; background-color: #eff6ff;">
+                <td style="border: 1px solid #000000; font-weight: bold; text-align: center; background-color: #f8fafc;">
                     {{ $avg !== null ? $avg : '-' }}
                 </td>
+                <td style="border: 1px solid #000000; font-weight: bold; text-align: center; background-color: #eff6ff; color: {{ ($finalScore !== null && $finalScore < $kkm) ? '#b91c1c' : '#1e40af' }};">
+                    {{ $nilaiAkhir !== null ? $nilaiAkhir : '-' }}
+                </td>
                 <td style="border: 1px solid #000000; text-align: center;">{{ $info['predikat'] }}</td>
-                <td style="border: 1px solid #000000; text-align: center; font-weight: bold; color: {{ ($avg !== null && $avg >= $kkm) ? '#15803d' : '#b91c1c' }};">
-                    @if($avg !== null)
-                        {{ $avg >= $kkm ? 'TUNTAS' : 'BELUM TUNTAS' }}
+                <td style="border: 1px solid #000000; text-align: center; font-weight: bold; color: {{ ($finalScore !== null && $finalScore >= $kkm) ? '#15803d' : '#b91c1c' }};">
+                    @if($finalScore !== null)
+                        {{ $finalScore >= $kkm ? 'TUNTAS' : 'BELUM TUNTAS' }}
                     @else
                         -
                     @endif

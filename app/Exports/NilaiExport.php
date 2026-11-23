@@ -2,9 +2,9 @@
 
 namespace App\Exports;
 
+use App\Http\Controllers\NilaiController;
 use App\Models\Kegiatan;
 use App\Models\MataPelajaran;
-use App\Models\Nilai;
 use App\Models\Siswa;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -39,37 +39,7 @@ class NilaiExport implements FromView, ShouldAutoSize
             ->orderBy('tanggal')
             ->get();
 
-        $rekap = [];
-        $totalKegiatan = $kegiatans->count();
-        foreach ($siswas as $siswa) {
-            $scores = [];
-            foreach ($kegiatans as $kegiatan) {
-                $n = Nilai::where('kegiatan_id', $kegiatan->id)->where('siswa_id', $siswa->id)->first();
-                $scores[$kegiatan->id] = $n ? $n->nilai : null;
-            }
-            $valid = array_filter($scores, fn ($v) => $v !== null);
-            $avg = (count($valid) > 0 && $totalKegiatan > 0) ? round(array_sum($valid) / $totalKegiatan, 1) : null;
-
-            $kkm = $mapel->kkm;
-            $predikat = '-';
-            if ($avg !== null) {
-                if ($avg >= 90) {
-                    $predikat = 'A (Sangat Baik)';
-                } elseif ($avg >= 80) {
-                    $predikat = 'B (Baik)';
-                } elseif ($avg >= $kkm) {
-                    $predikat = 'C (Cukup / Tuntas)';
-                } else {
-                    $predikat = 'D (Perlu Bimbingan)';
-                }
-            }
-
-            $rekap[$siswa->id] = [
-                'scores' => $scores,
-                'rata_rata' => $avg,
-                'predikat' => $predikat,
-            ];
-        }
+        [$rekap, $analytics] = NilaiController::calculateRekapData($siswas, $kegiatans, $mapel);
 
         return view('nilai.excel_rekap', [
             'kelas' => $this->kelas,
@@ -77,6 +47,7 @@ class NilaiExport implements FromView, ShouldAutoSize
             'siswas' => $siswas,
             'kegiatans' => $kegiatans,
             'rekap' => $rekap,
+            'analytics' => $analytics,
             'semester' => $this->semester,
             'tahunAjaran' => $this->tahunAjaran,
         ]);

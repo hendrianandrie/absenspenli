@@ -91,116 +91,7 @@ class NilaiController extends Controller
                 ->orderBy('tanggal')
                 ->get();
 
-            $kkm = $selectedMapel->kkm ?? 75;
-            $bTugas = $selectedMapel->bobot_tugas ?? 20;
-            $bUh = $selectedMapel->bobot_uh ?? 30;
-            $bUts = $selectedMapel->bobot_uts ?? 25;
-            $bUas = $selectedMapel->bobot_uas ?? 25;
-
-            $totalKegiatan = $kegiatans->count();
-            $classKegiatanCounts = [
-                'Tugas' => $kegiatans->where('jenis', 'Tugas')->count(),
-                'UH'    => $kegiatans->where('jenis', 'UH')->count(),
-                'UTS'   => $kegiatans->where('jenis', 'UTS')->count(),
-                'UAS'   => $kegiatans->where('jenis', 'UAS')->count(),
-            ];
-            $activeClassWeights = [
-                'Tugas' => $classKegiatanCounts['Tugas'] > 0 ? $bTugas : 0,
-                'UH'    => $classKegiatanCounts['UH'] > 0 ? $bUh : 0,
-                'UTS'   => $classKegiatanCounts['UTS'] > 0 ? $bUts : 0,
-                'UAS'   => $classKegiatanCounts['UAS'] > 0 ? $bUas : 0,
-            ];
-            $totalActiveWeight = array_sum($activeClassWeights);
-
-            $allFinalScores = [];
-            $tuntasCount = 0;
-            $belumTuntasCount = 0;
-
-            foreach ($siswas as $siswa) {
-                $scores = [];
-                $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
-
-                foreach ($kegiatans as $kegiatan) {
-                    $nilaiObj = Nilai::where('kegiatan_id', $kegiatan->id)
-                        ->where('siswa_id', $siswa->id)
-                        ->first();
-                    $val = $nilaiObj ? $nilaiObj->nilai : null;
-                    $scores[$kegiatan->id] = $val;
-
-                    if ($val !== null && isset($scoresByJenis[$kegiatan->jenis])) {
-                        $scoresByJenis[$kegiatan->jenis][] = $val;
-                    }
-                }
-
-                $validScores = array_filter($scores, fn ($n) => $n !== null);
-                $hasAnyScore = count($validScores) > 0;
-
-                if ($hasAnyScore) {
-                    // Solusi A: Nilai kegiatan yang belum dikerjakan dianggap 0 terhadap total kegiatan di kelas
-                    $rataRataMurni = $totalKegiatan > 0 ? round(array_sum($validScores) / $totalKegiatan, 1) : null;
-
-                    // Hitung Rata-Rata per Kategori berdasarkan jumlah kegiatan kategori tersebut di kelas
-                    $avgTugas = $classKegiatanCounts['Tugas'] > 0 ? array_sum($scoresByJenis['Tugas']) / $classKegiatanCounts['Tugas'] : 0;
-                    $avgUh    = $classKegiatanCounts['UH'] > 0 ? array_sum($scoresByJenis['UH']) / $classKegiatanCounts['UH'] : 0;
-                    $avgUts   = $classKegiatanCounts['UTS'] > 0 ? array_sum($scoresByJenis['UTS']) / $classKegiatanCounts['UTS'] : 0;
-                    $avgUas   = $classKegiatanCounts['UAS'] > 0 ? array_sum($scoresByJenis['UAS']) / $classKegiatanCounts['UAS'] : 0;
-
-                    $weightedSum = ($avgTugas * $activeClassWeights['Tugas'])
-                                 + ($avgUh * $activeClassWeights['UH'])
-                                 + ($avgUts * $activeClassWeights['UTS'])
-                                 + ($avgUas * $activeClassWeights['UAS']);
-
-                    $nilaiAkhirBerbobot = $totalActiveWeight > 0 ? round($weightedSum / $totalActiveWeight, 1) : $rataRataMurni;
-                } else {
-                    $rataRataMurni = null;
-                    $nilaiAkhirBerbobot = null;
-                }
-
-                $predikat = '-';
-                $statusKetuntasan = '-';
-                $scoreUsed = $nilaiAkhirBerbobot ?? $rataRataMurni;
-
-                if ($scoreUsed !== null) {
-                    $allFinalScores[] = $scoreUsed;
-                    if ($scoreUsed >= 90) {
-                        $predikat = 'A (Sangat Baik)';
-                    } elseif ($scoreUsed >= 80) {
-                        $predikat = 'B (Baik)';
-                    } elseif ($scoreUsed >= $kkm) {
-                        $predikat = 'C (Cukup / Tuntas)';
-                    } else {
-                        $predikat = 'D (Perlu Bimbingan)';
-                    }
-
-                    if ($scoreUsed >= $kkm) {
-                        $statusKetuntasan = 'TUNTAS';
-                        $tuntasCount++;
-                    } else {
-                        $statusKetuntasan = 'BELUM TUNTAS';
-                        $belumTuntasCount++;
-                    }
-                }
-
-                $rekapNilai[$siswa->id] = [
-                    'scores' => $scores,
-                    'rata_rata' => $rataRataMurni,
-                    'nilai_akhir' => $nilaiAkhirBerbobot,
-                    'predikat' => $predikat,
-                    'status_ketuntasan' => $statusKetuntasan,
-                ];
-            }
-
-            $totalStudents = count($siswas);
-            $totalEvaluated = count($allFinalScores);
-            $analytics = [
-                'total_siswa' => $totalStudents,
-                'tuntas_count' => $tuntasCount,
-                'belum_tuntas_count' => $belumTuntasCount,
-                'pct_tuntas' => $totalEvaluated > 0 ? round(($tuntasCount / $totalEvaluated) * 100, 1) : 0,
-                'highest' => count($allFinalScores) > 0 ? max($allFinalScores) : 0,
-                'lowest' => count($allFinalScores) > 0 ? min($allFinalScores) : 0,
-                'avg_kelas' => count($allFinalScores) > 0 ? round(array_sum($allFinalScores) / count($allFinalScores), 1) : 0,
-            ];
+            [$rekapNilai, $analytics] = self::calculateRekapData($siswas, $kegiatans, $selectedMapel);
         }
 
         return view('nilai.index', compact(
@@ -481,6 +372,133 @@ class NilaiController extends Controller
         ])->with('success', 'Kegiatan Penilaian berhasil dihapus!');
     }
 
+    /**
+     * Hitung rekap nilai (rata-rata murni, nilai akhir berbobot, predikat, dan ketuntasan)
+     */
+    public static function calculateRekapData($siswas, $kegiatans, $mapel): array
+    {
+        $kkm = $mapel->kkm ?? 75;
+        $bTugas = $mapel->bobot_tugas ?? 20;
+        $bUh = $mapel->bobot_uh ?? 30;
+        $bUts = $mapel->bobot_uts ?? 25;
+        $bUas = $mapel->bobot_uas ?? 25;
+
+        $totalKegiatan = $kegiatans->count();
+        $classKegiatanCounts = [
+            'Tugas' => $kegiatans->where('jenis', 'Tugas')->count(),
+            'UH'    => $kegiatans->where('jenis', 'UH')->count(),
+            'UTS'   => $kegiatans->where('jenis', 'UTS')->count(),
+            'UAS'   => $kegiatans->where('jenis', 'UAS')->count(),
+        ];
+        $activeClassWeights = [
+            'Tugas' => $classKegiatanCounts['Tugas'] > 0 ? $bTugas : 0,
+            'UH'    => $classKegiatanCounts['UH'] > 0 ? $bUh : 0,
+            'UTS'   => $classKegiatanCounts['UTS'] > 0 ? $bUts : 0,
+            'UAS'   => $classKegiatanCounts['UAS'] > 0 ? $bUas : 0,
+        ];
+        $totalActiveWeight = array_sum($activeClassWeights);
+
+        $allFinalScores = [];
+        $tuntasCount = 0;
+        $belumTuntasCount = 0;
+        $rekapNilai = [];
+
+        // Preload nilais agar tidak terjadi N+1 query
+        $kegiatanIds = $kegiatans->pluck('id');
+        $siswaIds = $siswas->pluck('id');
+        $allNilais = Nilai::whereIn('kegiatan_id', $kegiatanIds)
+            ->whereIn('siswa_id', $siswaIds)
+            ->get()
+            ->groupBy('siswa_id');
+
+        foreach ($siswas as $siswa) {
+            $scores = [];
+            $scoresByJenis = ['Tugas' => [], 'UH' => [], 'UTS' => [], 'UAS' => []];
+            $siswaNilais = $allNilais->get($siswa->id, collect())->keyBy('kegiatan_id');
+
+            foreach ($kegiatans as $kegiatan) {
+                $nilaiObj = $siswaNilais->get($kegiatan->id);
+                $val = $nilaiObj ? $nilaiObj->nilai : null;
+                $scores[$kegiatan->id] = $val;
+
+                if ($val !== null && isset($scoresByJenis[$kegiatan->jenis])) {
+                    $scoresByJenis[$kegiatan->jenis][] = $val;
+                }
+            }
+
+            $validScores = array_filter($scores, fn ($n) => $n !== null);
+            $hasAnyScore = count($validScores) > 0;
+
+            if ($hasAnyScore) {
+                // Rata-rata murni terhadap total kegiatan di kelas
+                $rataRataMurni = $totalKegiatan > 0 ? round(array_sum($validScores) / $totalKegiatan, 1) : null;
+
+                // Hitung Rata-Rata per Kategori berdasarkan jumlah kegiatan kategori tersebut di kelas
+                $avgTugas = $classKegiatanCounts['Tugas'] > 0 ? array_sum($scoresByJenis['Tugas']) / $classKegiatanCounts['Tugas'] : 0;
+                $avgUh    = $classKegiatanCounts['UH'] > 0 ? array_sum($scoresByJenis['UH']) / $classKegiatanCounts['UH'] : 0;
+                $avgUts   = $classKegiatanCounts['UTS'] > 0 ? array_sum($scoresByJenis['UTS']) / $classKegiatanCounts['UTS'] : 0;
+                $avgUas   = $classKegiatanCounts['UAS'] > 0 ? array_sum($scoresByJenis['UAS']) / $classKegiatanCounts['UAS'] : 0;
+
+                $weightedSum = ($avgTugas * $activeClassWeights['Tugas'])
+                             + ($avgUh * $activeClassWeights['UH'])
+                             + ($avgUts * $activeClassWeights['UTS'])
+                             + ($avgUas * $activeClassWeights['UAS']);
+
+                $nilaiAkhirBerbobot = $totalActiveWeight > 0 ? round($weightedSum / $totalActiveWeight, 1) : $rataRataMurni;
+            } else {
+                $rataRataMurni = null;
+                $nilaiAkhirBerbobot = null;
+            }
+
+            $predikat = '-';
+            $statusKetuntasan = '-';
+            $scoreUsed = $nilaiAkhirBerbobot ?? $rataRataMurni;
+
+            if ($scoreUsed !== null) {
+                $allFinalScores[] = $scoreUsed;
+                if ($scoreUsed >= 90) {
+                    $predikat = 'A (Sangat Baik)';
+                } elseif ($scoreUsed >= 80) {
+                    $predikat = 'B (Baik)';
+                } elseif ($scoreUsed >= $kkm) {
+                    $predikat = 'C (Cukup / Tuntas)';
+                } else {
+                    $predikat = 'D (Perlu Bimbingan)';
+                }
+
+                if ($scoreUsed >= $kkm) {
+                    $statusKetuntasan = 'TUNTAS';
+                    $tuntasCount++;
+                } else {
+                    $statusKetuntasan = 'BELUM TUNTAS';
+                    $belumTuntasCount++;
+                }
+            }
+
+            $rekapNilai[$siswa->id] = [
+                'scores' => $scores,
+                'rata_rata' => $rataRataMurni,
+                'nilai_akhir' => $nilaiAkhirBerbobot,
+                'predikat' => $predikat,
+                'status_ketuntasan' => $statusKetuntasan,
+            ];
+        }
+
+        $totalStudents = count($siswas);
+        $totalEvaluated = count($allFinalScores);
+        $analytics = [
+            'total_siswa' => $totalStudents,
+            'tuntas_count' => $tuntasCount,
+            'belum_tuntas_count' => $belumTuntasCount,
+            'pct_tuntas' => $totalEvaluated > 0 ? round(($tuntasCount / $totalEvaluated) * 100, 1) : 0,
+            'highest' => count($allFinalScores) > 0 ? max($allFinalScores) : 0,
+            'lowest' => count($allFinalScores) > 0 ? min($allFinalScores) : 0,
+            'avg_kelas' => count($allFinalScores) > 0 ? round(array_sum($allFinalScores) / count($allFinalScores), 1) : 0,
+        ];
+
+        return [$rekapNilai, $analytics];
+    }
+
     public function rekapPdf(Request $request)
     {
         $kelas = $request->get('kelas');
@@ -497,23 +515,9 @@ class NilaiController extends Controller
             ->orderBy('tanggal')
             ->get();
 
-        $rekap = [];
-        $totalKegiatan = $kegiatans->count();
-        foreach ($siswas as $siswa) {
-            $scores = [];
-            foreach ($kegiatans as $kegiatan) {
-                $n = Nilai::where('kegiatan_id', $kegiatan->id)->where('siswa_id', $siswa->id)->first();
-                $scores[$kegiatan->id] = $n ? $n->nilai : null;
-            }
-            $valid = array_filter($scores, fn ($v) => $v !== null);
-            $avg = (count($valid) > 0 && $totalKegiatan > 0) ? round(array_sum($valid) / $totalKegiatan, 1) : null;
-            $rekap[$siswa->id] = [
-                'scores' => $scores,
-                'rata_rata' => $avg,
-            ];
-        }
+        [$rekap, $analytics] = self::calculateRekapData($siswas, $kegiatans, $mapel);
 
-        $pdf = Pdf::loadView('nilai.pdf_rekap', compact('kelas', 'mapel', 'siswas', 'kegiatans', 'rekap', 'semester', 'tahunAjaran'))
+        $pdf = Pdf::loadView('nilai.pdf_rekap', compact('kelas', 'mapel', 'siswas', 'kegiatans', 'rekap', 'analytics', 'semester', 'tahunAjaran'))
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('Rekap_Nilai_'.$mapel->kode_mapel.'_'.$kelas.'_Sem_'.$semester.'.pdf');
