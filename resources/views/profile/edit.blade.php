@@ -75,10 +75,10 @@
                             <span class="fw-semibold text-truncate text-end ps-2 text-slate-800" style="max-width: 160px;" title="{{ $user->email }}">{{ $user->email }}</span>
                         </li>
 
-                        @if($user->nip)
+                        @if($user->role !== 'siswa')
                             <li class="list-group-item d-flex justify-content-between align-items-center px-2 py-2-5 border-0 border-bottom">
                                 <span class="text-muted"><i class="fa-solid fa-id-card me-2 text-primary"></i> NIP:</span>
-                                <span class="fw-semibold font-monospace text-slate-800">{{ $user->nip }}</span>
+                                <span class="fw-semibold font-monospace text-slate-800">{{ $user->nip ?? '-' }}</span>
                             </li>
                         @endif
 
@@ -180,8 +180,11 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="email" class="form-label fw-semibold text-slate-700 small">
-                                Alamat Email <span class="text-danger">*</span>
+                            <label for="email" class="form-label fw-semibold text-slate-700 small d-flex justify-content-between align-items-center">
+                                <span>Alamat Email <span class="text-danger">*</span></span>
+                                <span class="badge {{ $errors->has('email') ? 'bg-success-subtle text-success border border-success-subtle fw-semibold' : 'bg-light text-secondary border fw-normal' }}" id="badge-email-status" style="font-size: 10px;">
+                                    <i class="fa-solid {{ $errors->has('email') ? 'fa-lock-open' : 'fa-lock' }} me-1"></i> {{ $errors->has('email') ? 'Siap Diedit' : 'Terkunci' }}
+                                </span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope"></i></span>
@@ -191,12 +194,23 @@
                                        name="email" 
                                        value="{{ old('email', $user->email) }}" 
                                        placeholder="alamat@email.com" 
+                                       {{ $errors->has('email') ? '' : 'readonly' }}
+                                       style="{{ $errors->has('email') ? 'background-color: #ffffff;' : 'background-color: #f8fafc; cursor: pointer;' }}"
+                                       onclick="if(this.readOnly) toggleFieldEdit('email')"
                                        required>
+                                <button class="btn {{ $errors->has('email') ? 'btn-primary' : 'btn-outline-primary' }}" 
+                                        type="button" 
+                                        id="btn-edit-email" 
+                                        onclick="toggleFieldEdit('email')" 
+                                        title="Klik untuk mengedit alamat email">
+                                    <i class="fa-solid {{ $errors->has('email') ? 'fa-pen-nib' : 'fa-pen-to-square' }} me-1"></i>
+                                    <span class="btn-text">{{ $errors->has('email') ? 'Edit Aktif' : 'Edit' }}</span>
+                                </button>
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="form-text small text-muted">Email aktif untuk notifikasi dan pemulihan akun.</div>
+                            <div class="form-text small text-muted">Email aktif untuk notifikasi dan pemulihan akun. Klik tombol <strong>Edit</strong> untuk mengubah.</div>
                         </div>
 
                         <div class="col-md-6">
@@ -226,8 +240,11 @@
 
                         @if($user->role !== 'siswa')
                             <div class="col-md-6">
-                                <label for="nip" class="form-label fw-semibold text-slate-700 small">
-                                    NIP (Nomor Induk Pegawai)
+                                <label for="nip" class="form-label fw-semibold text-slate-700 small d-flex justify-content-between align-items-center">
+                                    <span>NIP (Nomor Induk Pegawai)</span>
+                                    <span class="badge {{ $errors->has('nip') ? 'bg-success-subtle text-success border border-success-subtle fw-semibold' : 'bg-light text-secondary border fw-normal' }}" id="badge-nip-status" style="font-size: 10px;">
+                                        <i class="fa-solid {{ $errors->has('nip') ? 'fa-lock-open' : 'fa-lock' }} me-1"></i> {{ $errors->has('nip') ? 'Siap Diedit' : 'Terkunci' }}
+                                    </span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-address-card"></i></span>
@@ -236,12 +253,23 @@
                                            id="nip" 
                                            name="nip" 
                                            value="{{ old('nip', $user->nip) }}" 
-                                           placeholder="19xxxxxxxxxxxxxx">
+                                           placeholder="19xxxxxxxxxxxxxx"
+                                           {{ $errors->has('nip') ? '' : 'readonly' }}
+                                           style="{{ $errors->has('nip') ? 'background-color: #ffffff;' : 'background-color: #f8fafc; cursor: pointer;' }}"
+                                           onclick="if(this.readOnly) toggleFieldEdit('nip')">
+                                    <button class="btn {{ $errors->has('nip') ? 'btn-primary' : 'btn-outline-primary' }}" 
+                                            type="button" 
+                                            id="btn-edit-nip" 
+                                            onclick="toggleFieldEdit('nip')" 
+                                            title="Klik untuk mengedit NIP">
+                                        <i class="fa-solid {{ $errors->has('nip') ? 'fa-pen-nib' : 'fa-pen-to-square' }} me-1"></i>
+                                        <span class="btn-text">{{ $errors->has('nip') ? 'Edit Aktif' : 'Edit' }}</span>
+                                    </button>
                                     @error('nip')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="form-text small text-muted">Opsional jika berstatus PNS / PPPK.</div>
+                                <div class="form-text small text-muted">Opsional jika berstatus PNS / PPPK. Klik tombol <strong>Edit</strong> untuk mengubah.</div>
                             </div>
                         @else
                             <div class="col-md-6">
@@ -359,6 +387,36 @@
 
 @push('scripts')
 <script>
+    function toggleFieldEdit(fieldId) {
+        const input = document.getElementById(fieldId);
+        const btn = document.getElementById('btn-edit-' + fieldId);
+        const badge = document.getElementById('badge-' + fieldId + '-status');
+        if (!input) return;
+
+        if (input.readOnly) {
+            input.readOnly = false;
+            input.style.backgroundColor = '#ffffff';
+            input.classList.add('border-primary');
+            input.focus();
+
+            const temp = input.value;
+            input.value = '';
+            input.value = temp;
+
+            if (btn) {
+                btn.className = 'btn btn-primary';
+                btn.innerHTML = '<i class="fa-solid fa-pen-nib me-1"></i> Edit Aktif';
+                btn.title = 'Kolom ini aktif untuk diedit. Klik Simpan Perubahan Profil untuk menyimpan.';
+            }
+            if (badge) {
+                badge.className = 'badge bg-success-subtle text-success border border-success-subtle fw-semibold';
+                badge.innerHTML = '<i class="fa-solid fa-lock-open me-1"></i> Siap Diedit';
+            }
+        } else {
+            input.focus();
+        }
+    }
+
     function togglePassVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
