@@ -984,4 +984,195 @@ class NilaiController extends Controller
 
         return $pdf->download('Rapor_Siswa_'.$safeNis.'_'.$safeNama.'_Sem_'.$semester.'.pdf');
     }
+
+    /**
+     * Monitoring Keterisian Penilaian Mata Pelajaran (Khusus Akun Admin)
+     */
+    public function monitoring(Request $request)
+    {
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Fitur monitoring penilaian ini khusus untuk akun Administrator.');
+        }
+
+        $selectedSemester = (int) $request->get('semester', Kegiatan::currentSemester());
+        $selectedTahunAjaran = $request->get('tahun_ajaran', Kegiatan::currentTahunAjaran());
+        $selectedTingkat = $request->get('tingkat', 'Semua');
+        $selectedStatus = $request->get('status', 'semua');
+        $searchQuery = trim($request->get('q', ''));
+
+        // Urutan logis kelas (VII, VIII, IX)
+        $order = ['VII' => 1, 'VIII' => 2, 'IX' => 3];
+        $allKelas = Siswa::select('kelas')->distinct()->pluck('kelas')->sort(function ($a, $b) use ($order) {
+            $tA = $order[strtoupper(MataPelajaran::getTingkatFromKelas($a))] ?? 99;
+            $tB = $order[strtoupper(MataPelajaran::getTingkatFromKelas($b))] ?? 99;
+            if ($tA !== $tB) return $tA <=> $tB;
+            return strnatcasecmp($a, $b);
+        })->values();
+
+        // Filter kelas jika tingkat dipilih
+        $displayKelas = $allKelas;
+        if ($selectedTingkat !== 'Semua') {
+            $displayKelas = $allKelas->filter(function ($k) use ($selectedTingkat) {
+                return MataPelajaran::getTingkatFromKelas($k) === $selectedTingkat;
+            })->values();
+        }
+
+        // Query Mapel
+        $mapelQuery = MataPelajaran::with('users')->orderBy('tingkat')->orderBy('nama_mapel');
+        if ($selectedTingkat !== 'Semua') {
+            $mapelQuery->where(function ($q) use ($selectedTingkat) {
+                $q->where('tingkat', $selectedTingkat)->orWhere('tingkat', 'Semua')->orWhereNull('tingkat');
+            });
+        }
+        if ($searchQuery !== '') {
+            $mapelQuery->where(function ($q) use ($searchQuery) {
+                $q->where('nama_mapel', 'like', "%{$searchQuery}%")
+                  ->orWhere('kode_mapel', 'like', "%{$searchQuery}%")
+                  ->orWhereHas('users', function ($u) use ($searchQuery) {
+                      $u->where('name', 'like', "%{$searchQuery}%");
+                  });
+            });
+        }
+        $mapels = $mapelQuery->get();
+
+        // Load seluruh kegiatan di semester & tahun ajaran ini
+        $kegiatans = Kegiatan::withCount('nilais')
+            ->where('semester', $selectedSemester)
+            ->where('tahun_ajaran', $selectedTahunAjaran)
+            ->get()
+            ->groupBy(['mata_pelajaran_id', 'kelas']);
+
+        $monitoringData = [];
+        $totalMapelEvaluated = 0;
+        $lengkapCount = 0;
+        $sebagianCount = 0;
+        $belumCount = 0;
+        $totalKegiatanSekolah = 0;
+        $totalNilaiSekolah = 0;
+        $totalKelasTargetSekolah = 0;
+        $totalKelasTerisiSekolah = 0;
+
+        foreach ($mapels as $mapel) {
+            $targetKelas = $mapel->filterKelasCollection($allKelas);
+            if ($selectedTingkat !== 'Semua') {
+                $targetKelas = $targetKelas->filter(function ($k) use ($selectedTingkat) {
+                    return MataPelajaran::getTingkatFromKelas($k) === $selectedTingkat;
+                })->values();
+            }
+
+            // Jika setelah filter tingkat, target kelas kosong, lewati
+            if ($selectedTingkat !== 'Semua' && $targetKelas->isEmpty()) {
+                continue;
+            }
+
+            $totalMapelEvaluated++;
+            $filledKelas = [];
+            $emptyKelas = [];
+            $totalKegiatanMapel = 0;
+            $totalNilaiMapel = 0;
+            $breakdownJenis = ['Tugas' => 0, 'UH' => 0, 'UTS' => 0, 'UAS' => 0];
+
+            foreach ($targetKelas as $kelas) {
+                $kegs = $kegiatans->get($mapel->id, collect())->get($kelas, collect());
+                if ($kegs->isNotEmpty()) {
+                    $kCount = $kegs->count();
+                    $nCount = $kegs->sum('nilais_count');
+                    $totalKegiatanMapel += $kCount;
+                    $totalNilaiMapel += $nCount;
+
+                    foreach ($kegs as $kg) {
+                        $j = $kg->jenis ?? 'Tugas';
+                        if (isset($breakdownJenis[$j])) {
+                            $breakdownJenis[$j]++;
+                        }
+                    }
+
+                    $filledKelas[$kelas] = [
+                        'kegiatan_count' => $kCount,
+                        'nilai_count' => $nCount,
+                        'kegiatans' => $kegs,
+                    ];
+                } else {
+                    $emptyKelas[] = $kelas;
+                }
+            }
+
+            $targetCount = count($targetKelas);
+            $filledCount = count($filledKelas);
+            $pctKeterisian = $targetCount > 0 ? round(($filledCount / $targetCount) * 100) : 0;
+
+            $status = 'belum';
+            if ($targetCount > 0 && $filledCount === $targetCount) {
+                $status = 'lengkap';
+                $lengkapCount++;
+            } elseif ($filledCount > 0) {
+                $status = 'sebagian';
+                $sebagianCount++;
+            } else {
+                $belumCount++;
+            }
+
+            $totalKegiatanSekolah += $totalKegiatanMapel;
+            $totalNilaiSekolah += $totalNilaiMapel;
+            $totalKelasTargetSekolah += $targetCount;
+            $totalKelasTerisiSekolah += $filledCount;
+
+            $guruList = $mapel->users->pluck('name')->toArray();
+
+            $item = [
+                'mapel' => $mapel,
+                'guru_list' => $guruList,
+                'target_kelas' => $targetKelas,
+                'filled_kelas' => $filledKelas,
+                'empty_kelas' => $emptyKelas,
+                'target_count' => $targetCount,
+                'filled_count' => $filledCount,
+                'pct_keterisian' => $pctKeterisian,
+                'status' => $status,
+                'total_kegiatan' => $totalKegiatanMapel,
+                'total_nilai' => $totalNilaiMapel,
+                'breakdown_jenis' => $breakdownJenis,
+            ];
+
+            if ($selectedStatus === 'semua' || $selectedStatus === $status) {
+                $monitoringData[] = $item;
+            }
+        }
+
+        $overallPct = $totalKelasTargetSekolah > 0
+            ? round(($totalKelasTerisiSekolah / $totalKelasTargetSekolah) * 100)
+            : 0;
+
+        $stats = [
+            'total_mapel' => $totalMapelEvaluated,
+            'lengkap_count' => $lengkapCount,
+            'sebagian_count' => $sebagianCount,
+            'belum_count' => $belumCount,
+            'total_kegiatan' => $totalKegiatanSekolah,
+            'total_nilai' => $totalNilaiSekolah,
+            'overall_pct' => $overallPct,
+            'total_kelas_target' => $totalKelasTargetSekolah,
+            'total_kelas_terisi' => $totalKelasTerisiSekolah,
+        ];
+
+        $daftarSemester = [
+            1 => 'Semester 1 (Ganjil)',
+            2 => 'Semester 2 (Genap)',
+        ];
+        $daftarTahunAjaran = ['2026/2027', '2025/2026'];
+
+        return view('nilai.monitoring', compact(
+            'monitoringData',
+            'stats',
+            'allKelas',
+            'displayKelas',
+            'selectedSemester',
+            'selectedTahunAjaran',
+            'selectedTingkat',
+            'selectedStatus',
+            'searchQuery',
+            'daftarSemester',
+            'daftarTahunAjaran'
+        ));
+    }
 }

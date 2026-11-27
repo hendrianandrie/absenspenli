@@ -21,6 +21,22 @@
     </div>
 </div>
 
+@if(Auth::check() && Auth::user()->role === 'admin')
+<!-- Navigasi Tab Cepat Admin -->
+<ul class="nav nav-pills mb-4 border-bottom pb-2">
+    <li class="nav-item">
+        <a class="nav-link active bg-primary text-white rounded-3 py-2 px-3 fw-semibold shadow-xs" href="{{ route('nilai.index') }}">
+            <i class="fa-solid fa-table-list me-1.5"></i> Lembar Penilaian Siswa
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-slate-600 rounded-3 py-2 px-3 fw-medium" href="{{ route('nilai.monitoring') }}">
+            <i class="fa-solid fa-chart-pie me-1.5 text-primary"></i> Monitoring Keterisian Mapel
+        </a>
+    </li>
+</ul>
+@endif
+
 <!-- Filter Bar -->
 <div class="card card-custom p-4 bg-white mb-4 shadow-sm">
     <form method="GET" action="{{ route('nilai.index') }}" class="row g-3 align-items-end" id="filterFormNilai">

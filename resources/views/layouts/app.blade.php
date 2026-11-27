@@ -658,9 +658,15 @@
 
                     <div class="mosaic-nav-section">Akademik & Kurikulum</div>
                     <div class="mosaic-nav-item">
-                        <a class="mosaic-nav-link {{ request()->routeIs('nilai.*') ? 'active' : '' }}" href="{{ route('nilai.index') }}">
+                        <a class="mosaic-nav-link {{ (request()->routeIs('nilai.index') || request()->routeIs('nilai.kegiatan.*')) ? 'active' : '' }}" href="{{ route('nilai.index') }}">
                             <i class="fa-solid fa-star" style="color: #f43f5e;"></i>
                             <span>Penilaian Siswa</span>
+                        </a>
+                    </div>
+                    <div class="mosaic-nav-item">
+                        <a class="mosaic-nav-link {{ request()->routeIs('nilai.monitoring') ? 'active' : '' }}" href="{{ route('nilai.monitoring') }}">
+                            <i class="fa-solid fa-chart-pie" style="color: #3b82f6;"></i>
+                            <span>Monitoring Penilaian</span>
                         </a>
                     </div>
                     @if(config('features.asesmen'))

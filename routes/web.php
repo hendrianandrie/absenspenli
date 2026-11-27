@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
 
         // Penilaian (Kegiatan, Rata-Rata Murni, Export PDF & Excel, Cetak Rapor Siswa)
         Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
+        Route::get('/nilai/monitoring', [NilaiController::class, 'monitoring'])->name('nilai.monitoring');
         Route::get('/nilai/kegiatan/create', [NilaiController::class, 'createKegiatan'])->name('nilai.kegiatan.create');
         Route::post('/nilai/kegiatan/store', [NilaiController::class, 'storeKegiatan'])->name('nilai.kegiatan.store');
         Route::get('/nilai/kegiatan/{id}/edit', [NilaiController::class, 'editKegiatan'])->name('nilai.kegiatan.edit');
